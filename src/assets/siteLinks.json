@@ -1,0 +1,37 @@
+[
+  {
+    "icon": "Blog",
+    "name": "博客",
+    "link": "https://firef.qzz.io"
+  },
+  {
+    "icon": "Cloud",
+    "name": "Cloudflare",
+    "link": "https://dash.cloudflare.com/83fdea7d910cbc683e6d53fa6baf45ab/firef.dpdns.org"
+  },
+  {
+    "icon": "CompactDisc",
+    "name": "音乐",
+    "link": "https://m.kugou.com/songlist/gcid_3zp6gggbz2z02a/?src_cid=3zp6gggbz2z02a&uid=1322756796&chl=message&cover=http://imge.kugou.com/stdmusic/20250213/20250213144553789083.jpg&iszlist=1"
+  },
+  {
+    "icon": "Compass",
+    "name": "Domain",
+    "link": "https://dash.domain.digitalplat.org/auth/login"
+  },
+  {
+    "icon": "Book",
+    "name": "简幻欢",
+    "link": "https://simpfun.cn/console"
+  },
+  {
+    "icon": "LaptopCode",
+    "name": "OpenFrp",
+    "link": "https://console.openfrp.net/dashboard"
+  },
+  {
+    "icon": "Fire",
+    "name": "今日热榜",
+    "link": "https://hot.imsyy.top/"
+  }
+]

@@ -1,0 +1,25 @@
+/* 引入public目录下的数码管字体 */
+@font-face {
+  font-family: 'Digital-7';
+  src: url('/font/digital-7.ttf') format('truetype'); /* 对应 public/font/digital-7.ttf */
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 全局基础样式 */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #121212;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* 清除默认边距 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+    
