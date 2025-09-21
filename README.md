@@ -96,7 +96,7 @@ docker run -p 12445:12445 -d home
 import {
   Link,
   Blog,
-  AiResults,
+  Airbnb,
   Cloud,
   DomainSharp,
   CloudServerOutlined,
@@ -111,7 +111,7 @@ import {
 const siteIcon = {
   Link,
   Blog,
-  AiResults,
+  Airbnb,
   Cloud,
   DomainSharp,
   CloudServerOutlined,
