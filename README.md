@@ -98,11 +98,11 @@ import {
   Blog,
   Airbnb,
   Cloud,
-  DomainSharp,
-  CloudServerOutlined,
+  Amilia,
+  CloudUploadAlt,
   Fire,
-  FlightInternational,
-  ToolKit,
+  Atom,
+  Tools,
 } from "@vicons/fa";
 
 ...
@@ -113,11 +113,11 @@ const siteIcon = {
   Blog,
   Airbnb,
   Cloud,
-  DomainSharp,
-  CloudServerOutlined,
+  Amilia,
+  CloudUploadAlt,
   Fire,
-  FlightInternational,
-  ToolKit,
+  Atom,
+  Tools,
 };
 ```
 

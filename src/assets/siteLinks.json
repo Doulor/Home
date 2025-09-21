@@ -15,17 +15,17 @@
     "link": "https://m.kugou.com/songlist/gcid_3zp6gggbz2z02a/?src_cid=3zp6gggbz2z02a&uid=1322756796&chl=message&cover=http://imge.kugou.com/stdmusic/20250213/20250213144553789083.jpg&iszlist=1"
   },
   {
-    "icon": "DomainSharp",
+    "icon": "Amilia",
     "name": "Domain",
     "link": "https://dash.domain.digitalplat.org/auth/login"
   },
   {
-    "icon": "CloudServerOutlined",
+    "icon": "CloudUploadAlt",
     "name": "简幻欢",
     "link": "https://simpfun.cn/console"
   },
   {
-    "icon": "FlightInternational",
+    "icon": "Atom",
     "name": "OpenFrp",
     "link": "https://console.openfrp.net/dashboard"
   },
@@ -35,7 +35,7 @@
     "link": "https://hot.imsyy.top/"
   },
   {
-    "icon": "ToolKit",
+    "icon": "Tools",
     "name": "小工具",
     "link": "https://tool.firef.dpdns.org/"
   }
