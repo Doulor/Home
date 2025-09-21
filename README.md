@@ -96,12 +96,13 @@ docker run -p 12445:12445 -d home
 import {
   Link,
   Blog,
-  CompactDisc,
+  AiResults,
   Cloud,
-  Compass,
-  Book,
+  DomainSharp,
+  CloudServerOutlined,
   Fire,
-  LaptopCode,
+  FlightInternational,
+  ToolKit,
 } from "@vicons/fa";
 
 ...
@@ -110,11 +111,12 @@ import {
 const siteIcon = {
   Blog,
   Cloud,
-  CompactDisc,
-  Compass,
-  Book,
+  FlightInternational,
+  ToolKit,
+  CloudServerOutlined,
   Fire,
-  LaptopCode,
+  AiResults,
+  DomainSharp,
 };
 ```
 
