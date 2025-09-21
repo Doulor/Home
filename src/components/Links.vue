@@ -63,14 +63,15 @@ const siteLinksList = computed(() => {
 
 // 网站链接图标
 const siteIcon = {
+  Link,
   Blog,
+  AiResults,
   Cloud,
-  FlightInternational,
-  ToolKit,
+  DomainSharp,
   CloudServerOutlined,
   Fire,
-  AiResults,
-  DomainSharp,
+  FlightInternational,
+  ToolKit,
 };
 
 // 链接跳转
