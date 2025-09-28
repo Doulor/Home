@@ -102,7 +102,7 @@ import {
   CloudUploadAlt,
   Fire,
   Music,
-  SurpriseRegular,
+  Surprise,
   Atom,
   Tools,
 } from "@vicons/fa";
