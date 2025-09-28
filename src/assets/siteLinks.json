@@ -35,8 +35,18 @@
     "link": "https://hot.imsyy.top/"
   },
   {
+    "icon": "SurpriseRegular",
+    "name": "图标中心",
+    "link": "https://hot.imsyy.top/"
+  },
+  {
+    "icon": "Music",
+    "name": "音乐解析",
+    "link": "https://tools.jixiaob.cn/index2.php"
+  },
+  {
     "icon": "Tools",
-    "name": "小工具",
+    "name": "帖子生成",
     "link": "https://tool.firef.dpdns.org/"
   }
 ]

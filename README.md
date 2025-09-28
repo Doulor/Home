@@ -101,6 +101,8 @@ import {
   Amilia,
   CloudUploadAlt,
   Fire,
+  Music,
+  SurpriseRegular,
   Atom,
   Tools,
 } from "@vicons/fa";
