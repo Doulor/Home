@@ -70,6 +70,8 @@ const siteIcon = {
   Amilia,
   CloudUploadAlt,
   Fire,
+  Music,
+  Surprise,
   Atom,
   Tools,
 };
