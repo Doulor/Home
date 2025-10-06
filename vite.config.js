@@ -94,6 +94,14 @@ export default ({ mode }) =>
     server: {
       port: "3000",
       open: true,
+      // 添加代理配置解决CORS问题
+      proxy: {
+        "/bing-suggest": {
+          target: "https://api.bing.com",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/bing-suggest/, "/osjson.aspx")
+        }
+      }
     },
     resolve: {
       alias: [
