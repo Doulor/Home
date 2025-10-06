@@ -40,6 +40,10 @@
       <div class="search-hint" v-if="searchText && suggestError && !isLoading">
         <span class="error-text">⚠️ 联想加载失败，可直接搜索</span>
       </div>
+      <!-- 环境变量配置错误提示 -->
+      <div class="search-hint" v-if="showEnvError && !isLoading">
+        <span class="error-text">⚠️ 未配置代理地址，请检查环境变量</span>
+      </div>
       <div 
         class="suggestions" 
         v-if="shouldShowSuggestions"
@@ -75,13 +79,26 @@ const isFocused = ref(false);
 const isMouseDownOnSuggestion = ref(false);
 const isLoading = ref(false); // 加载状态
 const suggestError = ref(false); // 错误状态
+const showEnvError = ref(false); // 环境变量配置错误提示
 let debounceTimer = null;
 let globalKeydownListener = null;
 let abortController = null; // 用于取消请求
 
+// 初始化时检测环境变量
+onMounted(() => {
+  // 开发环境不检测，生产环境检测
+  if (import.meta.env.PROD) {
+    const proxyUrl = import.meta.env.VITE_BING_PROXY_URL;
+    if (!proxyUrl || proxyUrl.trim() === "") {
+      console.warn("未配置VITE_BING_PROXY_URL环境变量，联想功能将无法使用");
+      showEnvError.value = true;
+    }
+  }
+});
+
 // 控制联想框显示
 const shouldShowSuggestions = computed(() => {
-  return isFocused.value && suggestions.value.length > 0 && !isLoading.value && !suggestError.value;
+  return isFocused.value && suggestions.value.length > 0 && !isLoading.value && !suggestError.value && !showEnvError.value;
 });
 
 // 输入处理
@@ -102,7 +119,7 @@ const handleInput = (e) => {
   }, 300);
 };
 
-// 获取搜索建议（通过本地代理请求）
+// 获取搜索建议（自动适配本地/线上环境）
 const fetchSuggestions = async (keyword) => {
   // 重置状态
   isLoading.value = true;
@@ -113,24 +130,45 @@ const fetchSuggestions = async (keyword) => {
   try {
     if (!isFocused.value) return;
 
-    // 创建取消控制器
+    // 1. 确定请求地址（优先使用环境变量，本地开发用代理）
+    const proxyUrl = import.meta.env.VITE_BING_PROXY_URL || '/bing-suggest';
+    
+    // 2. 检查地址有效性
+    if (!proxyUrl || proxyUrl.trim() === "") {
+      showEnvError.value = true;
+      isLoading.value = false;
+      return;
+    }
+    
+    // 3. 创建取消控制器
     abortController = new AbortController();
     
-    // 使用本地代理地址 /bing-suggest（由vite.config.js配置转发）
+    // 4. 发起请求
     const response = await fetch(
-      `/bing-suggest?query=${encodeURIComponent(keyword)}`,
+      `${proxyUrl}?query=${encodeURIComponent(keyword)}`,
       {
         method: "GET",
         signal: abortController.signal,
-        timeout: 5000
+        timeout: 5000,
+        headers: {
+          'Accept': 'application/json'
+        }
       }
     );
 
+    // 5. 检查响应状态
     if (!response.ok) {
-      throw new Error(`请求失败: ${response.status}`);
+      throw new Error(`请求失败: ${response.status} ${response.statusText}`);
     }
 
-    // 解析Bing返回的建议数据
+    // 6. 解析响应内容（先检查是否为JSON）
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+    }
+
+    // 7. 解析Bing返回的建议数据
     const [, suggestionsList] = await response.json();
     
     if (Array.isArray(suggestionsList)) {
