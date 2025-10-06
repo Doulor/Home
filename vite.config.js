@@ -94,14 +94,23 @@ export default ({ mode }) =>
     server: {
       port: "3000",
       open: true,
-      // 添加代理配置解决CORS问题
+      // 正确的 Bing 代理配置
       proxy: {
         "/bing-suggest": {
           target: "https://api.bing.com",
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/bing-suggest/, "/osjson.aspx")
-        }
-      }
+          rewrite: (path) => path.replace(/^\/bing-suggest/, "/osjson.aspx"),
+          // 模拟浏览器请求头，避免被 Bing 拦截
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyReq) => {
+              proxyReq.setHeader(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+              );
+            });
+          },
+        },
+      },
     },
     resolve: {
       alias: [

@@ -38,7 +38,7 @@
       </div>
       <!-- 错误提示 -->
       <div class="search-hint" v-if="searchText && suggestError && !isLoading">
-        <span class="error-text">⚠️ 联想建议加载失败，可直接搜索</span>
+        <span class="error-text">⚠️ 联想加载失败，可直接搜索</span>
       </div>
       <div 
         class="suggestions" 
@@ -71,16 +71,13 @@ const searchText = ref("");
 const suggestions = ref([]);
 const hoverIndex = ref(-1);
 const searchInput = ref(null);
-const isFocused = ref(false); // 默认不聚焦
+const isFocused = ref(false);
 const isMouseDownOnSuggestion = ref(false);
-const isLoading = ref(false); // 加载中状态（新增）
-const suggestError = ref(false); // 错误状态（新增）
+const isLoading = ref(false); // 加载状态
+const suggestError = ref(false); // 错误状态
 let debounceTimer = null;
 let globalKeydownListener = null;
-
-// 【关键修改1】替换成你的 Cloudflare Worker 域名！！！
-// 例子：const BING_PROXY_URL = "https://bing-proxy-yourname.workers.dev";
-const BING_PROXY_URL = "https://bing-proxy.2737855297.workers.dev"; // 必须改这里！
+let abortController = null; // 用于取消请求
 
 // 控制联想框显示
 const shouldShowSuggestions = computed(() => {
@@ -94,8 +91,9 @@ const handleInput = (e) => {
   
   if (value.length < 2) {
     suggestions.value = [];
-    suggestError.value = false; // 清空错误
-    isLoading.value = false; // 停止加载
+    suggestError.value = false;
+    isLoading.value = false;
+    cancelPendingRequest(); // 取消未完成的请求
     return;
   }
   
@@ -104,35 +102,37 @@ const handleInput = (e) => {
   }, 300);
 };
 
-// 获取搜索建议（【关键修改2】请求 Worker 地址）
+// 获取搜索建议（通过本地代理请求）
 const fetchSuggestions = async (keyword) => {
   // 重置状态
   isLoading.value = true;
   suggestError.value = false;
   suggestions.value = [];
-
+  cancelPendingRequest(); // 取消之前的请求
+  
   try {
     if (!isFocused.value) return;
 
-    // 1. 请求你的 Cloudflare Worker（不再直接请求 Bing）
-    const response = await fetch(`${BING_PROXY_URL}?query=${encodeURIComponent(keyword)}`, {
-      method: "GET",
-      timeout: 8000, // 8秒超时保护
-      headers: {
-        "Content-Type": "application/json"
+    // 创建取消控制器
+    abortController = new AbortController();
+    
+    // 使用本地代理地址 /bing-suggest（由vite.config.js配置转发）
+    const response = await fetch(
+      `/bing-suggest?query=${encodeURIComponent(keyword)}`,
+      {
+        method: "GET",
+        signal: abortController.signal,
+        timeout: 5000
       }
-    });
+    );
 
-    // 2. 检查请求是否成功
     if (!response.ok) {
-      throw new Error(`请求失败，状态码：${response.status}`);
+      throw new Error(`请求失败: ${response.status}`);
     }
 
-    // 3. 解析 Bing 返回的数据（格式：[关键词, 联想列表]）
-    const bingData = await response.json();
-    const [, suggestionsList] = bingData; // 提取联想列表
-
-    // 4. 更新联想数据
+    // 解析Bing返回的建议数据
+    const [, suggestionsList] = await response.json();
+    
     if (Array.isArray(suggestionsList)) {
       suggestions.value = suggestionsList;
     } else {
@@ -140,14 +140,23 @@ const fetchSuggestions = async (keyword) => {
     }
 
   } catch (err) {
-    // 错误处理（避免控制台爆红影响用户）
-    console.error("获取搜索建议失败:", err);
-    suggestError.value = true;
-    suggestions.value = [];
-    ElMessage.warning("联想建议加载失败，可直接输入关键词搜索");
+    // 忽略用户主动取消的请求错误
+    if (err.name !== 'AbortError') {
+      console.error("获取搜索建议失败:", err);
+      suggestError.value = true;
+      ElMessage.warning("联想建议加载失败，可直接搜索");
+    }
   } finally {
-    // 无论成功/失败，都停止加载
     isLoading.value = false;
+    abortController = null;
+  }
+};
+
+// 取消未完成的请求
+const cancelPendingRequest = () => {
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
   }
 };
 
@@ -172,7 +181,7 @@ const handleSearch = () => {
     ElMessage.info("请输入搜索内容");
     return;
   }
-  // 跳转到 Bing 搜索结果页（不变）
+  // 跳转到Bing搜索结果页
   const searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(searchValue)}`;
   window.open(searchUrl, "_blank");
 };
@@ -196,6 +205,7 @@ const handleEsc = () => {
   hoverIndex.value = -1;
   suggestError.value = false;
   isLoading.value = false;
+  cancelPendingRequest();
   searchInput.value?.blur();
   isFocused.value = false;
 };
@@ -217,20 +227,21 @@ const handleBlur = () => {
     isFocused.value = false;
     suggestions.value = [];
     isLoading.value = false;
+    cancelPendingRequest();
   }, 200);
 };
 
-// 全局键盘监听：实现不点击也能输入
+// 全局键盘监听
 const setupGlobalKeyListener = () => {
   globalKeydownListener = (e) => {
-    // 忽略已聚焦元素的输入
-    if (document.activeElement.tagName === 'INPUT' || 
-        document.activeElement.tagName === 'TEXTAREA' ||
-        document.activeElement.isContentEditable) {
+    if (
+      document.activeElement.tagName === 'INPUT' ||
+      document.activeElement.tagName === 'TEXTAREA' ||
+      document.activeElement.isContentEditable
+    ) {
       return;
     }
 
-    // 处理退格键
     if (e.key === 'Backspace' && searchText.value) {
       e.preventDefault();
       searchText.value = searchText.value.slice(0, -1);
@@ -243,17 +254,14 @@ const setupGlobalKeyListener = () => {
       return;
     }
 
-    // 处理Enter键
     if (e.key === 'Enter' && searchText.value.trim()) {
       e.preventDefault();
       handleSearch();
       return;
     }
 
-    // 处理普通字符（忽略功能键）
     if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault();
-      // 如果尚未聚焦，自动激活输入框但不显示光标
       if (!isFocused.value) {
         isFocused.value = true;
       }
@@ -281,10 +289,11 @@ watch(searchText, (newVal) => {
     hoverIndex.value = -1;
     suggestError.value = false;
     isLoading.value = false;
+    cancelPendingRequest();
   }
 });
 
-// 组件挂载：默认不聚焦，设置全局监听
+// 组件挂载
 onMounted(() => {
   setupGlobalKeyListener();
 });
@@ -293,6 +302,7 @@ onMounted(() => {
 onUnmounted(() => {
   clearTimeout(debounceTimer);
   removeGlobalKeyListener();
+  cancelPendingRequest();
 });
 </script>
 
@@ -318,8 +328,8 @@ onUnmounted(() => {
   padding: 10px 16px;
   border: none;
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1); /* 默认背景稍暗 */
-  color: rgba(255, 255, 255, 0.8); /* 默认文字稍淡 */
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 1rem;
   outline: none;
   transition: all 0.3s;
@@ -329,19 +339,17 @@ onUnmounted(() => {
   }
 }
 
-/* 聚焦状态的输入框样式 */
 .search-input--focused {
   background-color: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
 
-/* 搜索按钮默认样式 */
 .search-btn {
   width: 40px;
   height: 40px;
   border: none;
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1); /* 默认按钮背景 */
+  background-color: rgba(255, 255, 255, 0.1);
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
@@ -353,7 +361,6 @@ onUnmounted(() => {
   }
 }
 
-/* 聚焦状态：按钮变蓝 */
 .search-btn--focused {
   background-color: rgba(64, 158, 255, 0.3);
   border: 1px solid rgba(64, 158, 255, 0.5);
@@ -370,17 +377,14 @@ onUnmounted(() => {
   text-align: right;
 }
 
-/* 加载中提示样式 */
 .loading-text {
-  color: #409eff; /* 浅蓝色提示 */
+  color: #409eff;
 }
 
-/* 错误提示样式 */
 .error-text {
-  color: #ff4d4f; /* 红色错误提示 */
+  color: #ff4d4f;
 }
 
-/* 联想框样式 */
 .suggestions {
   position: absolute;
   top: 50px;
@@ -402,7 +406,6 @@ onUnmounted(() => {
   cursor: pointer;
   transition: background-color 0.2s;
   color: rgba(255, 255, 255, 1);
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.2);
   text-align: left;
   font-size: 0.95rem;
   font-weight: 500;
@@ -440,20 +443,13 @@ onUnmounted(() => {
     height: 36px;
   }
 
-  .search-btn--focused {
-    background-color: rgba(64, 158, 255, 0.35);
-  }
-
   .suggestions {
     top: 44px;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(0, 0, 0, 0.15);
   }
 
   .suggestion-item {
     padding: 8px 12px;
     font-size: 0.9rem;
-    font-weight: 400;
   }
 }
 </style>
