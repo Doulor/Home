@@ -29,8 +29,16 @@
           />
         </button>
       </div>
-      <div class="search-hint" v-if="searchText && !suggestions.length && isFocused">
+      <div class="search-hint" v-if="searchText && !suggestions.length && isFocused && !isLoading">
         按 Enter 键或点击图标搜索
+      </div>
+      <!-- 加载中提示 -->
+      <div class="search-hint" v-if="searchText && isLoading">
+        <span class="loading-text">加载联想建议中...</span>
+      </div>
+      <!-- 错误提示 -->
+      <div class="search-hint" v-if="searchText && suggestError && !isLoading">
+        <span class="error-text">⚠️ 联想建议加载失败，可直接搜索</span>
       </div>
       <div 
         class="suggestions" 
@@ -65,12 +73,18 @@ const hoverIndex = ref(-1);
 const searchInput = ref(null);
 const isFocused = ref(false); // 默认不聚焦
 const isMouseDownOnSuggestion = ref(false);
+const isLoading = ref(false); // 加载中状态（新增）
+const suggestError = ref(false); // 错误状态（新增）
 let debounceTimer = null;
 let globalKeydownListener = null;
 
+// 【关键修改1】替换成你的 Cloudflare Worker 域名！！！
+// 例子：const BING_PROXY_URL = "https://bing-proxy-yourname.workers.dev";
+const BING_PROXY_URL = "https://bing-proxy.2737855297.workers.dev"; // 必须改这里！
+
 // 控制联想框显示
 const shouldShowSuggestions = computed(() => {
-  return isFocused.value && suggestions.value.length > 0;
+  return isFocused.value && suggestions.value.length > 0 && !isLoading.value && !suggestError.value;
 });
 
 // 输入处理
@@ -80,6 +94,8 @@ const handleInput = (e) => {
   
   if (value.length < 2) {
     suggestions.value = [];
+    suggestError.value = false; // 清空错误
+    isLoading.value = false; // 停止加载
     return;
   }
   
@@ -88,19 +104,50 @@ const handleInput = (e) => {
   }, 300);
 };
 
-// 获取搜索建议
+// 获取搜索建议（【关键修改2】请求 Worker 地址）
 const fetchSuggestions = async (keyword) => {
+  // 重置状态
+  isLoading.value = true;
+  suggestError.value = false;
+  suggestions.value = [];
+
   try {
     if (!isFocused.value) return;
-    
-    const response = await fetch(`/bing-suggest?query=${encodeURIComponent(keyword)}`);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    
-    const [, suggestionsList] = await response.json();
-    suggestions.value = suggestionsList || [];
+
+    // 1. 请求你的 Cloudflare Worker（不再直接请求 Bing）
+    const response = await fetch(`${BING_PROXY_URL}?query=${encodeURIComponent(keyword)}`, {
+      method: "GET",
+      timeout: 8000, // 8秒超时保护
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    // 2. 检查请求是否成功
+    if (!response.ok) {
+      throw new Error(`请求失败，状态码：${response.status}`);
+    }
+
+    // 3. 解析 Bing 返回的数据（格式：[关键词, 联想列表]）
+    const bingData = await response.json();
+    const [, suggestionsList] = bingData; // 提取联想列表
+
+    // 4. 更新联想数据
+    if (Array.isArray(suggestionsList)) {
+      suggestions.value = suggestionsList;
+    } else {
+      suggestions.value = [];
+    }
+
   } catch (err) {
+    // 错误处理（避免控制台爆红影响用户）
     console.error("获取搜索建议失败:", err);
+    suggestError.value = true;
     suggestions.value = [];
+    ElMessage.warning("联想建议加载失败，可直接输入关键词搜索");
+  } finally {
+    // 无论成功/失败，都停止加载
+    isLoading.value = false;
   }
 };
 
@@ -120,14 +167,19 @@ const handleSuggestionClick = (text, event) => {
 
 // 搜索执行
 const handleSearch = () => {
-  if (!searchText.value.trim()) return;
-  const searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(searchText.value)}`;
+  const searchValue = searchText.value.trim();
+  if (!searchValue) {
+    ElMessage.info("请输入搜索内容");
+    return;
+  }
+  // 跳转到 Bing 搜索结果页（不变）
+  const searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(searchValue)}`;
   window.open(searchUrl, "_blank");
 };
 
 // 键盘导航
 const handleKeyDown = (direction) => {
-  if (!suggestions.length) return;
+  if (!suggestions.length || isLoading.value || suggestError.value) return;
   
   const len = suggestions.length;
   hoverIndex.value = direction === 'down' 
@@ -142,6 +194,8 @@ const handleEsc = () => {
   searchText.value = "";
   suggestions.value = [];
   hoverIndex.value = -1;
+  suggestError.value = false;
+  isLoading.value = false;
   searchInput.value?.blur();
   isFocused.value = false;
 };
@@ -162,6 +216,7 @@ const handleBlur = () => {
   setTimeout(() => {
     isFocused.value = false;
     suggestions.value = [];
+    isLoading.value = false;
   }, 200);
 };
 
@@ -183,6 +238,7 @@ const setupGlobalKeyListener = () => {
         fetchSuggestions(searchText.value);
       } else {
         suggestions.value = [];
+        suggestError.value = false;
       }
       return;
     }
@@ -223,13 +279,14 @@ watch(searchText, (newVal) => {
   if (!newVal) {
     suggestions.value = [];
     hoverIndex.value = -1;
+    suggestError.value = false;
+    isLoading.value = false;
   }
 });
 
 // 组件挂载：默认不聚焦，设置全局监听
 onMounted(() => {
   setupGlobalKeyListener();
-  // 移除自动聚焦代码，实现默认不激活状态
 });
 
 // 组件卸载
@@ -313,6 +370,16 @@ onUnmounted(() => {
   text-align: right;
 }
 
+/* 加载中提示样式 */
+.loading-text {
+  color: #409eff; /* 浅蓝色提示 */
+}
+
+/* 错误提示样式 */
+.error-text {
+  color: #ff4d4f; /* 红色错误提示 */
+}
+
 /* 联想框样式 */
 .suggestions {
   position: absolute;
@@ -390,4 +457,3 @@ onUnmounted(() => {
   }
 }
 </style>
-    
