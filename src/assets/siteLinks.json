@@ -40,6 +40,11 @@
     "link": "https://www.xicons.org"
   },
   {
+    "icon": "Monero",
+    "name": "Modrinth",
+    "link": "https://modrinth.com/mods"
+  },
+  {
     "icon": "Music",
     "name": "音乐解析",
     "link": "https://tools.jixiaob.cn/index2.php"
