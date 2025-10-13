@@ -19,10 +19,20 @@
     "name": "Domain",
     "link": "https://dash.domain.digitalplat.org/auth/login"
   },
+ {
+    "icon": "KissWinkHeart",
+    "name": "Modrinth",
+    "link": "https://modrinth.com/mods"
+  },
   {
     "icon": "CloudUploadAlt",
     "name": "简幻欢",
     "link": "https://simpfun.cn/console"
+  },
+    {
+    "icon": "Atom",
+    "name": "SakuraFRP",
+    "link": "https://www.natfrp.com/user/"
   },
   {
     "icon": "Atom",
@@ -38,11 +48,6 @@
     "icon": "Surprise",
     "name": "图标中心",
     "link": "https://www.xicons.org"
-  },
-  {
-    "icon": "PiedPiper",
-    "name": "Modrinth",
-    "link": "https://modrinth.com/mods"
   },
   {
     "icon": "Music",
