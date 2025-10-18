@@ -40,7 +40,7 @@
     "link": "https://console.openfrp.net/dashboard"
   },
   {
-    "icon": "DatabaseFilled",
+    "icon": "Database",
     "name": "Supabase",
     "link": "https://supabase.com/dashboard/project/nospgcbugwfwspqadjta/editor/17882?schema=public"
   },
