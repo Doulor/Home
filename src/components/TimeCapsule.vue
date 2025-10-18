@@ -52,8 +52,6 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .time-capsule {
   width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
   .title {
     display: flex;
     flex-direction: row;
@@ -71,86 +69,6 @@ onBeforeUnmount(() => {
     display: block;
     margin: 1rem 0rem 0.5rem 0rem;
     font-size: 0.95rem;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-  }
-}
-
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .time-capsule {
-    padding: 0.5rem;
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    margin-right: calc(-50vw + 50%);
-    
-    .title {
-      margin: 0.1rem 0 1rem;
-      font-size: 1rem;
-      
-      .i-icon {
-        margin-right: 4px;
-      }
-    }
-    
-    .text {
-      margin: 0.8rem 0rem 0.4rem 0rem;
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
-    
-    /* 调整 Element UI 进度条在移动端的显示 */
-    :deep(.el-progress) {
-      margin: 0.3rem 0;
-    }
-    
-    :deep(.el-progress-bar) {
-      padding-right: 0;
-    }
-    
-    :deep(.el-progress__text) {
-      font-size: 0.75rem;
-    }
-  }
-}
-
-/* 超小屏手机适配 */
-@media (max-width: 480px) {
-  .time-capsule {
-    padding: 0.25rem;
-    
-    .title {
-      font-size: 0.95rem;
-      margin: 0 0 0.8rem;
-    }
-    
-    .text {
-      font-size: 0.8rem;
-      margin: 0.6rem 0rem 0.3rem 0rem;
-    }
-    
-    :deep(.el-progress__text) {
-      font-size: 0.7rem;
-    }
-  }
-}
-
-/* 修复极窄屏幕的显示问题 */
-@media (max-width: 320px) {
-  .time-capsule {
-    padding: 0.15rem;
-    
-    .title {
-      font-size: 0.9rem;
-    }
-    
-    .text {
-      font-size: 0.75rem;
-    }
-    
-    :deep(.el-progress__text) {
-      font-size: 0.65rem;
-    }
   }
 }
 </style>

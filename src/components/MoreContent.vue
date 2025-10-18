@@ -354,9 +354,6 @@ function showError(message) {
   font-family: inherit;
   color: inherit;
   position: relative;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
 /* 修复访问计数文字颜色 */
@@ -372,8 +369,6 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.8);
   font-style: italic;
   font-weight: 500;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .counter-number {
@@ -396,8 +391,6 @@ function showError(message) {
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .message-card:hover {
@@ -410,8 +403,6 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.1rem;
   margin-bottom: 1rem;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .message-footer {
@@ -430,7 +421,6 @@ function showError(message) {
   cursor: pointer;
   color: rgba(255, 255, 255, 0.7);
   transition: all 0.2s;
-  flex-shrink: 0;
 }
 
 .refresh-btn:hover {
@@ -447,8 +437,6 @@ function showError(message) {
   backdrop-filter: blur(10px);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .empty-icon {
@@ -479,9 +467,6 @@ function showError(message) {
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
-  min-height: 44px; /* 移动端友好的最小触摸尺寸 */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .trigger-btn:hover {
@@ -530,7 +515,6 @@ function showError(message) {
   border: 1px solid rgba(255, 255, 255, 0.1);
   animation: modalSlideIn 0.3s ease-out;
   color: rgba(255, 255, 255, 0.9);
-  box-sizing: border-box;
 }
 
 .overlay-header {
@@ -547,8 +531,6 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.25rem;
   font-weight: 600;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .close-btn {
@@ -565,9 +547,6 @@ function showError(message) {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px; /* 移动端友好的最小触摸尺寸 */
-  min-width: 44px;
-  flex-shrink: 0;
 }
 
 .close-btn:hover {
@@ -588,7 +567,6 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.9);
   min-height: 150px;
   line-height: 1.5;
-  box-sizing: border-box;
 }
 
 .overlay-textarea:focus {
@@ -629,9 +607,6 @@ function showError(message) {
   cursor: pointer;
   transition: all 0.2s;
   font-weight: 500;
-  min-height: 44px; /* 移动端友好的最小触摸尺寸 */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .cancel-btn:hover {
@@ -652,9 +627,6 @@ function showError(message) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: 44px; /* 移动端友好的最小触摸尺寸 */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .submit-btn-overlay:hover:not(:disabled) {
@@ -680,78 +652,11 @@ function showError(message) {
   }
 }
 
-/* ==================== 移动端适配 ==================== */
+/* 响应式设计 */
 @media (max-width: 768px) {
-  .memory-capsule {
-    margin: 10px 0;
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    margin-right: calc(-50vw + 50%);
-    padding: 0 10px;
-    box-sizing: border-box;
-  }
-  
-  .visitor-counter {
-    padding: 0.8rem 0;
-    margin-bottom: 1rem;
-  }
-  
-  .counter-text {
-    font-size: 0.9rem;
-    padding: 0 5px;
-  }
-  
-  .counter-number {
-    font-size: 1rem;
-  }
-  
-  .message-section {
-    padding: 0.5rem;
-  }
-  
-  .message-card {
-    padding: 1rem;
-    border-radius: 10px;
-  }
-  
-  .message-content {
-    font-size: 1rem;
-    line-height: 1.5;
-    margin-bottom: 0.8rem;
-  }
-  
-  .message-footer {
-    font-size: 0.8rem;
-    flex-wrap: wrap;
-  }
-  
-  .empty-state {
-    padding: 1.5rem;
-    border-radius: 10px;
-  }
-  
-  .input-trigger {
-    margin: 1rem 0;
-  }
-  
-  .trigger-btn {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
-    width: 100%;
-    max-width: 280px;
-  }
-  
-  /* 覆盖式输入框的移动端优化 */
-  .overlay-input {
-    padding: 0.5rem;
-  }
-  
   .overlay-content {
     padding: 1.5rem;
-    margin: 0.5rem;
-    border-radius: 12px;
-    max-height: 85vh;
-    width: calc(100vw - 20px);
+    margin: 1rem;
   }
   
   .overlay-header h3 {
@@ -761,18 +666,11 @@ function showError(message) {
   .overlay-textarea {
     padding: 1rem;
     min-height: 120px;
-    font-size: 16px; /* 防止iOS缩放 */
-  }
-  
-  .overlay-actions {
-    flex-direction: column;
-    gap: 1rem;
   }
   
   .action-buttons {
     flex-direction: column;
     width: 100%;
-    gap: 0.5rem;
   }
   
   .cancel-btn,
@@ -781,101 +679,14 @@ function showError(message) {
     justify-content: center;
   }
   
+  .overlay-actions {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
   .char-count {
     text-align: center;
-    width: 100%;
-  }
-}
-
-/* 超小屏手机适配 */
-@media (max-width: 480px) {
-  .memory-capsule {
-    margin: 5px 0;
-    padding: 0 5px;
-  }
-  
-  .visitor-counter {
-    padding: 0.6rem 0;
-  }
-  
-  .counter-text {
-    font-size: 0.85rem;
-  }
-  
-  .message-section {
-    padding: 0.25rem;
-  }
-  
-  .message-card {
-    padding: 0.8rem;
-  }
-  
-  .message-content {
-    font-size: 0.95rem;
-  }
-  
-  .empty-state {
-    padding: 1rem;
-  }
-  
-  .empty-icon {
-    font-size: 1.5rem;
-  }
-  
-  .overlay-content {
-    padding: 1.25rem;
-    margin: 0.25rem;
-    width: calc(100vw - 10px);
-  }
-  
-  .overlay-header h3 {
-    font-size: 1rem;
-  }
-}
-
-/* 修复极窄屏幕的显示问题 */
-@media (max-width: 320px) {
-  .memory-capsule {
-    padding: 0 2px;
-  }
-  
-  .counter-text {
-    font-size: 0.8rem;
-  }
-  
-  .message-card {
-    padding: 0.6rem;
-  }
-  
-  .message-content {
-    font-size: 0.9rem;
-  }
-  
-  .overlay-content {
-    padding: 1rem;
-    margin: 0.1rem;
-    width: calc(100vw - 5px);
-  }
-  
-  .overlay-header h3 {
-    font-size: 0.95rem;
-  }
-  
-  .overlay-textarea {
-    padding: 0.8rem;
-    min-height: 100px;
-  }
-}
-
-/* 横屏手机适配 */
-@media (max-width: 768px) and (orientation: landscape) {
-  .overlay-content {
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-  
-  .overlay-textarea {
-    min-height: 100px;
   }
 }
 
