@@ -20,7 +20,7 @@
     "link": "https://dash.domain.digitalplat.org/auth/login"
   },
  {
-    "icon": "KissWinkHeart",
+    "icon": "Accessible",
     "name": "Modrinth",
     "link": "https://modrinth.com/mods"
   },
@@ -38,6 +38,11 @@
     "icon": "Atom",
     "name": "OpenFrp",
     "link": "https://console.openfrp.net/dashboard"
+  },
+  {
+    "icon": "DatabaseFilled",
+    "name": "Supabase",
+    "link": "https://supabase.com/dashboard/project/nospgcbugwfwspqadjta/editor/17882?schema=public"
   },
   {
     "icon": "Fire",
