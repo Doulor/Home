@@ -52,6 +52,8 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .time-capsule {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   .title {
     display: flex;
     flex-direction: row;
@@ -69,6 +71,8 @@ onBeforeUnmount(() => {
     display: block;
     margin: 1rem 0rem 0.5rem 0rem;
     font-size: 0.95rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 
@@ -76,6 +80,9 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .time-capsule {
     padding: 0.5rem;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
     
     .title {
       margin: 0.1rem 0 1rem;
@@ -124,6 +131,25 @@ onBeforeUnmount(() => {
     
     :deep(.el-progress__text) {
       font-size: 0.7rem;
+    }
+  }
+}
+
+/* 修复极窄屏幕的显示问题 */
+@media (max-width: 320px) {
+  .time-capsule {
+    padding: 0.15rem;
+    
+    .title {
+      font-size: 0.9rem;
+    }
+    
+    .text {
+      font-size: 0.75rem;
+    }
+    
+    :deep(.el-progress__text) {
+      font-size: 0.65rem;
     }
   }
 }

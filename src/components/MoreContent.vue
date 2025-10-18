@@ -354,6 +354,9 @@ function showError(message) {
   font-family: inherit;
   color: inherit;
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* 修复访问计数文字颜色 */
@@ -369,6 +372,8 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.8);
   font-style: italic;
   font-weight: 500;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .counter-number {
@@ -391,6 +396,8 @@ function showError(message) {
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .message-card:hover {
@@ -403,6 +410,8 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.1rem;
   margin-bottom: 1rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .message-footer {
@@ -421,6 +430,7 @@ function showError(message) {
   cursor: pointer;
   color: rgba(255, 255, 255, 0.7);
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .refresh-btn:hover {
@@ -437,6 +447,8 @@ function showError(message) {
   backdrop-filter: blur(10px);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .empty-icon {
@@ -468,6 +480,8 @@ function showError(message) {
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   min-height: 44px; /* 移动端友好的最小触摸尺寸 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .trigger-btn:hover {
@@ -516,6 +530,7 @@ function showError(message) {
   border: 1px solid rgba(255, 255, 255, 0.1);
   animation: modalSlideIn 0.3s ease-out;
   color: rgba(255, 255, 255, 0.9);
+  box-sizing: border-box;
 }
 
 .overlay-header {
@@ -532,6 +547,8 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1.25rem;
   font-weight: 600;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .close-btn {
@@ -550,6 +567,7 @@ function showError(message) {
   justify-content: center;
   min-height: 44px; /* 移动端友好的最小触摸尺寸 */
   min-width: 44px;
+  flex-shrink: 0;
 }
 
 .close-btn:hover {
@@ -570,6 +588,7 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.9);
   min-height: 150px;
   line-height: 1.5;
+  box-sizing: border-box;
 }
 
 .overlay-textarea:focus {
@@ -611,6 +630,8 @@ function showError(message) {
   transition: all 0.2s;
   font-weight: 500;
   min-height: 44px; /* 移动端友好的最小触摸尺寸 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .cancel-btn:hover {
@@ -632,6 +653,8 @@ function showError(message) {
   align-items: center;
   gap: 0.5rem;
   min-height: 44px; /* 移动端友好的最小触摸尺寸 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .submit-btn-overlay:hover:not(:disabled) {
@@ -661,6 +684,11 @@ function showError(message) {
 @media (max-width: 768px) {
   .memory-capsule {
     margin: 10px 0;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    padding: 0 10px;
+    box-sizing: border-box;
   }
   
   .visitor-counter {
@@ -670,6 +698,7 @@ function showError(message) {
   
   .counter-text {
     font-size: 0.9rem;
+    padding: 0 5px;
   }
   
   .counter-number {
@@ -693,6 +722,7 @@ function showError(message) {
   
   .message-footer {
     font-size: 0.8rem;
+    flex-wrap: wrap;
   }
   
   .empty-state {
@@ -721,6 +751,7 @@ function showError(message) {
     margin: 0.5rem;
     border-radius: 12px;
     max-height: 85vh;
+    width: calc(100vw - 20px);
   }
   
   .overlay-header h3 {
@@ -760,6 +791,7 @@ function showError(message) {
 @media (max-width: 480px) {
   .memory-capsule {
     margin: 5px 0;
+    padding: 0 5px;
   }
   
   .visitor-counter {
@@ -793,10 +825,45 @@ function showError(message) {
   .overlay-content {
     padding: 1.25rem;
     margin: 0.25rem;
+    width: calc(100vw - 10px);
   }
   
   .overlay-header h3 {
     font-size: 1rem;
+  }
+}
+
+/* 修复极窄屏幕的显示问题 */
+@media (max-width: 320px) {
+  .memory-capsule {
+    padding: 0 2px;
+  }
+  
+  .counter-text {
+    font-size: 0.8rem;
+  }
+  
+  .message-card {
+    padding: 0.6rem;
+  }
+  
+  .message-content {
+    font-size: 0.9rem;
+  }
+  
+  .overlay-content {
+    padding: 1rem;
+    margin: 0.1rem;
+    width: calc(100vw - 5px);
+  }
+  
+  .overlay-header h3 {
+    font-size: 0.95rem;
+  }
+  
+  .overlay-textarea {
+    padding: 0.8rem;
+    min-height: 100px;
   }
 }
 
