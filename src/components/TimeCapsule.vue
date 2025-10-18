@@ -71,4 +71,60 @@ onBeforeUnmount(() => {
     font-size: 0.95rem;
   }
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .time-capsule {
+    padding: 0.5rem;
+    
+    .title {
+      margin: 0.1rem 0 1rem;
+      font-size: 1rem;
+      
+      .i-icon {
+        margin-right: 4px;
+      }
+    }
+    
+    .text {
+      margin: 0.8rem 0rem 0.4rem 0rem;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    
+    /* 调整 Element UI 进度条在移动端的显示 */
+    :deep(.el-progress) {
+      margin: 0.3rem 0;
+    }
+    
+    :deep(.el-progress-bar) {
+      padding-right: 0;
+    }
+    
+    :deep(.el-progress__text) {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+/* 超小屏手机适配 */
+@media (max-width: 480px) {
+  .time-capsule {
+    padding: 0.25rem;
+    
+    .title {
+      font-size: 0.95rem;
+      margin: 0 0 0.8rem;
+    }
+    
+    .text {
+      font-size: 0.8rem;
+      margin: 0.6rem 0rem 0.3rem 0rem;
+    }
+    
+    :deep(.el-progress__text) {
+      font-size: 0.7rem;
+    }
+  }
+}
 </style>

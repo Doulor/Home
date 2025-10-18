@@ -467,6 +467,7 @@ function showError(message) {
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
+  min-height: 44px; /* 移动端友好的最小触摸尺寸 */
 }
 
 .trigger-btn:hover {
@@ -547,6 +548,8 @@ function showError(message) {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 44px; /* 移动端友好的最小触摸尺寸 */
+  min-width: 44px;
 }
 
 .close-btn:hover {
@@ -607,6 +610,7 @@ function showError(message) {
   cursor: pointer;
   transition: all 0.2s;
   font-weight: 500;
+  min-height: 44px; /* 移动端友好的最小触摸尺寸 */
 }
 
 .cancel-btn:hover {
@@ -627,6 +631,7 @@ function showError(message) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: 44px; /* 移动端友好的最小触摸尺寸 */
 }
 
 .submit-btn-overlay:hover:not(:disabled) {
@@ -652,11 +657,70 @@ function showError(message) {
   }
 }
 
-/* 响应式设计 */
+/* ==================== 移动端适配 ==================== */
 @media (max-width: 768px) {
+  .memory-capsule {
+    margin: 10px 0;
+  }
+  
+  .visitor-counter {
+    padding: 0.8rem 0;
+    margin-bottom: 1rem;
+  }
+  
+  .counter-text {
+    font-size: 0.9rem;
+  }
+  
+  .counter-number {
+    font-size: 1rem;
+  }
+  
+  .message-section {
+    padding: 0.5rem;
+  }
+  
+  .message-card {
+    padding: 1rem;
+    border-radius: 10px;
+  }
+  
+  .message-content {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 0.8rem;
+  }
+  
+  .message-footer {
+    font-size: 0.8rem;
+  }
+  
+  .empty-state {
+    padding: 1.5rem;
+    border-radius: 10px;
+  }
+  
+  .input-trigger {
+    margin: 1rem 0;
+  }
+  
+  .trigger-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  /* 覆盖式输入框的移动端优化 */
+  .overlay-input {
+    padding: 0.5rem;
+  }
+  
   .overlay-content {
     padding: 1.5rem;
-    margin: 1rem;
+    margin: 0.5rem;
+    border-radius: 12px;
+    max-height: 85vh;
   }
   
   .overlay-header h3 {
@@ -666,11 +730,18 @@ function showError(message) {
   .overlay-textarea {
     padding: 1rem;
     min-height: 120px;
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+  
+  .overlay-actions {
+    flex-direction: column;
+    gap: 1rem;
   }
   
   .action-buttons {
     flex-direction: column;
     width: 100%;
+    gap: 0.5rem;
   }
   
   .cancel-btn,
@@ -679,14 +750,65 @@ function showError(message) {
     justify-content: center;
   }
   
-  .overlay-actions {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
   .char-count {
     text-align: center;
+    width: 100%;
+  }
+}
+
+/* 超小屏手机适配 */
+@media (max-width: 480px) {
+  .memory-capsule {
+    margin: 5px 0;
+  }
+  
+  .visitor-counter {
+    padding: 0.6rem 0;
+  }
+  
+  .counter-text {
+    font-size: 0.85rem;
+  }
+  
+  .message-section {
+    padding: 0.25rem;
+  }
+  
+  .message-card {
+    padding: 0.8rem;
+  }
+  
+  .message-content {
+    font-size: 0.95rem;
+  }
+  
+  .empty-state {
+    padding: 1rem;
+  }
+  
+  .empty-icon {
+    font-size: 1.5rem;
+  }
+  
+  .overlay-content {
+    padding: 1.25rem;
+    margin: 0.25rem;
+  }
+  
+  .overlay-header h3 {
+    font-size: 1rem;
+  }
+}
+
+/* 横屏手机适配 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .overlay-content {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  
+  .overlay-textarea {
+    min-height: 100px;
   }
 }
 
