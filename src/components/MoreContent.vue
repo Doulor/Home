@@ -1,64 +1,104 @@
 <template>
   <div class="more-content">
-    <div class="iframe-container">
-      <!-- 添加滚动容器包裹iframe，避免内容溢出 -->
-      <div class="scroll-wrapper">
-        <iframe 
-          src="http://39.97.183.32:7500/"
-          width="100%" 
-          height="100%"
-          frameborder="0"
-          class="embedded-iframe"
-        ></iframe>
+    <!-- 仅保留小窗口显示，移除全屏功能 -->
+    <div 
+      class="capsule-container"
+      :class="{ 'active': isActive }"
+    >
+      <!-- 未激活时的提示 -->
+      <div v-if="!isActive" class="placeholder" @click="activate">
+        <p>点击进入时光胶囊内容</p>
+      </div>
+
+      <!-- 激活后显示网页（仅小窗口） -->
+      <div v-else class="content-wrapper">
+        <!-- 移除全屏按钮 -->
+        <div class="scroll-wrapper">
+          <iframe 
+            src="http://39.97.183.32:7500/"
+            width="100%" 
+            height="100%" 
+            frameborder="0"
+            class="embedded-iframe"
+          ></iframe>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
+<script setup>
+import { ref } from 'vue';
+
+// 仅保留激活状态控制（无需全屏状态）
+const isActive = ref(false);
+
+// 激活网页显示
+const activate = () => {
+  isActive.value = true;
+};
+</script>
+
 <style lang="scss" scoped>
 .more-content {
   margin-top: 30px;
   width: 100%;
-  // 限制整体最大高度，与时光胶囊所在容器高度协调
-  max-height: 600px; 
   display: flex;
   justify-content: center;
   padding: 0 16px;
-  // 避免容器自身溢出
-  overflow: hidden;
 }
 
-.iframe-container {
+// 胶囊容器基础样式（仅小窗口）
+.capsule-container {
   width: 100%;
   max-width: 900px;
-  background-color: #00000040;
+  min-height: 320px; /* 未激活时的高度（已优化） */
+  background-color: #00000040; /* 灰色透明背景框 */
   backdrop-filter: blur(10px);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  transition: transform 0.3s;
-  // 容器高度继承父元素，避免无限制扩展
-  height: 100%;
-
-  &:hover {
-    transform: scale(1.01);
-  }
+  padding: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden; /* 严格限制内容不溢出 */
 }
 
-// 滚动容器：限制高度并处理溢出
+// 未激活提示样式（保持优化后的状态）
+.placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+}
+
+// 激活后样式（仅小窗口，无全屏）
+.capsule-container.active {
+  cursor: default;
+  min-height: 420px; /* 激活后高度（控制背景框不超出） */
+  padding: 16px;
+}
+
+// 滚动容器（确保内容在小窗口内滚动）
 .scroll-wrapper {
   width: 100%;
-  // 减去内边距后的可用高度（父容器padding 16px*2）
-  height: calc(100% - 32px); 
-  overflow: auto;  // 内容超出时显示滚动条
+  height: 100%; /* 充满激活后的容器高度 */
+  overflow: auto; /* 内容过长时内部滚动 */
   border-radius: 4px;
+  background-color: #121212;
 }
 
+// iframe样式（适配小窗口）
 .embedded-iframe {
-  min-height: 400px;  // 保证最小高度，避免内容过短时容器塌陷
+  width: 100%;
+  height: 100%;
+  min-height: 380px; /* 匹配激活后容器高度，避免空白 */
 }
 
-// 滚动条样式统一（与全局风格匹配）
+// 滚动条样式（保持美观）
 .scroll-wrapper::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -75,21 +115,21 @@
 
 // 移动端适配
 @media (max-width: 768px) {
-  .more-content {
-    margin-top: 20px;
-    max-height: 500px;  // 移动端降低最大高度
+  .capsule-container {
+    padding: 10px;
+    min-height: 300px;
   }
-  
-  .iframe-container {
-    padding: 12px;
+
+  .placeholder {
+    min-height: 300px;
   }
-  
-  .scroll-wrapper {
-    height: calc(100% - 24px);  // 对应移动端内边距调整
+
+  .capsule-container.active {
+    min-height: 380px;
   }
-  
+
   .embedded-iframe {
-    min-height: 350px;
+    min-height: 340px;
   }
 }
 </style>
