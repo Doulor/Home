@@ -168,7 +168,8 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    top: 84%;
+    top: auto;
+    bottom: 20px;
     left: calc(50% - 28px);
     width: 56px;
     height: 34px;
@@ -177,6 +178,7 @@ onBeforeUnmount(() => {
     border-radius: 6px;
     transition: transform 0.3s;
     animation: fade 0.5s;
+    z-index: 1;
     &:active {
       transform: scale(0.95);
     }
