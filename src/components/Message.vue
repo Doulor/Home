@@ -56,7 +56,18 @@ const descriptionText = reactive({
 
 // 切换右侧功能区
 const changeBox = () => {
-  store.boxOpenState = !store.boxOpenState;
+  if (store.getInnerWidth >= 990) {
+    store.boxOpenState = !store.boxOpenState;
+  } else {
+    ElMessage({
+      message: "当前页面宽度不足以开启盒子",
+      grouping: true,
+      icon: h(Error, {
+        theme: "filled",
+        fill: "#efefef",
+      }),
+    });
+  }
 };
 
 // 监听状态变化

@@ -20,7 +20,7 @@
       <Icon
         class="menu"
         size="24"
-        v-show="!store.backgroundShow && !store.boxOpenState"
+        v-show="!store.backgroundShow"
         @click="store.mobileOpenState = !store.mobileOpenState"
       >
         <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
@@ -168,8 +168,7 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    top: auto;
-    bottom: 20px;
+    top: 84%;
     left: calc(50% - 28px);
     width: 56px;
     height: 34px;
@@ -178,7 +177,6 @@ onBeforeUnmount(() => {
     border-radius: 6px;
     transition: transform 0.3s;
     animation: fade 0.5s;
-    z-index: 100;
     &:active {
       transform: scale(0.95);
     }

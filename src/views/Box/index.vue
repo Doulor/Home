@@ -82,12 +82,5 @@ const closeShow = ref(false);
     width: 100%;
     height: 100%;
   }
-
-  @media (max-width: 720px) {
-    max-width: 100%;
-    margin: 0 10px;
-    height: 70%;
-    width: calc(100% - 20px);
-  }
 }
 </style>
