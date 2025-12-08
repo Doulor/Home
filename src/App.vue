@@ -65,17 +65,14 @@ const loadComplete = () => {
 };
 
 // 监听宽度变化
-let previousWidth = null;
 watch(
   () => store.innerWidth,
   (value) => {
-    // 只有在桌面端从大屏幕变小屏幕时才关闭盒子，防止布局问题
-    // 但允许在移动设备上打开盒子
-    if (previousWidth !== null && value < 720 && previousWidth >= 720 && store.boxOpenState) {
-      // 仅当从大于等于720px变到小于720px时关闭盒子
+    // 移除990px限制，允许在移动端打开时光胶囊
+    // 保持原来的逻辑仅在极小屏幕（如<600px）时关闭，避免布局问题
+    if (value < 600 && store.boxOpenState) {
       store.boxOpenState = false;
     }
-    previousWidth = value;
   },
 );
 
