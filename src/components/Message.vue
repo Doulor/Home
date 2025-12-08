@@ -149,7 +149,7 @@ watch(
     }
     @media (max-width: 720px) {
       max-width: 100%;
-      pointer-events: none;
+      /* 移除pointer-events: none以允许移动端点击 */
     }
   }
   @media (max-width: 390px) {

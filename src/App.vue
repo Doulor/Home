@@ -65,12 +65,17 @@ const loadComplete = () => {
 };
 
 // 监听宽度变化
+let previousWidth = null;
 watch(
   () => store.innerWidth,
   (value) => {
-    if (value < 990) {
+    // 只有在桌面端从大屏幕变小屏幕时才关闭盒子，防止布局问题
+    // 但允许在移动设备上打开盒子
+    if (previousWidth !== null && value < 720 && previousWidth >= 720 && store.boxOpenState) {
+      // 仅当从大于等于720px变到小于720px时关闭盒子
       store.boxOpenState = false;
     }
+    previousWidth = value;
   },
 );
 
@@ -178,7 +183,7 @@ onBeforeUnmount(() => {
     border-radius: 6px;
     transition: transform 0.3s;
     animation: fade 0.5s;
-    z-index: 100;
+    z-index: 1000;  // 提高z-index确保在最顶层
     &:active {
       transform: scale(0.95);
     }
