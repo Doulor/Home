@@ -202,10 +202,10 @@ onBeforeUnmount(() => {
   .i-icon {
     transform: translateY(2px);
   }
-  @media (min-width: 1201px) {
+  @media (min-width: 1400px) {
     display: none !important;  /* 在大屏幕上隐藏，因为左右两部分已经同时可见 */
   }
-  @media (max-width: 1200px) {
+  @media (max-width: 1399px) {
     display: flex !important;  /* 在中等屏幕及以下显示 */
   }
 }
