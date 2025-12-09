@@ -180,7 +180,9 @@ onBeforeUnmount(() => {
     border-radius: 6px;
     transition: transform 0.3s;
     animation: fade 0.5s;
-    z-index: 1000;  // 提高z-index确保在最顶层
+    z-index: 2000;  // 提高z-index to ensure it's above all other elements
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     &:active {
       transform: scale(0.95);
     }

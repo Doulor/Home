@@ -18,12 +18,14 @@ const store = mainStore();
   width: 50%;
   margin-right: 10px;
   transform: translateY(20px);
+  padding-bottom: 80px; /* Add padding to avoid content being hidden behind the floating menu button */
   &.hidden {
     display: none;
   }
   @media (max-width: 720px) {
     margin-right: 0;
     width: 100%;
+    padding-bottom: 80px; /* Maintain padding on mobile */
   }
 }
 </style>

@@ -111,12 +111,14 @@ onMounted(() => {
     width: calc(100% + 20px);
     padding: 5px 10px 0;
     z-index: 0;
+    margin-bottom: 10px; /* Add margin to ensure space for floating button */
     .swiper-slide {
       height: 100%;
     }
     .swiper-pagination {
       position: static;
       margin-top: 4px;
+      margin-bottom: 20px; /* Add margin to keep pagination away from floating button */
       :deep(.swiper-pagination-bullet) {
         background-color: #fff;
         width: 18px;

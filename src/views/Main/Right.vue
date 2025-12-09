@@ -36,6 +36,7 @@ const siteUrl = computed(() => {
   // flex: 1 0 0%;
   width: 50%;
   margin-left: 0.75rem;
+  padding-bottom: 80px; /* Add padding to avoid content being hidden behind the floating menu button */
   .logo {
     width: 100%;
     font-family: "Pacifico-Regular";
@@ -56,6 +57,7 @@ const siteUrl = computed(() => {
   @media (max-width: 720px) {
     margin-left: 0;
     width: 100%;
+    padding-bottom: 80px; /* Maintain padding on mobile */
     &.hidden {
       display: none;
     }
