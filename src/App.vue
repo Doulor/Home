@@ -172,7 +172,8 @@ onBeforeUnmount(() => {
     align-items: center;
     top: auto;
     bottom: 20px;
-    left: calc(50% - 28px);
+    left: 50%;
+    transform: translateX(-50%); /* 使用transform居中而不是计算left值 */
     width: 56px;
     height: 34px;
     background: rgb(0 0 0 / 20%);
@@ -184,7 +185,7 @@ onBeforeUnmount(() => {
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     &:active {
-      transform: scale(0.95);
+      transform: translateX(-50%) scale(0.95); /* 保持居中同时添加缩放效果 */
     }
     .i-icon {
       transform: translateY(2px);
