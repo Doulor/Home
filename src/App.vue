@@ -23,14 +23,17 @@
     </main>
   </Transition>
   <!-- 移动端菜单按钮 - 移出 main 容器避免 transform 影响，仅在内容加载完成后显示 -->
-  <Icon
-    class="menu"
-    size="24"
-    v-show="!store.backgroundShow && !store.boxOpenState && store.imgLoadStatus && store.innerWidth < 1201"
-    @click="store.mobileOpenState = !store.mobileOpenState"
-  >
-    <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
-  </Icon>
+  <Transition name="fade" mode="out-in">
+    <Icon
+      v-if="store.imgLoadStatus"
+      class="menu"
+      size="24"
+      v-show="!store.backgroundShow && !store.boxOpenState && store.innerWidth < 1201"
+      @click="store.mobileOpenState = !store.mobileOpenState"
+    >
+      <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
+    </Icon>
+  </Transition>
 </template>
 <script setup>
 import { helloInit, checkDays } from "@/utils/getTime.js";
