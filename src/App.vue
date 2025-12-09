@@ -16,15 +16,6 @@
           <MoreSet />
         </section>
       </div>
-      <!-- 移动端菜单按钮 -->
-      <Icon
-        class="menu"
-        size="24"
-        v-show="!store.backgroundShow && !store.boxOpenState"
-        @click="store.mobileOpenState = !store.mobileOpenState"
-      >
-        <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
-      </Icon>
       <!-- 页脚 -->
       <Transition name="fade" mode="out-in">
         <Footer v-show="!store.backgroundShow && !store.setOpenState" />
@@ -174,37 +165,41 @@ onBeforeUnmount(() => {
       padding: 0 2vw;
     }
   }
-  .menu {
-    position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: auto;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%); /* 使用transform居中而不是计算left值 */
-    width: 56px;
-    height: 34px;
-    background: rgb(0 0 0 / 20%);
-    backdrop-filter: blur(10px);
-    border-radius: 6px;
-    transition: transform 0.3s;
-    animation: fade 0.5s;
-    z-index: 2000;  // 提高z-index to ensure it's above all other elements
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    &:active {
-      transform: translateX(-50%) scale(0.95); /* 保持居中同时添加缩放效果 */
-    }
-    .i-icon {
-      transform: translateY(2px);
-    }
-    @media (min-width: 721px) {
-      display: none;
-    }
-    @media (max-width: 720px) {
-      display: flex !important;
-    }
+}
+</style>
+
+<style lang="scss">
+/* 全局样式，确保菜单按钮在所有情况下都正确显示且不受main容器transform影响 */
+.menu {
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: auto;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%); /* 使用transform居中而不是计算left值 */
+  width: 56px;
+  height: 34px;
+  background: rgb(0 0 0 / 20%);
+  backdrop-filter: blur(10px);
+  border-radius: 6px;
+  transition: transform 0.3s;
+  animation: fade 0.5s;
+  z-index: 2000;  // 提高z-index to ensure it's above all other elements
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  &:active {
+    transform: translateX(-50%) scale(0.95); /* 保持居中同时添加缩放效果 */
+  }
+  .i-icon {
+    transform: translateY(2px);
+  }
+  @media (min-width: 721px) {
+    display: none;
+  }
+  @media (max-width: 720px) {
+    display: flex !important;
   }
 }
 </style>
