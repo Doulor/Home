@@ -56,8 +56,8 @@ const isMobileSize = ref(true); // 默认为移动端尺寸
 // 页面宽度
 const getWidth = () => {
   store.setInnerWidth(window.innerWidth);
-  // 根据窗口宽度判断是否为移动端尺寸，当宽度大于等于1100px时认为是大屏，不需要切换按钮
-  isMobileSize.value = window.innerWidth < 1100;
+  // 根据窗口宽度判断是否为移动端尺寸，当宽度大于等于992px时认为是大屏，不需要切换按钮
+  isMobileSize.value = window.innerWidth < 992;
 };
 
 // 加载完成事件
@@ -202,10 +202,10 @@ onBeforeUnmount(() => {
   .i-icon {
     transform: translateY(2px);
   }
-  @media (min-width: 1100px) {
+  @media (min-width: 992px) {
     display: none !important;  /* 在大屏幕上隐藏，因为左右两部分已经同时可见 */
   }
-  @media (max-width: 1099px) {
+  @media (max-width: 991px) {
     display: flex !important;  /* 在中等屏幕及以下显示 */
   }
 }
