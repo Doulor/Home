@@ -31,6 +31,15 @@
       </Transition>
     </main>
   </Transition>
+  <!-- 移动端菜单按钮 - 移出 main 容器避免 transform 影响 -->
+  <Icon
+    class="menu"
+    size="24"
+    v-show="!store.backgroundShow && !store.boxOpenState && store.imgLoadStatus"
+    @click="store.mobileOpenState = !store.mobileOpenState"
+  >
+    <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
+  </Icon>
 </template>
 <script setup>
 import { helloInit, checkDays } from "@/utils/getTime.js";
@@ -193,9 +202,6 @@ onBeforeUnmount(() => {
     @media (min-width: 721px) {
       display: none;
     }
-  }
-
-  .menu {
     @media (max-width: 720px) {
       display: flex !important;
     }
