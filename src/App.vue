@@ -194,5 +194,11 @@ onBeforeUnmount(() => {
       display: none;
     }
   }
+
+  .menu {
+    @media (max-width: 720px) {
+      display: flex !important;
+    }
+  }
 }
 </style>
