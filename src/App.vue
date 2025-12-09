@@ -22,11 +22,11 @@
       </Transition>
     </main>
   </Transition>
-  <!-- 移动端菜单按钮 - 移出 main 容器避免 transform 影响 -->
+  <!-- 移动端菜单按钮 - 移出 main 容器避免 transform 影响，仅在内容加载完成后显示 -->
   <Icon
     class="menu"
     size="24"
-    v-show="!store.backgroundShow && !store.boxOpenState && store.imgLoadStatus"
+    v-show="!store.backgroundShow && !store.boxOpenState && store.imgLoadStatus && store.innerWidth < 1201"
     @click="store.mobileOpenState = !store.mobileOpenState"
   >
     <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
