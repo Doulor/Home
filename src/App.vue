@@ -28,7 +28,7 @@
       v-if="store.imgLoadStatus"
       class="menu"
       size="24"
-      v-show="!store.backgroundShow && !store.boxOpenState && store.innerWidth < 1201"
+      v-show="!store.backgroundShow && !store.boxOpenState"
       @click="store.mobileOpenState = !store.mobileOpenState"
     >
       <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
