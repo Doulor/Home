@@ -190,7 +190,7 @@ onBeforeUnmount(() => {
   padding: 18px;  /* 增加内边距，使背景更大 */
   background: rgb(0 0 0 / 20%);
   backdrop-filter: blur(10px);
-  border-radius: 12px;  /* 增加圆角 */
+  border-radius: 6px;  /* 减小圆角，更接近快速链接的圆角 */
   transition: transform 0.3s;
   animation: fade 0.5s;
   z-index: 2000;  // 提高z-index to ensure it's above all other elements
