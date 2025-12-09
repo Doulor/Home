@@ -179,11 +179,12 @@ onBeforeUnmount(() => {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%); /* 使用transform居中而不是计算left值 */
-  width: 56px;
-  height: 34px;
+  width: 70px;  /* 增加按钮宽度 */
+  height: 70px;  /* 增加按钮高度 */
+  padding: 18px;  /* 增加内边距，使背景更大 */
   background: rgb(0 0 0 / 20%);
   backdrop-filter: blur(10px);
-  border-radius: 6px;
+  border-radius: 12px;  /* 增加圆角 */
   transition: transform 0.3s;
   animation: fade 0.5s;
   z-index: 2000;  // 提高z-index to ensure it's above all other elements
@@ -195,11 +196,11 @@ onBeforeUnmount(() => {
   .i-icon {
     transform: translateY(2px);
   }
-  @media (min-width: 721px) {
-    display: none;
+  @media (min-width: 1201px) {
+    display: none;  /* 在大屏幕上隐藏，因为左右两部分已经同时可见 */
   }
-  @media (max-width: 720px) {
-    display: flex !important;
+  @media (max-width: 1200px) {
+    display: flex !important;  /* 在中等屏幕及以下显示 */
   }
 }
 </style>
