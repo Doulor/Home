@@ -25,7 +25,7 @@
   <!-- 移动端菜单按钮 - 移出 main 容器避免 transform 影响，仅在内容加载完成后显示 -->
   <Transition name="fade" mode="out-in">
     <Icon
-      v-if="store.imgLoadStatus"
+      v-if="store.imgLoadStatus && isMobileSize"
       class="menu"
       size="24"
       v-show="!store.backgroundShow && !store.boxOpenState"
@@ -51,10 +51,13 @@ import cursorInit from "@/utils/cursor.js";
 import config from "@/../package.json";
 
 const store = mainStore();
+const isMobileSize = ref(true); // 默认为移动端尺寸
 
 // 页面宽度
 const getWidth = () => {
   store.setInnerWidth(window.innerWidth);
+  // 根据窗口宽度判断是否为移动端尺寸
+  isMobileSize.value = window.innerWidth < 1201;
 };
 
 // 加载完成事件
