@@ -56,8 +56,8 @@ const isMobileSize = ref(true); // 默认为移动端尺寸
 // 页面宽度
 const getWidth = () => {
   store.setInnerWidth(window.innerWidth);
-  // 根据窗口宽度判断是否为移动端尺寸
-  isMobileSize.value = window.innerWidth < 1201;
+  // 根据窗口宽度判断是否为移动端尺寸，当宽度大于等于1400px时认为是大屏，不需要切换按钮
+  isMobileSize.value = window.innerWidth < 1400;
 };
 
 // 加载完成事件
