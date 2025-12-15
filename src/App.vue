@@ -9,8 +9,8 @@
       <div class="container" v-show="!store.backgroundShow">
         <section class="all" v-show="!store.setOpenState">
           <MainLeft />
-          <MainRight v-show="!store.boxOpenState" />
-          <Box v-show="store.boxOpenState" />
+          <MainRight />
+          <Box v-show="store.boxOpenState" class="box-overlay" />
         </section>
         <section class="more" v-show="store.setOpenState" @click="store.setOpenState = false">
           <MoreSet />
@@ -170,6 +170,22 @@ onBeforeUnmount(() => {
     @media (max-width: 1200px) {
       padding: 0 2vw;
     }
+  }
+}
+
+.box-overlay {
+  position: absolute;
+  right: 0.75rem;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  z-index: 10; /* 确保覆盖在其他内容之上 */
+  @media (max-width: 720px) {
+    position: relative;
+    width: 100%;
+    right: 0;
+    margin-left: 0;
   }
 }
 </style>
