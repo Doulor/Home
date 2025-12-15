@@ -2,16 +2,19 @@
   <!-- 社交链接 -->
   <div class="social">
     <div class="link">
-      <a
-        v-for="item in socialLinks"
-        :key="item.name"
-        :href="item.url"
-        target="_blank"
-        @mouseenter="socialTip = item.tip"
-        @mouseleave="socialTip = '通过这里联系我吧'"
-      >
-        <img class="icon" :src="item.icon" height="24" />
-      </a>
+      <TransitionGroup name="slide-up" tag="div">
+        <a
+          v-for="(item, index) in socialLinks"
+          :key="item.name"
+          :href="item.url"
+          target="_blank"
+          class="social-icon"
+          @mouseenter="socialTip = item.tip"
+          @mouseleave="socialTip = '通过这里联系我吧'"
+        >
+          <img class="icon" :src="item.icon" height="24" />
+        </a>
+      </TransitionGroup>
     </div>
     <span class="tip">{{ socialTip }}</span>
   </div>
@@ -60,14 +63,36 @@ const socialTip = ref("通过这里联系我吧");
       display: inherit;
       .icon {
         margin: 0 12px;
-        transition: transform 0.3s;
+        transition: transform 0.3s, filter 0.3s;
+        filter: brightness(0.8);
         &:hover {
-          transform: scale(1.1);
+          transform: scale(1.2);
+          filter: brightness(1.2);
+          transition: transform 0.3s, filter 0.3s;
         }
         &:active {
           transform: scale(1);
         }
       }
+    }
+  }
+  .social-icon {
+    position: relative;
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.4s, height 0.4s;
+    }
+    &:hover::after {
+      width: 30px;
+      height: 30px;
     }
   }
   .tip {

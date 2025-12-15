@@ -1,7 +1,11 @@
 <template>
-  <div :class="store.mobileOpenState ? 'left hidden' : 'left'">
-    <Message />
-    <SocialLinks />
+  <div :class="store.mobileOpenState ? 'left hidden' : 'left'" v-if="!store.mobileOpenState">
+    <Transition name="fade" appear>
+      <Message />
+    </Transition>
+    <Transition name="slide-up" :duration="{ enter: 800, leave: 300 }" appear>
+      <SocialLinks />
+    </Transition>
   </div>
 </template>
 
@@ -19,9 +23,15 @@ const store = mainStore();
   margin-right: 10px;
   transform: translateY(20px);
   padding-bottom: 80px; /* Add padding to avoid content being hidden behind the floating menu button */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+
   &.hidden {
     display: none;
   }
+
   @media (max-width: 720px) {
     margin-right: 0;
     width: 100%;

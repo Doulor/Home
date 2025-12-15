@@ -1,14 +1,20 @@
 <template>
   <div :class="store.mobileOpenState ? 'right' : 'right hidden'">
     <!-- 移动端 Logo -->
-    <div class="logo text-hidden" @click="store.mobileFuncState = !store.mobileFuncState">
-      <span class="bg">{{ siteUrl[0] }}</span>
-      <span class="sm">.{{ siteUrl[1] }}</span>
-    </div>
+    <Transition name="fade" appear>
+      <div class="logo text-hidden" @click="store.mobileFuncState = !store.mobileFuncState">
+        <span class="bg">{{ siteUrl[0] }}</span>
+        <span class="sm">.{{ siteUrl[1] }}</span>
+      </div>
+    </Transition>
     <!-- 功能区 -->
-    <Func />
+    <Transition name="slide-down" :duration="{ enter: 1000, leave: 300 }" appear>
+      <Func />
+    </Transition>
     <!-- 网站链接 -->
-    <Link />
+    <Transition name="slide-up" :duration="{ enter: 1200, leave: 300 }" appear>
+      <Link />
+    </Transition>
   </div>
 </template>
 
@@ -37,6 +43,11 @@ const siteUrl = computed(() => {
   width: 50%;
   margin-left: 0.75rem;
   padding-bottom: 80px; /* Add padding to avoid content being hidden behind the floating menu button */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+
   .logo {
     width: 100%;
     font-family: "Pacifico-Regular";

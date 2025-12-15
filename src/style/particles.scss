@@ -1,0 +1,294 @@
+// 高级视觉特效 - 粒子系统
+
+// 粒子容器
+.particle-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+// 基础粒子样式
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  animation: float 6s ease-in-out infinite;
+  
+  &.particle-sm {
+    width: 2px;
+    height: 2px;
+    animation-duration: 8s;
+  }
+  
+  &.particle-md {
+    width: 3px;
+    height: 3px;
+    animation-duration: 10s;
+  }
+  
+  &.particle-lg {
+    width: 4px;
+    height: 4px;
+    animation-duration: 12s;
+  }
+  
+  // 颜色变体
+  &.particle-blue {
+    background: rgba(100, 181, 246, 0.7);
+    box-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
+  }
+  
+  &.particle-purple {
+    background: rgba(187, 134, 252, 0.7);
+    box-shadow: 0 0 10px rgba(187, 134, 252, 0.5);
+  }
+  
+  &.particle-pink {
+    background: rgba(245, 124, 188, 0.7);
+    box-shadow: 0 0 10px rgba(245, 124, 188, 0.5);
+  }
+}
+
+// 浮动动画
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.7;
+  }
+  25% {
+    transform: translate(20px, 15px) rotate(90deg);
+  }
+  50% {
+    transform: translate(0, 30px) rotate(180deg);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translate(-20px, 15px) rotate(270deg);
+  }
+}
+
+// 光晕效果
+.glow-effect {
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border-radius: inherit;
+    background: linear-gradient(45deg, 
+      rgba(100, 181, 246, 0.5), 
+      rgba(187, 134, 252, 0.5), 
+      rgba(245, 124, 188, 0.5));
+    z-index: -1;
+    filter: blur(10px);
+    animation: pulse-glow 3s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes pulse-glow {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+// 涟漪效果
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1);
+    transform-origin: 50% 50%;
+    transition: all 0.5s ease;
+  }
+  
+  &:active::after {
+    animation: ripple 0.6s ease-out;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(100);
+    opacity: 0;
+  }
+}
+
+// 悬浮动画效果
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// 3D倾斜效果
+.tilt-effect {
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+  }
+}
+
+// 渐变边框动画
+.gradient-border {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ff00cc, #333399, #00ccff, #00ffcc, #ff00cc);
+    z-index: -1;
+    border-radius: inherit;
+    animation: gradient-border-rotate 4s linear infinite;
+    background-size: 400% 400%;
+  }
+}
+
+@keyframes gradient-border-rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+// 水波纹效果
+.wave-effect {
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, 
+      rgba(255, 255, 255, 0.2) 0%, 
+      transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover::before {
+    animation: wave 1.5s ease-out;
+  }
+}
+
+@keyframes wave {
+  0% {
+    opacity: 1;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+// 文字动画效果
+.text-animated {
+  background: linear-gradient(45deg, #64b5f6, #bb86fc, #f57cb4, #64b5f6);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: text-shine 3s ease-in-out infinite;
+}
+
+@keyframes text-shine {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+// 呼吸灯效果
+.breathing {
+  animation: breathing 3s ease-in-out infinite;
+}
+
+@keyframes breathing {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+// 雷达扫描效果
+.radar-scan {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: conic-gradient(
+      transparent, 
+      rgba(100, 181, 246, 0.5), 
+      transparent 30%);
+    animation: radar 3s linear infinite;
+    opacity: 0.5;
+  }
+}
+
+@keyframes radar {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

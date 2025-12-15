@@ -3,21 +3,32 @@
   <Loading />
   <!-- 壁纸 -->
   <Background @loadComplete="loadComplete" />
+  <!-- 粒子系统 -->
+  <Particles :enabled="true" :count="25" />
   <!-- 主界面 -->
-  <Transition name="fade" mode="out-in">
+  <Transition name="fade-blur-main-in" mode="out-in">
     <main id="main" v-if="store.imgLoadStatus">
       <div class="container" v-show="!store.backgroundShow">
         <section class="all" v-show="!store.setOpenState">
-          <MainLeft />
-          <MainRight v-show="!store.boxOpenState" />
-          <Box v-show="store.boxOpenState" />
+          <Transition name="slide-right" mode="out-in">
+            <MainLeft v-if="!store.boxOpenState" />
+          </Transition>
+          <Transition
+            :name="store.boxOpenState ? 'slide-left' : 'slide-right'"
+            mode="out-in"
+          >
+            <MainRight v-if="!store.boxOpenState" />
+            <Box v-else />
+          </Transition>
         </section>
         <section class="more" v-show="store.setOpenState" @click="store.setOpenState = false">
-          <MoreSet />
+          <Transition name="fade" mode="out-in">
+            <MoreSet />
+          </Transition>
         </section>
       </div>
       <!-- 页脚 -->
-      <Transition name="fade" mode="out-in">
+      <Transition name="slide-up" mode="out-in">
         <Footer v-show="!store.backgroundShow && !store.setOpenState" />
       </Transition>
     </main>
@@ -26,7 +37,7 @@
   <Transition name="fade" mode="out-in">
     <Icon
       v-if="store.imgLoadStatus && isMobileSize"
-      class="menu"
+      class="menu pulse"
       size="24"
       v-show="!store.backgroundShow && !store.boxOpenState"
       @click="store.mobileOpenState = !store.mobileOpenState"
@@ -41,6 +52,7 @@ import { HamburgerButton, CloseSmall } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import { Icon } from "@vicons/utils";
 import Loading from "@/components/Loading.vue";
+import Particles from "@/components/Particles.vue";
 import MainLeft from "@/views/Main/Left.vue";
 import MainRight from "@/views/Main/Right.vue";
 import Background from "@/components/Background.vue";

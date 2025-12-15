@@ -2,29 +2,32 @@
   <!-- 基本信息 -->
   <div class="message">
     <!-- Logo -->
-    <div class="logo">
-      <img class="logo-img" :src="siteLogo" alt="logo" />
-      <div :class="{ name: true, 'text-hidden': true, long: siteUrl[0].length >= 6 }">
-        <span class="bg">{{ siteUrl[0] }}</span>
-        <span class="sm">.{{ siteUrl[1] }}</span>
-      </div>
-    </div>
-    <!-- 简介 -->
-    <div class="description cards" @click="changeBox">
-      <div class="content">
-        <Icon size="16">
-          <QuoteLeft />
-        </Icon>
-        <div class="text">
-          <p>{{ descriptionText.hello }}</p>
-          <p>{{ descriptionText.text }}</p>
+    <Transition name="fade" appear>
+      <div class="logo">
+        <img class="logo-img" :src="siteLogo" alt="logo" />
+        <div :class="{ name: true, 'text-hidden': true, long: siteUrl[0].length >= 6 }">
+          <span class="bg">{{ siteUrl[0] }}</span>
+          <span class="sm">.{{ siteUrl[1] }}</span>
         </div>
-        <Icon size="16">
-          <QuoteRight />
-        </Icon>
       </div>
-    </div>
-  </div>
+    </Transition>
+    <!-- 简介 -->
+    <Transition name="slide-up" appear>
+      <div class="description cards glow-hover" @click="changeBox">
+        <div class="content">
+          <Icon size="16">
+            <QuoteLeft />
+          </Icon>
+          <div class="text">
+            <p>{{ descriptionText.hello }}</p>
+            <p>{{ descriptionText.text }}</p>
+          </div>
+          <Icon size="16">
+            <QuoteRight />
+          </Icon>
+        </div>
+      </div>
+    </Transition>
 </template>
 
 <script setup>
@@ -126,6 +129,41 @@ watch(
     margin-top: 3.5rem;
     max-width: 460px;
     animation: fade 0.5s;
+    position: relative;
+    overflow: hidden;
+
+    &.glow-hover {
+      &::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg,
+          #ff00cc, #333399, #00ccff, #00ffcc, #ff00cc);
+        z-index: -1;
+        border-radius: 8px;
+        animation: gradient-border 3s linear infinite;
+        background-size: 400% 400%;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      &:hover::before {
+        opacity: 1;
+      }
+    }
+
+    &:hover {
+      transform: scale(1.02);
+      background: rgb(0 0 0 / 45%) !important;
+      transition: all 0.3s ease;
+      z-index: 1;
+      box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(255, 255, 255, 0.1);
+    }
 
     .content {
       display: flex;

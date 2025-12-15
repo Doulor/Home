@@ -19,21 +19,29 @@
       }"
       :mousewheel="true"
     >
-      <SwiperSlide v-for="site in siteLinksList" :key="site">
-        <el-row class="link-all" :gutter="20">
-          <el-col v-for="(item, index) in site" :span="8" :key="item">
-            <div
-              class="item cards"
-              :style="index < 3 ? 'margin-bottom: 20px' : null"
-              @click="jumpLink(item)"
-            >
-              <Icon size="26">
-                <component :is="siteIcon[item.icon]" />
-              </Icon>
-              <span class="name text-hidden">{{ item.name }}</span>
-            </div>
-          </el-col>
-        </el-row>
+      <SwiperSlide v-for="(site, siteIndex) in siteLinksList" :key="siteIndex">
+        <Transition name="slide-up" appear>
+          <el-row class="link-all" :gutter="20">
+            <el-col v-for="(item, index) in site" :span="8" :key="item">
+              <Transition
+                :name="index % 2 === 0 ? 'slide-right' : 'slide-left'"
+                appear
+                :duration="{ enter: 500 + index * 100 }"
+              >
+                <div
+                  class="item cards glow-hover"
+                  :style="index < 3 ? 'margin-bottom: 20px' : null"
+                  @click="jumpLink(item)"
+                >
+                  <Icon size="26">
+                    <component :is="siteIcon[item.icon]" />
+                  </Icon>
+                  <span class="name text-hidden">{{ item.name }}</span>
+                </div>
+              </Transition>
+            </el-col>
+          </el-row>
+        </Transition>
       </SwiperSlide>
       <div class="swiper-pagination" />
     </Swiper>
@@ -142,15 +150,44 @@ onMounted(() => {
       justify-content: center;
       padding: 0 10px;
       animation: fade 0.5s;
+      position: relative;
+      overflow: hidden;
+
+      &.glow-hover {
+        &::before {
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          background: linear-gradient(45deg,
+            #ff00cc, #333399, #00ccff, #00ffcc, #ff00cc);
+          z-index: -1;
+          border-radius: 8px;
+          animation: gradient-border 3s linear infinite;
+          background-size: 400% 400%;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        &:hover::before {
+          opacity: 1;
+        }
+      }
 
       &:hover {
-        transform: scale(1.02);
+        transform: scale(1.05);
         background: rgb(0 0 0 / 40%);
-        transition: 0.3s;
+        transition: all 0.3s ease;
+        z-index: 1;
+        box-shadow:
+          0 8px 30px rgba(0, 0, 0, 0.3),
+          0 0 20px rgba(255, 255, 255, 0.1);
       }
 
       &:active {
-        transform: scale(1);
+        transform: scale(0.98);
       }
 
       .name {
