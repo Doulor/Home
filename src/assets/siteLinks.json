@@ -10,13 +10,13 @@
     "link": "https://dash.cloudflare.com/83fdea7d910cbc683e6d53fa6baf45ab/home/domains"
   },
   {
-    "icon": "Airbnb",
-    "name": "豆包",
-    "link": "https://www.doubao.com/chat/"
+    "icon": "Mountain",
+    "name": "Vercel",
+    "link": "https://vercel.com/"
   },
   {
     "icon": "Amilia",
-    "name": "Domain",
+    "name": "Digitalplat",
     "link": "https://dash.domain.digitalplat.org/auth/login"
   },
  {
@@ -25,11 +25,16 @@
     "link": "https://modrinth.com/mods"
   },
   {
-    "icon": "CloudUploadAlt",
-    "name": "简幻欢",
-    "link": "https://simpfun.cn/console"
+    "icon": "Database",
+    "name": "Supabase",
+    "link": "https://supabase.com/dashboard/project/nospgcbugwfwspqadjta/editor/17882?schema=public"
   },
-    {
+  {
+    "icon": "Blogger",
+    "name": "TBlog",
+    "link": "https://tblog.firef.dpdns.org/"
+  },
+  {
     "icon": "Atom",
     "name": "SakuraFRP",
     "link": "https://www.natfrp.com/user/"
@@ -40,28 +45,8 @@
     "link": "https://console.openfrp.net/dashboard"
   },
   {
-    "icon": "Database",
-    "name": "Supabase",
-    "link": "https://supabase.com/dashboard/project/nospgcbugwfwspqadjta/editor/17882?schema=public"
-  },
-  {
-    "icon": "Fire",
-    "name": "今日热榜",
-    "link": "https://hot.imsyy.top/"
-  },
-  {
     "icon": "Surprise",
     "name": "图标中心",
     "link": "https://www.xicons.org"
-  },
-  {
-    "icon": "Music",
-    "name": "音乐解析",
-    "link": "https://tools.jixiaob.cn/index2.php"
-  },
-  {
-    "icon": "Tools",
-    "name": "帖子生成",
-    "link": "https://tool.firef.dpdns.org/"
   }
 ]
