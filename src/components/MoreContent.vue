@@ -124,16 +124,14 @@ const formattedUniqueCount = computed(() => {
 onMounted(async () => {
   await incrementVisitorCount()
   await getUniqueVisitorCount()
+  // 页面加载时自动记录唯一访问者
+  await incrementUniqueVisitorCount()
   await getRandomMessage()
 })
 
 // 切换计数显示
 function toggleCounterDisplay() {
   showUniqueCounter.value = !showUniqueCounter.value
-  // 只有切换到唯一访问者计数时才增加计数
-  if (showUniqueCounter.value) {
-    incrementUniqueVisitorCount()
-  }
 }
 
 // 获取唯一访问者计数
