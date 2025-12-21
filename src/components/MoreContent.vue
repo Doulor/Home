@@ -505,21 +505,17 @@ function showError(message) {
 
 .counter-fade-enter-active,
 .counter-fade-leave-active {
-  transition: all 0.4s ease;
+  transition: all 0.2s ease;
 }
 
 .counter-fade-enter-from {
   opacity: 0;
-  transform: translateY(10px) scale(0.95);
+  transform: translateY(8px) scale(0.95);
 }
 
 .counter-fade-leave-to {
   opacity: 0;
-  transform: translateY(-10px) scale(1.05);
-}
-
-.counter-fade-enter-active {
-  transition-delay: 0.1s;
+  transform: translateY(-8px) scale(1.05);
 }
 
 /* 留言展示区域 - 修复背景突兀问题 */
