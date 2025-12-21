@@ -25,14 +25,19 @@
     "link": "https://modrinth.com/mods"
   },
   {
-    "icon": "Database",
-    "name": "Supabase",
-    "link": "https://supabase.com/dashboard/project/nospgcbugwfwspqadjta/editor/17882?schema=public"
+    "icon": "DigitalOcean",
+    "name": "DNSHE",
+    "link": "https://my.dnshe.com/index.php?m=domain_hub"
   },
   {
     "icon": "Blogger",
     "name": "TBlog",
     "link": "https://tblog.firef.dpdns.org/"
+  },
+  {
+    "icon": "Database",
+    "name": "Supabase",
+    "link": "https://supabase.com/dashboard/project/nospgcbugwfwspqadjta/editor/17882?schema=public"
   },
   {
     "icon": "Atom",
