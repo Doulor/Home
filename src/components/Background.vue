@@ -12,7 +12,7 @@
     <div :class="store.backgroundShow ? 'gray hidden' : 'gray'" />
     <Transition name="fade" mode="out-in">
       <a
-        v-if="store.backgroundShow && store.coverType != '3'"
+        v-if="store.backgroundShow"
         class="down"
         :href="bgUrl"
         target="_blank"
@@ -38,25 +38,29 @@ const bgRandom = Math.floor(Math.random() * 19 + 1);
 
 // 更换壁纸链接
 const changeBg = (type) => {
+  let newBgUrl;
   if (type == 0) {
-    bgUrl.value = `/images/background${bgRandom}.jpg`;
+    newBgUrl = `/images/background${bgRandom}.jpg`;
   } else if (type == 1) {
-    bgUrl.value = "https://api.dujin.org/bing/1920.php";
-  } else if (type == 2) {
-    bgUrl.value = "https://api.aixiaowai.cn/gqapi/gqapi.php";
-  } else if (type == 3) {
-    bgUrl.value = "https://api.aixiaowai.cn/api/api.php";
+    newBgUrl = "https://api.dujin.org/bing/1920.php";
+  } else {
+    // 如果是无效的类型值（如之前的2或3），则使用默认壁纸
+    newBgUrl = `/images/background${bgRandom}.jpg`;
   }
+
+  console.log("设置壁纸URL:", newBgUrl);
+  bgUrl.value = newBgUrl;
 };
 
 // 图片加载完成
 const imgLoadComplete = () => {
-  imgTimeout.value = setTimeout(
-    () => {
-      store.setImgLoadStatus(true);
-    },
-    Math.floor(Math.random() * (600 - 300 + 1)) + 300,
-  );
+  console.log("图片加载完成事件触发");
+  // 立即设置加载状态，以便Loading组件可以消失
+  if (!store.imgLoadStatus) {  // 防止重复设置
+    store.setImgLoadStatus(true);
+  }
+  // 触发loadComplete事件
+  emit("loadComplete");
 };
 
 // 图片动画完成
@@ -76,6 +80,12 @@ const imgLoadError = () => {
       fill: "#efefef",
     }),
   });
+  // 即使加载失败也要继续执行，不能让加载界面卡住
+  if (!store.imgLoadStatus) {  // 防止重复设置
+    store.setImgLoadStatus(true);
+  }
+  // 触发loadComplete事件
+  emit("loadComplete");
   bgUrl.value = `/images/background${bgRandom}.jpg`;
 };
 
@@ -87,13 +97,28 @@ watch(
   },
 );
 
+let loadTimeout;
+
 onMounted(() => {
   // 加载壁纸
   changeBg(store.coverType);
+
+  // 设置一个合理的超时时间，确保即使图片加载事件未触发，也不会卡住加载界面
+  // 在开发环境中，图片加载可能因为缓存或其他原因表现不同
+  loadTimeout = setTimeout(() => {
+    if (!store.imgLoadStatus) {
+      console.warn("壁纸加载超时，强制进入主页");
+      store.setImgLoadStatus(true);
+      emit("loadComplete");
+    }
+  }, 3000); // 3秒后强制完成加载
 });
 
 onBeforeUnmount(() => {
   clearTimeout(imgTimeout.value);
+  if (loadTimeout) {
+    clearTimeout(loadTimeout);
+  }
 });
 </script>
 
