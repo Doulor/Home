@@ -2,8 +2,13 @@
   <div class="memory-capsule">
     <!-- 上方：简洁的访问计数 -->
     <div class="visitor-counter">
-      <div class="counter-text">
-        你是飘过此处的第 <span class="counter-number">{{ formattedCount }}</span> 缕灵魂
+      <div class="counter-text" @click="toggleCounterDisplay">
+        <template v-if="showUniqueCounter">
+          你是路过此处的第 <span class="counter-number">{{ formattedUniqueCount }}</span> 个唯一的你
+        </template>
+        <template v-else>
+          你是飘过此处的第 <span class="counter-number">{{ formattedCount }}</span> 缕灵魂
+        </template>
       </div>
     </div>
 
@@ -96,21 +101,117 @@ const supabase = createClient(
 
 // 响应式数据
 const visitorCount = ref(0)
+const uniqueVisitorCount = ref(0)
 const currentMessage = ref(null)
 const newMessage = ref('')
 const submitting = ref(false)
 const showInput = ref(false)
+const showUniqueCounter = ref(false) // 控制是否显示唯一访问者计数
 
 // 格式化访问计数（如：1,234）
 const formattedCount = computed(() => {
   return visitorCount.value.toLocaleString()
 })
 
+// 格式化唯一访问者计数（如：1,234）
+const formattedUniqueCount = computed(() => {
+  return uniqueVisitorCount.value.toLocaleString()
+})
+
 // 初始化函数
 onMounted(async () => {
   await incrementVisitorCount()
+  await getUniqueVisitorCount()
   await getRandomMessage()
 })
+
+// 切换计数显示
+function toggleCounterDisplay() {
+  showUniqueCounter.value = true
+  // 同时增加唯一访问者计数
+  incrementUniqueVisitorCount()
+}
+
+// 获取唯一访问者计数
+async function getUniqueVisitorCount() {
+  try {
+    const { count, error } = await supabase
+      .from('unique_visitors')
+      .select('*', { count: 'exact', head: true })
+
+    if (error) throw error
+
+    uniqueVisitorCount.value = count
+  } catch (error) {
+    console.error('获取唯一访问者计数失败:', error)
+  }
+}
+
+// 增加唯一访问者计数
+async function incrementUniqueVisitorCount() {
+  try {
+    // 检查localStorage中是否有已记录的IP哈希，避免重复请求
+    const storedIpHash = localStorage.getItem('unique_visitor_ip_hash')
+    const currentIpHash = await generateIpHash()
+
+    // 如果已经记录过该IP，则不再重复请求
+    if (storedIpHash === currentIpHash) {
+      return
+    }
+
+    // 检查该IP是否已存在
+    let existingRecord = null;
+    let fetchError = null;
+
+    try {
+      const { data, error } = await supabase
+        .from('unique_visitors')
+        .select('*')
+        .eq('ip_hash', currentIpHash)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // PGRST116 means no rows returned, which is expected when IP doesn't exist
+          existingRecord = null;
+        } else {
+          console.error('查询唯一访问者记录失败:', error)
+          return
+        }
+      } else {
+        existingRecord = data;
+      }
+    } catch (error) {
+      console.error('查询唯一访问者记录时发生异常:', error)
+      return
+    }
+
+    if (!existingRecord) {
+      // 如果IP不存在，则插入新记录
+      const { error: insertError } = await supabase
+        .from('unique_visitors')
+        .insert([{ ip_hash: currentIpHash }])
+
+      if (insertError) {
+        if (insertError.code === '23505') {
+          // 23505是唯一约束违反错误，表示并发情况下另一请求已插入相同IP
+          // 这种情况可以忽略，因为目标已经达成
+          console.log('IP已存在（并发处理）')
+        } else {
+          console.error('插入唯一访问者记录失败:', insertError)
+          // 即使插入失败也不增加本地计数
+          return
+        }
+      } else {
+        // 插入成功，更新本地计数并存储IP哈希到localStorage
+        uniqueVisitorCount.value++
+        localStorage.setItem('unique_visitor_ip_hash', currentIpHash)
+      }
+    }
+  } catch (error) {
+    console.error('增加唯一访问者计数失败:', error)
+  }
+}
 
 // 增加访问计数
 async function incrementVisitorCount() {
