@@ -3,12 +3,14 @@
     <!-- 上方：简洁的访问计数 -->
     <div class="visitor-counter">
       <div class="counter-text" @click="toggleCounterDisplay">
-        <template v-if="showUniqueCounter">
-          你是路过此处的第 <span class="counter-number">{{ formattedUniqueCount }}</span> 个唯一的你
-        </template>
-        <template v-else>
-          你是飘过此处的第 <span class="counter-number">{{ formattedCount }}</span> 缕灵魂
-        </template>
+        <Transition name="counter-fade" mode="out-in">
+          <div v-if="showUniqueCounter" :key="1" class="counter-content">
+            你是路过此处的第 <span class="counter-number">{{ formattedUniqueCount }}</span> 个唯一的你
+          </div>
+          <div v-else :key="0" class="counter-content">
+            你是飘过此处的第 <span class="counter-number">{{ formattedCount }}</span> 缕灵魂
+          </div>
+        </Transition>
       </div>
     </div>
 
@@ -127,9 +129,11 @@ onMounted(async () => {
 
 // 切换计数显示
 function toggleCounterDisplay() {
-  showUniqueCounter.value = true
-  // 同时增加唯一访问者计数
-  incrementUniqueVisitorCount()
+  showUniqueCounter.value = !showUniqueCounter.value
+  // 只有切换到唯一访问者计数时才增加计数
+  if (showUniqueCounter.value) {
+    incrementUniqueVisitorCount()
+  }
 }
 
 // 获取唯一访问者计数
@@ -470,6 +474,15 @@ function showError(message) {
   color: rgba(255, 255, 255, 0.8);
   font-style: italic;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.counter-text:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .counter-number {
@@ -477,6 +490,34 @@ function showError(message) {
   color: #fff;
   font-style: normal;
   font-size: 1.1em;
+}
+
+/* 计数切换动画 */
+.counter-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.counter-fade-enter-active,
+.counter-fade-leave-active {
+  transition: all 0.4s ease;
+}
+
+.counter-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+}
+
+.counter-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(1.05);
+}
+
+.counter-fade-enter-active {
+  transition-delay: 0.1s;
 }
 
 /* 留言展示区域 - 修复背景突兀问题 */
