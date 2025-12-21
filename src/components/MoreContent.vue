@@ -476,12 +476,9 @@ function showError(message) {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  padding: 0.5rem;
-  border-radius: 8px;
 }
 
 .counter-text:hover {
-  background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
@@ -490,6 +487,11 @@ function showError(message) {
   color: #fff;
   font-style: normal;
   font-size: 1.1em;
+  transition: all 0.3s ease;
+}
+
+.counter-text:hover .counter-number {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
 /* 计数切换动画 */
