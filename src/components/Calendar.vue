@@ -69,6 +69,15 @@
                     class="event-icon"
                   />
                 </div>
+                <div v-if="(day.events || []).length" class="event-tooltip">
+                  <div class="tooltip-title">{{ (day.events || []).length }} 个事件</div>
+                  <ul>
+                    <li v-for="(event, idx) in (day.events || [])" :key="event.date + event.title + idx">
+                      <span class="dot"></span>
+                      <span class="text">{{ event.title }}<span v-if="event.description"> · {{ event.description }}</span></span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -396,6 +405,7 @@ onMounted(() => {
   width: 92vw;
   max-width: 900px;
   max-height: 620px;
+  overflow: visible;
 }
 
 .expanded-calendar-container.is-collapsing .calendar-card {
@@ -545,6 +555,71 @@ onMounted(() => {
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.05);
   position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    z-index: 1;
+  }
+
+  .event-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translate(-50%, 10px);
+    min-width: 170px;
+    max-width: 220px;
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    z-index: 10;
+
+    .tooltip-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    ul {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #f7f7f7;
+        font-size: 0.82rem;
+        line-height: 1.2;
+
+        .dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #ef3340;
+          box-shadow: 0 0 6px rgba(239, 51, 64, 0.45);
+          flex-shrink: 0;
+        }
+
+        .text {
+          opacity: 0.95;
+        }
+      }
+    }
+  }
 
   &.is-today {
     border: 2px solid #ef859d;
@@ -580,11 +655,25 @@ onMounted(() => {
       radial-gradient(120% 95% at 18% 32%, rgba(239, 51, 64, 0.3) 0%, transparent 55%),
       radial-gradient(95% 115% at 74% 58%, rgba(239, 51, 64, 0.26) 0%, transparent 60%),
       radial-gradient(90% 90% at 40% 78%, rgba(239, 51, 64, 0.2) 0%, transparent 62%),
-      radial-gradient(75% 85% at 62% 22%, rgba(239, 51, 64, 0.18) 0%, transparent 58%);
+      radial-gradient(75% 85% at 62% 22%, rgba(239, 51, 64, 0.18) 0%, transparent 58%),
+      radial-gradient(18% 22% at 30% 15%, rgba(239, 51, 64, 0.35) 0%, transparent 75%),
+      radial-gradient(12% 18% at 78% 72%, rgba(239, 51, 64, 0.28) 0%, transparent 78%),
+      radial-gradient(10% 14% at 52% 48%, rgba(239, 51, 64, 0.22) 0%, transparent 80%);
     opacity: 0.95;
     transform: rotate(-7deg) scaleX(0.985);
     filter: blur(0.45px) drop-shadow(-1px 1px 1px rgba(0, 0, 0, 0.18));
     pointer-events: none;
+  }
+
+  &.has-event:hover {
+    transform: translateY(-3px) scale(1.08);
+    z-index: 2;
+
+    .event-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, 4px);
+    }
   }
 
   .day-number {
@@ -774,6 +863,16 @@ onMounted(() => {
   .day-cell {
     height: 24px;
     font-size: 12px;
+
+    &.has-event::before,
+    &.has-event::after {
+      display: none;
+    }
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
 
     &.is-today {
       background: var(--main-color, #ef859d);
