@@ -1,0 +1,44 @@
+[
+  {
+    "date": "2025-01-01",
+    "title": "元旦快乐",
+    "description": "新的开始，愿每一天都有美好",
+    "icon": "Calendar",
+    "category": "节日"
+  },
+  {
+    "date": "2025-02-14",
+    "title": "情人节",
+    "description": "给重要的人送上一句暖心问候",
+    "icon": "Heart",
+    "category": "纪念日"
+  },
+  {
+    "date": "2025-04-22",
+    "title": "地球日",
+    "description": "记录那些为了环境努力的小事",
+    "icon": "Leaf",
+    "category": "纪念日"
+  },
+  {
+    "date": "2025-05-20",
+    "title": "520告白日",
+    "description": "记录想对特别的人说的话",
+    "icon": "Flag",
+    "category": "纪念日"
+  },
+  {
+    "date": "2025-12-25",
+    "title": "圣诞节",
+    "description": "一起庆祝冬日奇迹",
+    "icon": "Gift",
+    "category": "节日"
+  },
+  {
+    "date": "2025-12-31",
+    "title": "年末总结",
+    "description": "静下心看看这一年的故事",
+    "icon": "AlarmClock",
+    "category": "纪念日"
+  }
+]

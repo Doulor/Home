@@ -52,6 +52,7 @@ import config from "@/../package.json";
 
 const store = mainStore();
 const isMobileSize = ref(true); // 默认为移动端尺寸
+const fallbackTimer = ref(null); // 壁纸兜底计时器，防止因加载异常导致页面不展示
 
 // 页面宽度
 const getWidth = () => {
@@ -87,8 +88,23 @@ watch(
 );
 
 onMounted(() => {
+  // 强制开启主界面显示，避免因某些加载异常导致整屏被遮挡
+  store.setImgLoadStatus(true);
+  store.backgroundShow = false;
+  store.setOpenState = false;
+  store.boxOpenState = false;
+
   // 自定义鼠标
   cursorInit();
+
+  // 兜底：若壁纸加载或事件异常，强制在 2.5s 后展示主界面，避免空白屏
+  fallbackTimer.value = setTimeout(() => {
+    if (!store.imgLoadStatus) {
+      store.setImgLoadStatus(true);
+      loadComplete();
+      console.warn("壁纸加载异常，已自动跳过等待");
+    }
+  }, 2500);
 
   // 屏蔽右键
   document.oncontextmenu = () => {
@@ -133,6 +149,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", getWidth);
+  if (fallbackTimer.value) {
+    clearTimeout(fallbackTimer.value);
+  }
 });
 </script>
 

@@ -27,6 +27,7 @@
 - [x] 时光进度条
 - [x] 音乐播放器
 - [x] 移动端适配
+- [x] 云+私有日历（支持 icon 事件标注与本地存储）
 
 ### 自动部署
 
@@ -64,6 +65,8 @@ pnpm dev
 pnpm build
 ```
 > 构建完成后，静态资源会在 **`dist` 目录** 中生成，可将 **`dist` 文件夹下的文件**上传至服务器，也可使用 `Vercel` 等托管平台一键导入并自动部署
+
+> 如果 `pnpm dev` 在本地一直卡在加载动画，请确认 `vite.config.js` 中的 `AutoImport` 已将 `ElMessage` 包含进去（新的配置会自动引入 ElementPlus 的消息组件），否则运行时会因 `ElMessage` 未定义而挂起。
 
 ### Docker 部署
 

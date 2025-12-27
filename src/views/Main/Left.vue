@@ -2,6 +2,7 @@
   <div :class="store.mobileOpenState ? 'left hidden' : 'left'">
     <Message />
     <SocialLinks />
+    <Calendar />
   </div>
 </template>
 
@@ -9,6 +10,7 @@
 import { mainStore } from "@/store";
 import Message from "@/components/Message.vue";
 import SocialLinks from "@/components/SocialLinks.vue";
+import Calendar from "@/components/Calendar.vue";
 const store = mainStore();
 </script>
 
