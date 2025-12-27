@@ -1227,22 +1227,26 @@ onMounted(() => {
     gap: 3px;
   }
 
-  .day-cell {
+  .calendar-body .day-cell {
     min-height: 44px;
   }
 
   .mini-calendar {
     width: 92%;
     max-width: 380px;
-    margin: 0.35rem auto 0;
+    margin: 0.7rem auto 0;
 
     .calendar-card {
       padding: 8px;
     }
 
     .day-cell {
-      height: 20px;
-      font-size: 10px;
+      height: 30px;
+      font-size: 13px;
+      min-height: 0;
+      aspect-ratio: auto;
+      line-height: 1;
+      padding: 0;
     }
   }
 }

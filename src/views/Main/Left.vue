@@ -19,8 +19,8 @@ const store = mainStore();
   // flex: 1 0 0%;
   width: 50%;
   margin-right: 10px;
-  transform: translateY(20px);
-  margin-top: 1.5rem;
+  transform: translateY(32px);
+  margin-top: 2.5rem;
   padding-bottom: 80px; /* Add padding to avoid content being hidden behind the floating menu button */
   &.hidden {
     display: none;
@@ -29,6 +29,8 @@ const store = mainStore();
     margin-right: 0;
     width: 100%;
     padding-bottom: 80px; /* Maintain padding on mobile */
+    transform: translateY(24px);
+    margin-top: 2rem;
   }
 }
 </style>
