@@ -3,7 +3,7 @@
   <div class="mini-calendar" @click.stop="toggleExpand">
     <section class="calendar-card cards">
       <header class="calendar-header">
-  <div class="calendar-label">日历</div>
+        <div class="calendar-label">日历</div>
       </header>
       <div class="weekday-row">
         <span v-for="(label, index) in weekdayLabels" :key="index">{{ label }}</span>
@@ -12,9 +12,21 @@
         <div
           v-for="day in monthDays"
           :key="day.key"
-          :class="['day-cell', { 'is-today': day.isToday, 'has-event': (day.events || []).length } ]"
+          :class="[
+            'day-cell',
+            {
+              'is-today': day.isToday,
+              'has-mini-event': (day.events || []).length,
+            },
+            (day.events || []).length ? `event-${getMarkColor(day.events)}` : '',
+          ]"
         >
-          <div class="day-number">{{ day.date }}</div>
+          <div class="day-number" v-if="!day.empty">{{ day.date }}</div>
+          <span
+            v-if="(day.events || []).length"
+            class="mini-underline"
+            :class="`mini-underline--${getMarkColor(day.events)}`"
+          ></span>
         </div>
       </div>
     </section>
@@ -58,7 +70,14 @@
               <div
                 v-for="day in monthDays"
                 :key="day.key"
-                :class="['day-cell', { 'is-today': day.isToday, 'has-event': (day.events || []).length } ]"
+                :class="[
+                  'day-cell',
+                  {
+                    'is-today': day.isToday,
+                    'has-event': (day.events || []).length,
+                  },
+                  (day.events || []).length ? `event-${getMarkColor(day.events)}` : '',
+                ]"
               >
                 <div class="day-number">{{ day.date }}</div>
                 <div class="event-icons">
@@ -73,7 +92,7 @@
                   <div class="tooltip-title">{{ (day.events || []).length }} 个事件</div>
                   <ul>
                     <li v-for="(event, idx) in (day.events || [])" :key="event.date + event.title + idx">
-                      <span class="dot"></span>
+                      <span class="dot" :class="{ 'dot-purple': event.markColor === 'purple' }"></span>
                       <span class="text">{{ event.title }}<span v-if="event.description"> · {{ event.description }}</span></span>
                     </li>
                   </ul>
@@ -192,6 +211,14 @@ const iconOptions = {
 const storageKey = "home-calendar-personal-events";
 const cloudUrl = import.meta.env.VITE_CALENDAR_EVENTS_URL;
 
+const getMarkColor = (events = []) => {
+  if (!events.length) return "red";
+  const colors = events.map((ev) => ev.markColor).filter(Boolean);
+  if (colors.includes("purple")) return "purple";
+  if (colors.includes("red")) return "red";
+  return "red";
+};
+
 const toggleExpand = () => {
   if (!isExpanded.value) {
     isExpanded.value = true;
@@ -220,7 +247,15 @@ const monthDays = computed(() => {
     cells.push({ key: `empty-${blank}`, empty: true, date: "", events: [] });
   }
 
-  const allEvents = [...cloudEvents.value, ...personalEvents.value];
+  const recurringCloudEvents = (cloudEvents.value || []).map((ev) => {
+    const [_, m, d] = (ev.date || "").split("-").map(Number);
+    const monthNum = Number.isFinite(m) ? m : 1;
+    const dayNum = Number.isFinite(d) ? d : 1;
+    const mappedDate = `${year}-${String(monthNum).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+    return { ...ev, date: mappedDate };
+  });
+
+  const allEvents = [...recurringCloudEvents, ...personalEvents.value];
 
   for (let day = 1; day <= totalDays; day++) {
     const isoDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -612,6 +647,11 @@ onMounted(() => {
           background: #ef3340;
           box-shadow: 0 0 6px rgba(239, 51, 64, 0.45);
           flex-shrink: 0;
+
+          &.dot-purple {
+            background: #c17eff;
+            box-shadow: 0 0 6px rgba(193, 126, 255, 0.45);
+          }
         }
 
         .text {
@@ -663,6 +703,37 @@ onMounted(() => {
     transform: rotate(-7deg) scaleX(0.985);
     filter: blur(0.45px) drop-shadow(-1px 1px 1px rgba(0, 0, 0, 0.18));
     pointer-events: none;
+  }
+
+  &.event-purple.has-event::before {
+    border: 1.5px solid rgba(193, 126, 255, 0.55);
+    filter: blur(0.55px);
+  }
+
+  &.event-purple.has-event::after {
+    border: 2px solid #c17eff;
+    box-shadow: 0 0 10px rgba(193, 126, 255, 0.32), 0 0 0 1px rgba(193, 126, 255, 0.22),
+      0 0 0 7px rgba(193, 126, 255, 0.08);
+    background:
+      radial-gradient(120% 95% at 18% 32%, rgba(193, 126, 255, 0.3) 0%, transparent 55%),
+      radial-gradient(95% 115% at 74% 58%, rgba(193, 126, 255, 0.26) 0%, transparent 60%),
+      radial-gradient(90% 90% at 40% 78%, rgba(193, 126, 255, 0.2) 0%, transparent 62%),
+      radial-gradient(75% 85% at 62% 22%, rgba(193, 126, 255, 0.18) 0%, transparent 58%),
+      radial-gradient(18% 22% at 30% 15%, rgba(193, 126, 255, 0.35) 0%, transparent 75%),
+      radial-gradient(12% 18% at 78% 72%, rgba(193, 126, 255, 0.28) 0%, transparent 78%),
+      radial-gradient(10% 14% at 52% 48%, rgba(193, 126, 255, 0.22) 0%, transparent 80%);
+    filter: blur(0.45px) drop-shadow(-1px 1px 1px rgba(0, 0, 0, 0.18));
+  }
+
+  &.event-purple {
+    .event-icon {
+      color: #c17eff;
+    }
+
+    .event-tooltip .dot {
+      background: #c17eff;
+      box-shadow: 0 0 6px rgba(193, 126, 255, 0.45);
+    }
   }
 
   &.has-event:hover {
@@ -864,6 +935,10 @@ onMounted(() => {
     height: 24px;
     font-size: 12px;
 
+    &.has-mini-event {
+      position: relative;
+    }
+
     &.has-event::before,
     &.has-event::after {
       display: none;
@@ -877,6 +952,23 @@ onMounted(() => {
     &.is-today {
       background: var(--main-color, #ef859d);
       color: #fff;
+    }
+  }
+
+  .mini-underline {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 2px;
+    border-radius: 999px;
+    background: #ef3340;
+    box-shadow: 0 0 6px rgba(239, 51, 64, 0.25);
+
+    &.mini-underline--purple {
+      background: #c17eff;
+      box-shadow: 0 0 6px rgba(193, 126, 255, 0.25);
     }
   }
 }

@@ -36,7 +36,7 @@
   </Transition>
 </template>
 <script setup>
-import { helloInit, checkDays } from "@/utils/getTime.js";
+import { helloInit, checkDays, showUpcomingCloudHello } from "@/utils/getTime.js";
 import { HamburgerButton, CloseSmall } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import { Icon } from "@vicons/utils";
@@ -63,12 +63,20 @@ const getWidth = () => {
 
 // 加载完成事件
 const hasCalledHello = ref(false); // 添加标志确保问候语只显示一次
+const hasShownUpcoming = ref(false); // 仅提醒一次最近特殊日
 const loadComplete = () => {
   nextTick(() => {
     // 欢迎提示 - 只调用一次
     if (!hasCalledHello.value) {
       helloInit();
       hasCalledHello.value = true;
+    }
+
+    if (!hasShownUpcoming.value) {
+      const upcoming = showUpcomingCloudHello();
+      if (upcoming) {
+        hasShownUpcoming.value = true;
+      }
     }
     // 默哀模式
     checkDays();

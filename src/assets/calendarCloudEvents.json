@@ -4,132 +4,151 @@
     "title": "元旦快乐",
     "description": "新的开始，愿每一天都有美好",
     "icon": "Calendar",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-02-14",
     "title": "情人节",
     "description": "给重要的人送上一句暖心问候",
     "icon": "Heart",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "red"
   },
   {
     "date": "2025-03-08",
     "title": "妇女节",
     "description": "致敬每一位女性的美丽与坚强",
     "icon": "Star",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-03-12",
     "title": "植树节",
     "description": "种下一棵树，守护一片绿",
     "icon": "Leaf",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "red"
   },
   {
     "date": "2025-04-05",
     "title": "清明节",
     "description": "缅怀先人，珍惜当下",
     "icon": "Leaf",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-04-22",
     "title": "地球日",
     "description": "记录那些为了环境努力的小事",
     "icon": "Leaf",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "red"
   },
   {
     "date": "2025-05-01",
     "title": "劳动节",
     "description": "致敬每一份努力",
     "icon": "Flag",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-05-04",
     "title": "青年节",
     "description": "青春无畏，逐梦前行",
     "icon": "Star",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "red"
   },
   {
     "date": "2025-05-20",
     "title": "520告白日",
     "description": "记录想对特别的人说的话",
     "icon": "Heart",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "red"
   },
   {
     "date": "2025-06-01",
     "title": "儿童节",
     "description": "童心未泯，快乐成长",
     "icon": "Star",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-06-07",
     "title": "端午节",
     "description": "粽叶飘香，安康团圆",
     "icon": "Gift",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-08-01",
     "title": "建军节",
     "description": "致敬最可爱的人",
     "icon": "Flag",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "red"
   },
   {
     "date": "2025-09-06",
     "title": "教师节",
     "description": "感谢每一位辛勤的园丁",
     "icon": "Calendar",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "red"
   },
   {
     "date": "2025-09-06",
     "title": "中秋节",
     "description": "月圆人团圆",
     "icon": "Star",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-10-01",
     "title": "国庆节",
     "description": "祖国生日，举国同庆",
     "icon": "Flag",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-11-11",
     "title": "光棍节",
     "description": "单身也快乐",
     "icon": "Star",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "red"
   },
   {
     "date": "2025-12-24",
     "title": "平安夜",
     "description": "温馨夜晚，平安喜乐",
     "icon": "Gift",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-12-25",
     "title": "圣诞节",
     "description": "一起庆祝冬日奇迹",
     "icon": "Gift",
-    "category": "节日"
+    "category": "节日",
+    "markColor": "red"
   },
   {
     "date": "2025-12-31",
     "title": "年末总结",
     "description": "静下心看看这一年的故事",
     "icon": "AlarmClock",
-    "category": "纪念日"
+    "category": "纪念日",
+    "markColor": "purple"
   }
 ]
