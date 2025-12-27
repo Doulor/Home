@@ -112,6 +112,14 @@
     "markColor": "red"
   },
   {
+    "date": "2025-09-21",
+    "title": "建站纪念日",
+    "description": "记录本站的成长与回忆",
+    "icon": "AlarmClock",
+    "category": "纪念日",
+    "markColor": "purple"
+  },
+  {
     "date": "2025-10-01",
     "title": "国庆节",
     "description": "祖国生日，举国同庆",
@@ -146,7 +154,7 @@
   {
     "date": "2025-12-31",
     "title": "年末总结",
-    "description": "静下心看看这一年的故事",
+    "description": "总结过去，展望未来",
     "icon": "AlarmClock",
     "category": "纪念日",
     "markColor": "purple"

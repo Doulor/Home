@@ -3,7 +3,10 @@
   <div class="mini-calendar" @click.stop="toggleExpand">
     <section class="calendar-card cards">
       <header class="calendar-header">
-        <div class="calendar-label">日历</div>
+        <div class="calendar-label">
+          日历
+          <span class="mini-label-date">{{ displayYear }}年 {{ displayMonth }}月</span>
+        </div>
       </header>
       <div class="weekday-row">
         <span v-for="(label, index) in weekdayLabels" :key="index">{{ label }}</span>
@@ -92,7 +95,7 @@
                   <div class="tooltip-title">{{ (day.events || []).length }} 个事件</div>
                   <ul>
                     <li v-for="(event, idx) in (day.events || [])" :key="event.date + event.title + idx">
-                      <span class="dot" :class="{ 'dot-purple': event.markColor === 'purple' }"></span>
+                      <span class="dot" :class="{ 'dot-purple': event.markColor === 'purple', 'dot-blue': event.markColor === 'blue' }"></span>
                       <span class="text">{{ event.title }}<span v-if="event.description"> · {{ event.description }}</span></span>
                     </li>
                   </ul>
@@ -102,15 +105,25 @@
           </div>
 
           <div class="calendar-right">
-            <div v-if="mode === 'cloud'" class="cloud-panel">
-              <h4 class="panel-title">最近的特殊日</h4>
+                <div v-if="mode === 'cloud'" class="cloud-panel">
+              <h4 class="panel-title">
+                最近的特殊日
+                <span class="legend-tip" tabindex="0" aria-label="颜色说明">
+                  ！
+                  <div class="legend-tooltip">
+                    <p><span class="legend-dot legend-dot--red"></span> 红色：公共节日</p>
+                    <p><span class="legend-dot legend-dot--purple"></span> 紫色：站长定的特殊日期</p>
+                    <p><span class="legend-dot legend-dot--blue"></span> 蓝色：私人标记</p>
+                  </div>
+                </span>
+              </h4>
               <ul class="upcoming-list">
-                <li v-for="event in upcomingEvents" :key="event.date + event.title" class="event-row">
-                  <span class="bullet"></span>
+                    <li v-for="event in upcomingEvents" :key="event.isoNextDate + event.title" class="event-row">
+                      <span class="bullet" :class="{ 'bullet-purple': event.markColor === 'purple', 'bullet-blue': event.markColor === 'blue' }"></span>
                   <div class="upcoming-meta">
                     <span class="event-title">{{ event.title }}</span>
-                    <span class="event-date">{{ formatDate(event.date) }}</span>
-                    <span class="event-countdown">剩余 {{ event.daysLeft }} 天</span>
+                        <span class="event-date">{{ formatDate(event.isoNextDate || event.date) }}</span>
+                        <span class="event-countdown" :class="{ 'event-countdown-purple': event.markColor === 'purple', 'event-countdown-blue': event.markColor === 'blue' }">剩余 {{ event.daysLeft }} 天</span>
                   </div>
                 </li>
                 <li v-if="!upcomingEvents.length" class="empty">暂无即将到来的特殊日</li>
@@ -192,7 +205,7 @@ const formatIsoDate = (dateObj) => {
 };
 
 const todayIso = formatIsoDate(today);
-const newEvent = ref({ date: todayIso, title: "", icon: "Calendar", description: "" });
+const newEvent = ref({ date: todayIso, title: "", icon: "Calendar", description: "", markColor: "blue" });
 
 const weekdayLabels = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -215,6 +228,7 @@ const getMarkColor = (events = []) => {
   if (!events.length) return "red";
   const colors = events.map((ev) => ev.markColor).filter(Boolean);
   if (colors.includes("purple")) return "purple";
+  if (colors.includes("blue")) return "blue";
   if (colors.includes("red")) return "red";
   return "red";
 };
@@ -287,7 +301,8 @@ const maxDate = computed(() => {
 const loadPersonalEvents = () => {
   try {
     const stored = window.localStorage.getItem(storageKey);
-    personalEvents.value = stored ? JSON.parse(stored) : [];
+    const parsed = stored ? JSON.parse(stored) : [];
+    personalEvents.value = parsed.map((ev) => ({ ...ev, markColor: ev.markColor || "blue" }));
   } catch (error) {
     console.error("加载本地事件失败", error);
     personalEvents.value = [];
@@ -305,10 +320,11 @@ const addPersonalEvent = () => {
     title: newEvent.value.title.trim(),
     icon: newEvent.value.icon,
     description: newEvent.value.description.trim(),
+    markColor: newEvent.value.markColor || "blue",
   });
   savePersonalEvents();
   ElMessage({ message: "已保存到本地事件", type: "success", duration: 1200 });
-  newEvent.value = { date: todayIso, title: "", icon: "Calendar", description: "" };
+  newEvent.value = { date: todayIso, title: "", icon: "Calendar", description: "", markColor: "blue" };
 };
 
 const removePersonalEvent = (event) => {
@@ -335,24 +351,55 @@ const nextMonth = () => {
   }
 };
 
-const parseDate = (str) => {
-  if (!str) return null;
-  const [y, m, d] = str.split("-").map(Number);
-  return new Date(y, m - 1, d);
+const getNextOccurrence = (isoDate, reference) => {
+  if (!isoDate) return null;
+  const [_, month, day] = isoDate.split("-").map(Number);
+  if (!Number.isFinite(month) || !Number.isFinite(day)) return null;
+  const currentYear = reference.getFullYear();
+  const candidate = new Date(currentYear, month - 1, day);
+  if (candidate < reference) {
+    return new Date(currentYear + 1, month - 1, day);
+  }
+  return candidate;
 };
 
 const upcomingEvents = computed(() => {
   const now = new Date();
-  return (cloudEvents.value || [])
-    .map((ev) => {
-      const dateObj = parseDate(ev.date);
-      if (!dateObj) return null;
-      const diff = Math.ceil((dateObj - now) / (1000 * 60 * 60 * 24));
-      return diff >= 0 ? { ...ev, daysLeft: diff } : null;
-    })
-    .filter(Boolean)
+
+  const cloudNext = (cloudEvents.value || []).map((ev) => {
+    const nextDate = getNextOccurrence(ev.date, now);
+    if (!nextDate) return null;
+    const diff = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
+    return {
+      ...ev,
+      nextDate,
+      isoNextDate: `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(
+        nextDate.getDate(),
+      ).padStart(2, "0")}`,
+      daysLeft: diff,
+    };
+  });
+
+  const personalNext = (personalEvents.value || []).map((ev) => {
+    if (!ev.date) return null;
+    const dateObj = new Date(ev.date);
+    if (Number.isNaN(dateObj.getTime())) return null;
+    const diff = Math.ceil((dateObj - now) / (1000 * 60 * 60 * 24));
+    return diff >= 0
+      ? {
+          ...ev,
+          nextDate: dateObj,
+          isoNextDate: ev.date,
+          daysLeft: diff,
+          markColor: ev.markColor || "blue",
+        }
+      : null;
+  });
+
+  return [...cloudNext, ...personalNext]
+    .filter((event) => event && Number.isFinite(event.daysLeft))
     .sort((a, b) => a.daysLeft - b.daysLeft)
-    .slice(0, 4);
+    .slice(0, 3);
 });
 
 const fetchCloudEvents = async () => {
@@ -456,6 +503,14 @@ onMounted(() => {
   .calendar-label {
     font-size: 1.2rem;
     font-weight: bold;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .mini-label-date {
+    font-size: 0.75rem;
+    opacity: 0.7;
   }
 
   .calendar-sub {
@@ -652,6 +707,11 @@ onMounted(() => {
             background: #c17eff;
             box-shadow: 0 0 6px rgba(193, 126, 255, 0.45);
           }
+
+          &.dot-blue {
+            background: #4da3ff;
+            box-shadow: 0 0 6px rgba(77, 163, 255, 0.45);
+          }
         }
 
         .text {
@@ -725,6 +785,26 @@ onMounted(() => {
     filter: blur(0.45px) drop-shadow(-1px 1px 1px rgba(0, 0, 0, 0.18));
   }
 
+  &.event-blue.has-event::before {
+    border: 1.5px solid rgba(77, 163, 255, 0.55);
+    filter: blur(0.55px);
+  }
+
+  &.event-blue.has-event::after {
+    border: 2px solid #4da3ff;
+    box-shadow: 0 0 10px rgba(77, 163, 255, 0.32), 0 0 0 1px rgba(77, 163, 255, 0.22),
+      0 0 0 7px rgba(77, 163, 255, 0.08);
+    background:
+      radial-gradient(120% 95% at 18% 32%, rgba(77, 163, 255, 0.3) 0%, transparent 55%),
+      radial-gradient(95% 115% at 74% 58%, rgba(77, 163, 255, 0.26) 0%, transparent 60%),
+      radial-gradient(90% 90% at 40% 78%, rgba(77, 163, 255, 0.2) 0%, transparent 62%),
+      radial-gradient(75% 85% at 62% 22%, rgba(77, 163, 255, 0.18) 0%, transparent 58%),
+      radial-gradient(18% 22% at 30% 15%, rgba(77, 163, 255, 0.35) 0%, transparent 75%),
+      radial-gradient(12% 18% at 78% 72%, rgba(77, 163, 255, 0.28) 0%, transparent 78%),
+      radial-gradient(10% 14% at 52% 48%, rgba(77, 163, 255, 0.22) 0%, transparent 80%);
+    filter: blur(0.45px) drop-shadow(-1px 1px 1px rgba(0, 0, 0, 0.18));
+  }
+
   &.event-purple {
     .event-icon {
       color: #c17eff;
@@ -733,6 +813,17 @@ onMounted(() => {
     .event-tooltip .dot {
       background: #c17eff;
       box-shadow: 0 0 6px rgba(193, 126, 255, 0.45);
+    }
+  }
+
+  &.event-blue {
+    .event-icon {
+      color: #4da3ff;
+    }
+
+    .event-tooltip .dot {
+      background: #4da3ff;
+      box-shadow: 0 0 6px rgba(77, 163, 255, 0.45);
     }
   }
 
@@ -767,6 +858,87 @@ onMounted(() => {
   margin-bottom: 0.5rem;
   font-size: 1rem;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  padding-left: 5.5px;
+  cursor: default;
+  color: #fff;
+  opacity: 0.8;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  .legend-tooltip {
+    position: absolute;
+    top: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 8px 10px;
+    white-space: nowrap;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    transform: translate(-50%, -2px);
+    z-index: 20;
+
+    p {
+      margin: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #f7f7f7;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+
+      &.legend-dot--red {
+        background: #ef3340;
+        box-shadow: 0 0 6px rgba(239, 51, 64, 0.35);
+      }
+
+      &.legend-dot--purple {
+        background: #c17eff;
+        box-shadow: 0 0 6px rgba(193, 126, 255, 0.35);
+      }
+
+      &.legend-dot--blue {
+        background: #4da3ff;
+        box-shadow: 0 0 6px rgba(77, 163, 255, 0.35);
+      }
+    }
+  }
+
+  &:hover .legend-tooltip,
+  &:focus-visible .legend-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 2px);
+  }
 }
 
 .upcoming-list {
@@ -789,6 +961,16 @@ onMounted(() => {
     height: 6px;
     background: #ef859d;
     border-radius: 50%;
+
+    &.bullet-purple {
+      background: #c17eff;
+      box-shadow: 0 0 6px rgba(193, 126, 255, 0.35);
+    }
+
+    &.bullet-blue {
+      background: #4da3ff;
+      box-shadow: 0 0 6px rgba(77, 163, 255, 0.35);
+    }
   }
 
   .upcoming-meta {
@@ -810,6 +992,14 @@ onMounted(() => {
     font-size: 0.9rem;
     color: #ef859d;
     font-weight: 600;
+
+    &.event-countdown-purple {
+      color: #c17eff;
+    }
+
+    &.event-countdown-blue {
+      color: #4da3ff;
+    }
   }
 }
 
@@ -969,6 +1159,11 @@ onMounted(() => {
     &.mini-underline--purple {
       background: #c17eff;
       box-shadow: 0 0 6px rgba(193, 126, 255, 0.25);
+    }
+
+    &.mini-underline--blue {
+      background: #4da3ff;
+      box-shadow: 0 0 6px rgba(77, 163, 255, 0.25);
     }
   }
 }
