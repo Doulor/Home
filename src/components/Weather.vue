@@ -62,6 +62,7 @@ import { ref, onMounted, nextTick } from "vue";
 
 // 配置区域 - 在这里修改默认城市
 const DEFAULT_CITY = "荆州"; 
+const STORAGE_KEY = "home-weather-city";
 
 // 高德API配置
 const AMAP_WEB_KEY = "3b3b7736c187fa7bffae3bb1ecb30ef0"; 
@@ -100,8 +101,29 @@ const getWeatherIcon = (condition) => {
   return weatherMap[condition] || "🌤️";
 };
 
-// 组件挂载时加载默认城市天气
+// 加载本地存储城市
+const loadSavedCity = () => {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      cityName.value = saved;
+    }
+  } catch (err) {
+    console.warn("读取本地城市失败", err);
+  }
+};
+
+const saveCity = (city) => {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, city);
+  } catch (err) {
+    console.warn("保存本地城市失败", err);
+  }
+};
+
+// 组件挂载时加载默认/本地城市天气
 onMounted(() => {
+  loadSavedCity();
   fetchWeather();
 });
 
@@ -160,6 +182,9 @@ const fetchWeather = async () => {
       condition: weather.weather,
       updateTime: weather.reporttime.slice(11, 16)
     };
+
+    cityName.value = weather.city;
+    saveCity(weather.city);
 
     showSearch.value = false;
   } catch (err) {
