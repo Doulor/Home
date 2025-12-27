@@ -20,6 +20,7 @@ const store = mainStore();
   width: 50%;
   margin-right: 10px;
   transform: translateY(20px);
+  margin-top: 1.5rem;
   padding-bottom: 80px; /* Add padding to avoid content being hidden behind the floating menu button */
   &.hidden {
     display: none;
