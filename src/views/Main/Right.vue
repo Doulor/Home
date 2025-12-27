@@ -58,6 +58,7 @@ const siteUrl = computed(() => {
     margin-left: 0;
     width: 100%;
     padding-bottom: 80px; /* Maintain padding on mobile */
+    padding-top: 7.5rem; /* Push content further downward on mobile */
     &.hidden {
       display: none;
     }

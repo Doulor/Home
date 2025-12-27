@@ -498,6 +498,8 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   flex-shrink: 0;
 
   .calendar-label {
@@ -573,11 +575,14 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.6rem;
   padding: 0 0.5rem;
   flex-shrink: 0;
 
   .calendar-title {
     font-weight: bold;
+    text-align: center;
+    flex: 1;
   }
 
   .control-btn {
@@ -1164,6 +1169,84 @@ onMounted(() => {
     &.mini-underline--blue {
       background: #4da3ff;
       box-shadow: 0 0 6px rgba(77, 163, 255, 0.25);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .expanded-calendar-container .calendar-card {
+    width: 95vw;
+    max-width: 95vw;
+    max-height: 90vh;
+    padding: 1rem;
+  }
+
+  .calendar-header {
+    align-items: flex-start;
+  }
+
+  .mode-switch {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .calendar-controls {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+
+    .control-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .calendar-title {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  .calendar-body {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .calendar-left,
+  .calendar-right {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .calendar-right {
+    padding: 0.8rem;
+    margin-top: 2rem;
+  }
+
+  .days-grid {
+    gap: 3px;
+  }
+
+  .calendar-body .day-cell {
+    min-height: 44px;
+  }
+
+  .mini-calendar {
+    width: 92%;
+    max-width: 380px;
+    margin: 0.7rem auto 0;
+
+    .calendar-card {
+      padding: 8px;
+    }
+
+    .day-cell {
+      height: 30px;
+      font-size: 13px;
+      min-height: 0;
+      aspect-ratio: auto;
+      line-height: 1;
+      padding: 0;
     }
   }
 }
