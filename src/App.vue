@@ -36,7 +36,7 @@
   </Transition>
 </template>
 <script setup>
-import { helloInit, checkDays } from "@/utils/getTime.js";
+import { helloInit, checkDays, showUpcomingCloudHello } from "@/utils/getTime.js";
 import { HamburgerButton, CloseSmall } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import { Icon } from "@vicons/utils";
@@ -52,6 +52,7 @@ import config from "@/../package.json";
 
 const store = mainStore();
 const isMobileSize = ref(true); // 默认为移动端尺寸
+const fallbackTimer = ref(null); // 壁纸兜底计时器，防止因加载异常导致页面不展示
 
 // 页面宽度
 const getWidth = () => {
@@ -62,12 +63,20 @@ const getWidth = () => {
 
 // 加载完成事件
 const hasCalledHello = ref(false); // 添加标志确保问候语只显示一次
+const hasShownUpcoming = ref(false); // 仅提醒一次最近特殊日
 const loadComplete = () => {
   nextTick(() => {
     // 欢迎提示 - 只调用一次
     if (!hasCalledHello.value) {
       helloInit();
       hasCalledHello.value = true;
+    }
+
+    if (!hasShownUpcoming.value) {
+      const upcoming = showUpcomingCloudHello();
+      if (upcoming) {
+        hasShownUpcoming.value = true;
+      }
     }
     // 默哀模式
     checkDays();
@@ -87,8 +96,23 @@ watch(
 );
 
 onMounted(() => {
+  // 强制开启主界面显示，避免因某些加载异常导致整屏被遮挡
+  store.setImgLoadStatus(true);
+  store.backgroundShow = false;
+  store.setOpenState = false;
+  store.boxOpenState = false;
+
   // 自定义鼠标
   cursorInit();
+
+  // 兜底：若壁纸加载或事件异常，强制在 2.5s 后展示主界面，避免空白屏
+  fallbackTimer.value = setTimeout(() => {
+    if (!store.imgLoadStatus) {
+      store.setImgLoadStatus(true);
+      loadComplete();
+      console.warn("壁纸加载异常，已自动跳过等待");
+    }
+  }, 2500);
 
   // 屏蔽右键
   document.oncontextmenu = () => {
@@ -133,6 +157,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", getWidth);
+  if (fallbackTimer.value) {
+    clearTimeout(fallbackTimer.value);
+  }
 });
 </script>
 

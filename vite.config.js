@@ -14,7 +14,12 @@ export default ({ mode }) =>
     plugins: [
       vue(),
       AutoImport({
-        imports: ["vue"],
+        imports: [
+          "vue",
+          {
+            "element-plus": ["ElMessage"],
+          },
+        ],
         resolvers: [ElementPlusResolver()],
       }),
       Components({

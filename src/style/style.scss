@@ -75,6 +75,66 @@ p {
   }
 }
 
+// 按钮/图标悬停上浮放大（全局适用，大多数按钮）
+button,
+.el-button,
+.icon-button,
+.control-btn,
+.add-btn,
+.remove-btn,
+.close-btn,
+.mode-switch button,
+.calendar-header button,
+.calendar-controls button {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transform-origin: center;
+}
+
+button:hover,
+.el-button:hover,
+.icon-button:hover,
+.control-btn:hover,
+.add-btn:hover,
+.remove-btn:hover,
+.close-btn:hover,
+.mode-switch button:hover,
+.calendar-header button:hover,
+.calendar-controls button:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+button:active,
+.el-button:active,
+.icon-button:active,
+.control-btn:active,
+.add-btn:active,
+.remove-btn:active,
+.close-btn:active,
+.mode-switch button:active,
+.calendar-header button:active,
+.calendar-controls button:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.22);
+}
+
+// 按钮内的图标/文字上浮感
+button > svg,
+.el-button > svg,
+.icon-button > svg,
+.mode-switch button > svg,
+.calendar-controls button > svg {
+  transition: transform 0.18s ease;
+}
+
+button:hover > svg,
+.el-button:hover > svg,
+.icon-button:hover > svg,
+.mode-switch button:hover > svg,
+.calendar-controls button:hover > svg {
+  transform: translateY(-1px) scale(1.08);
+}
+
 // 文字超出
 .text-hidden {
   overflow: hidden;

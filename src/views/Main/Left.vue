@@ -2,6 +2,7 @@
   <div :class="store.mobileOpenState ? 'left hidden' : 'left'">
     <Message />
     <SocialLinks />
+    <Calendar />
   </div>
 </template>
 
@@ -9,6 +10,7 @@
 import { mainStore } from "@/store";
 import Message from "@/components/Message.vue";
 import SocialLinks from "@/components/SocialLinks.vue";
+import Calendar from "@/components/Calendar.vue";
 const store = mainStore();
 </script>
 
@@ -18,6 +20,7 @@ const store = mainStore();
   width: 50%;
   margin-right: 10px;
   transform: translateY(20px);
+  margin-top: 1.5rem;
   padding-bottom: 80px; /* Add padding to avoid content being hidden behind the floating menu button */
   &.hidden {
     display: none;

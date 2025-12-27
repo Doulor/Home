@@ -72,18 +72,30 @@ onBeforeUnmount(() => {
 .content-row {
   display: flex;
   justify-content: center;
+  align-items: flex-start; /* 顶部对齐 */
   width: 100%;
+  gap: 20px; /* 增加间距 */
+
+  @media (max-width: 1200px) {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .time-weather-card {
-  width: 100%;
-  max-width: 900px;
+  flex: 1; /* 占据剩余空间 */
+  max-width: 800px;
   background-color: rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  padding: 10px 15px; /* 【减小】卡片内边距（上下各减5px） */
+  padding: 10px 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 1200px) {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 .time-section {
