@@ -29,8 +29,8 @@ const store = mainStore();
     margin-right: 0;
     width: 100%;
     padding-bottom: 80px; /* Maintain padding on mobile */
-    transform: translateY(24px);
-    margin-top: 2rem;
+    transform: translateY(-30px); /* 移动端整体上移 */
+    margin-top: 1rem;
   }
 }
 </style>

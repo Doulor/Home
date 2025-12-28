@@ -82,6 +82,29 @@ onBeforeUnmount(() => {
   }
 }
 
+@media (max-width: 720px) {
+  .func-container {
+    padding-top: 42px; /* 移动端整体下移搜索与天气 */
+  }
+
+  .search-card {
+    margin-top: 18px; /* 随高度压缩略微下移 */
+  }
+
+  .content-row {
+    gap: 12px;
+  }
+
+  .time-weather-card {
+    padding: 4px 10px; /* 进一步降低高度但不改字体 */
+  }
+
+  .weather-section {
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+}
+
 .time-weather-card {
   flex: 1; /* 占据剩余空间 */
   max-width: 800px;
