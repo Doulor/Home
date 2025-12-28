@@ -1,6 +1,7 @@
 import { h } from "vue";
 import { SpaCandle } from "@icon-park/vue-next";
 import cloudEvents from "@/assets/calendarCloudEvents.json";
+import { getNextOccurrenceForEvent } from "@/utils/cloudEventHelpers";
 
 // 时钟
 export const getCurrentTime = () => {
@@ -135,25 +136,19 @@ export const checkDays = () => {
 };
 
 // 最近特殊日提醒（云事件）
-const parseDate = (str, targetYear) => {
-  if (!str) return null;
-  const [y, m, d] = str.split("-").map(Number);
-  const year = typeof targetYear === "number" ? targetYear : y;
-  return new Date(year, m - 1, d);
-};
-
 export const getUpcomingCloudEvent = (limitDays = 7) => {
   if (!Array.isArray(cloudEvents)) return null;
   const now = new Date();
-  const thisYear = now.getFullYear();
   const eventsWithNextDate = cloudEvents
     .map((ev) => {
-      const base = parseDate(ev.date, thisYear);
-      if (!base) return null;
-      // 若今年已过，则滚动到下一年
-      const target = base < now ? parseDate(ev.date, thisYear + 1) : base;
-      const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
-      return { ...ev, nextDate: target, daysLeft: diff };
+      const occurrence = getNextOccurrenceForEvent(ev, now);
+      if (!occurrence) return null;
+      return {
+        ...ev,
+        nextDate: occurrence.dateObj,
+        daysLeft: occurrence.daysLeft,
+        isoNextDate: occurrence.iso,
+      };
     })
     .filter(Boolean)
     .filter((ev) => ev.daysLeft >= 0)
@@ -163,9 +158,7 @@ export const getUpcomingCloudEvent = (limitDays = 7) => {
   if (!nearest || nearest.daysLeft >= limitDays) return null;
   return {
     ...nearest,
-    date: `${nearest.nextDate.getFullYear()}-${String(nearest.nextDate.getMonth() + 1).padStart(2, "0")}-${String(
-      nearest.nextDate.getDate(),
-    ).padStart(2, "0")}`,
+    date: nearest.isoNextDate,
   };
 };
 

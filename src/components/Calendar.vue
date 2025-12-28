@@ -191,6 +191,7 @@ import {
   Lock,
 } from "@icon-park/vue-next";
 import cloudData from "@/assets/calendarCloudEvents.json";
+import { resolveEventDateForYear, getNextOccurrenceForEvent } from "@/utils/cloudEventHelpers";
 
 const isExpanded = ref(false);
 const isCollapsing = ref(false);
@@ -200,6 +201,17 @@ const displayYear = ref(today.getFullYear());
 const displayMonth = ref(today.getMonth() + 1);
 const cloudEvents = ref([]);
 const personalEvents = ref([]);
+
+const cloudEventsForYear = computed(() => {
+  const year = displayYear.value;
+  return (cloudEvents.value || [])
+    .map((event) => {
+      const iso = resolveEventDateForYear(event, year);
+      if (!iso) return null;
+      return { ...event, date: iso };
+    })
+    .filter(Boolean);
+});
 
 const formatIsoDate = (dateObj) => {
   const y = dateObj.getFullYear();
@@ -265,15 +277,7 @@ const monthDays = computed(() => {
     cells.push({ key: `empty-${blank}`, empty: true, date: "", events: [] });
   }
 
-  const recurringCloudEvents = (cloudEvents.value || []).map((ev) => {
-    const [_, m, d] = (ev.date || "").split("-").map(Number);
-    const monthNum = Number.isFinite(m) ? m : 1;
-    const dayNum = Number.isFinite(d) ? d : 1;
-    const mappedDate = `${year}-${String(monthNum).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-    return { ...ev, date: mappedDate };
-  });
-
-  const allEvents = [...recurringCloudEvents, ...personalEvents.value];
+  const allEvents = [...cloudEventsForYear.value, ...personalEvents.value];
 
   for (let day = 1; day <= totalDays; day++) {
     const isoDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -355,32 +359,17 @@ const nextMonth = () => {
   }
 };
 
-const getNextOccurrence = (isoDate, reference) => {
-  if (!isoDate) return null;
-  const [_, month, day] = isoDate.split("-").map(Number);
-  if (!Number.isFinite(month) || !Number.isFinite(day)) return null;
-  const currentYear = reference.getFullYear();
-  const candidate = new Date(currentYear, month - 1, day);
-  if (candidate < reference) {
-    return new Date(currentYear + 1, month - 1, day);
-  }
-  return candidate;
-};
-
 const upcomingEvents = computed(() => {
   const now = new Date();
 
   const cloudNext = (cloudEvents.value || []).map((ev) => {
-    const nextDate = getNextOccurrence(ev.date, now);
-    if (!nextDate) return null;
-    const diff = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
+    const occurrence = getNextOccurrenceForEvent(ev, now);
+    if (!occurrence) return null;
     return {
       ...ev,
-      nextDate,
-      isoNextDate: `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(
-        nextDate.getDate(),
-      ).padStart(2, "0")}`,
-      daysLeft: diff,
+      nextDate: occurrence.dateObj,
+      isoNextDate: occurrence.iso,
+      daysLeft: occurrence.daysLeft,
     };
   });
 

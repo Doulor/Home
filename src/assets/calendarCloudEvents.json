@@ -2,15 +2,55 @@
   {
     "date": "2025-01-01",
     "title": "元旦快乐",
-    "description": "新的开始，愿每一天都有美好",
+    "description": "新一年的序章开启！每天都要揣着开心过日子呀",
     "icon": "Calendar",
+    "category": "节日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-01-17,2026-01-05,2027-01-24,2028-01-12,2029-01-01",
+    "title": "腊八节",
+    "description": "喝碗热乎乎的腊八粥，年味儿直接拉满！",
+    "icon": "Gift",
+    "category": "节日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-01-23,2026-01-12,2027-01-30,2028-01-19,2029-01-08",
+    "title": "小年",
+    "description": "除尘祭灶搞起来，准备迎接新年的好运啦",
+    "icon": "Calendar",
+    "category": "节日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-01-28,2026-01-26,2027-02-14,2028-02-02,2029-01-22",
+    "title": "除夕",
+    "description": "贴春联吃年夜饭！把所有烦恼都留在旧年啦",
+    "icon": "Star",
+    "category": "节日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-01-29,2026-01-27,2027-02-15,2028-02-03,2029-01-23",
+    "title": "春节",
+    "description": "龙年大吉！红包收不停，快乐也不停",
+    "icon": "Flag",
+    "category": "节日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-02-12,2026-02-10,2027-02-28,2028-02-16,2029-02-05",
+    "title": "元宵节",
+    "description": "吃汤圆逛灯会，今晚的月色和你都超甜",
+    "icon": "Star",
     "category": "节日",
     "markColor": "red"
   },
   {
     "date": "2025-02-14",
     "title": "情人节",
-    "description": "给重要的人送上一句暖心问候",
+    "description": "给喜欢的人发句悄悄话，甜度超标预警",
     "icon": "Heart",
     "category": "纪念日",
     "markColor": "red"
@@ -18,7 +58,7 @@
   {
     "date": "2025-03-08",
     "title": "妇女节",
-    "description": "致敬每一位女性的美丽与坚强",
+    "description": "各位女神们！今天只管放肆宠爱自己",
     "icon": "Star",
     "category": "节日",
     "markColor": "red"
@@ -26,15 +66,15 @@
   {
     "date": "2025-03-12",
     "title": "植树节",
-    "description": "种下一棵树，守护一片绿",
+    "description": "种棵小树苗，等它长大陪你看四季呀",
     "icon": "Leaf",
     "category": "纪念日",
     "markColor": "red"
   },
   {
-    "date": "2025-04-05",
+    "date": "2025-04-05,2026-04-04,2027-04-05,2028-04-04,2029-04-05",
     "title": "清明节",
-    "description": "缅怀先人，珍惜当下",
+    "description": "踏青扫墓两不误，珍惜眼前的每一份美好",
     "icon": "Leaf",
     "category": "节日",
     "markColor": "red"
@@ -42,15 +82,31 @@
   {
     "date": "2025-04-22",
     "title": "地球日",
-    "description": "记录那些为了环境努力的小事",
+    "description": "随手捡个垃圾、节约一度电，地球会更爱你",
     "icon": "Leaf",
     "category": "纪念日",
     "markColor": "red"
   },
   {
+    "date": "2025-04-23",
+    "title": "世界读书日",
+    "description": "放下手机读会儿书，给自己充充电吧",
+    "icon": "Calendar",
+    "category": "纪念日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-04-25",
+    "title": "Doulor的生日",
+    "description": "叮！专属寿星的快乐日到啦！又多了一岁的可爱与帅气",
+    "icon": "Gift",
+    "category": "纪念日",
+    "markColor": "purple"
+  },
+  {
     "date": "2025-05-01",
     "title": "劳动节",
-    "description": "致敬每一份努力",
+    "description": "打工人的专属假期！啥也别干，躺着最香",
     "icon": "Flag",
     "category": "节日",
     "markColor": "red"
@@ -58,7 +114,23 @@
   {
     "date": "2025-05-04",
     "title": "青年节",
-    "description": "青春无畏，逐梦前行",
+    "description": "年轻就是本钱！想做的事赶紧冲，别犹豫",
+    "icon": "Star",
+    "category": "纪念日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-05-11,2026-05-10,2027-05-09,2028-05-14,2029-05-13",
+    "title": "母亲节",
+    "description": "给妈妈打个电话，说句我爱你超管用",
+    "icon": "Heart",
+    "category": "纪念日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-05-12",
+    "title": "护士节",
+    "description": "谢谢白衣天使们！你们的守护超靠谱",
     "icon": "Star",
     "category": "纪念日",
     "markColor": "red"
@@ -66,7 +138,15 @@
   {
     "date": "2025-05-20",
     "title": "520告白日",
-    "description": "记录想对特别的人说的话",
+    "description": "大胆说爱！今天的浪漫氛围拉满啦",
+    "icon": "Heart",
+    "category": "纪念日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-05-21",
+    "title": "521告白日",
+    "description": "昨天没说出口的话，今天继续冲呀",
     "icon": "Heart",
     "category": "纪念日",
     "markColor": "red"
@@ -74,47 +154,63 @@
   {
     "date": "2025-06-01",
     "title": "儿童节",
-    "description": "童心未泯，快乐成长",
+    "description": "不管几岁，快乐万岁！今天都做小朋友",
     "icon": "Star",
     "category": "节日",
     "markColor": "red"
   },
   {
-    "date": "2025-06-07",
+    "date": "2025-06-07,2026-05-28,2027-06-15,2028-06-04,2029-05-24",
     "title": "端午节",
-    "description": "粽叶飘香，安康团圆",
+    "description": "吃粽子赛龙舟，今天的快乐是糯米味的",
     "icon": "Gift",
     "category": "节日",
     "markColor": "red"
   },
   {
-    "date": "2025-08-01",
-    "title": "建军节",
-    "description": "致敬最可爱的人",
+    "date": "2025-06-15,2026-06-21,2027-06-20,2028-06-18,2029-06-17",
+    "title": "父亲节",
+    "description": "那个不善言辞的男人，其实超爱你呀",
+    "icon": "Star",
+    "category": "纪念日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-07-01",
+    "title": "建党节",
+    "description": "致敬守护我们的中国红，骄傲值拉满",
     "icon": "Flag",
     "category": "纪念日",
     "markColor": "red"
   },
   {
-    "date": "2025-09-06",
+    "date": "2025-08-01",
+    "title": "建军节",
+    "description": "谢谢最可爱的人！有你们在超安心",
+    "icon": "Flag",
+    "category": "纪念日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-08-29,2026-08-19,2027-09-06,2028-08-25,2029-09-13",
+    "title": "七夕节",
+    "description": "牛郎织女来相会，你也可以甜甜蜜蜜",
+    "icon": "Heart",
+    "category": "节日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-09-10",
     "title": "教师节",
-    "description": "感谢每一位辛勤的园丁",
+    "description": "谢谢老师的谆谆教诲，您辛苦啦",
     "icon": "Calendar",
     "category": "纪念日",
     "markColor": "red"
   },
   {
-    "date": "2025-09-06",
-    "title": "中秋节",
-    "description": "月圆人团圆",
-    "icon": "Star",
-    "category": "节日",
-    "markColor": "red"
-  },
-  {
     "date": "2025-09-21",
     "title": "建站纪念日",
-    "description": "记录本站的成长与回忆",
+    "description": "咱的小站又长大一岁！记录每一份成长与热爱",
     "icon": "AlarmClock",
     "category": "纪念日",
     "markColor": "purple"
@@ -122,15 +218,39 @@
   {
     "date": "2025-10-01",
     "title": "国庆节",
-    "description": "祖国生日，举国同庆",
+    "description": "举国同庆的日子！祝祖国妈妈生日快乐",
     "icon": "Flag",
     "category": "节日",
     "markColor": "red"
   },
   {
+    "date": "2025-10-06,2026-09-25,2027-10-13,2028-09-30,2029-09-20",
+    "title": "中秋节",
+    "description": "月圆人团圆，月饼吃到撑才过瘾",
+    "icon": "Star",
+    "category": "节日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-10-29,2026-10-18,2027-11-05,2028-10-23,2029-11-11",
+    "title": "重阳节",
+    "description": "陪长辈登高赏秋，这份陪伴超温暖",
+    "icon": "Leaf",
+    "category": "节日",
+    "markColor": "red"
+  },
+  {
+    "date": "2025-10-31",
+    "title": "万圣节",
+    "description": "捣蛋还是吃糖？今天可以放肆玩",
+    "icon": "Gift",
+    "category": "纪念日",
+    "markColor": "red"
+  },
+  {
     "date": "2025-11-11",
     "title": "光棍节",
-    "description": "单身也快乐",
+    "description": "单身贵族的快乐星球！想吃啥玩啥全听自己的",
     "icon": "Star",
     "category": "纪念日",
     "markColor": "red"
@@ -138,7 +258,7 @@
   {
     "date": "2025-12-24",
     "title": "平安夜",
-    "description": "温馨夜晚，平安喜乐",
+    "description": "吃个苹果许个愿，今晚一定超平安",
     "icon": "Gift",
     "category": "节日",
     "markColor": "red"
@@ -146,7 +266,7 @@
   {
     "date": "2025-12-25",
     "title": "圣诞节",
-    "description": "一起庆祝冬日奇迹",
+    "description": "圣诞快乐！想要半夜偷偷抓住圣诞老人吗",
     "icon": "Gift",
     "category": "节日",
     "markColor": "red"
@@ -154,7 +274,7 @@
   {
     "date": "2025-12-31",
     "title": "年末总结",
-    "description": "总结过去，展望未来",
+    "description": "和2025说拜拜！明年也要闪闪发光呀",
     "icon": "AlarmClock",
     "category": "纪念日",
     "markColor": "purple"
