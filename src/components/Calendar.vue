@@ -109,7 +109,7 @@
               <h4 class="panel-title">
                 最近的特殊日
                 <span class="legend-tip" tabindex="0" aria-label="颜色说明">
-                  ！
+                  i
                   <div class="legend-tooltip">
                     <p><span class="legend-dot legend-dot--red"></span> 红色：公共节日</p>
                     <p><span class="legend-dot legend-dot--purple"></span> 紫色：站长定的特殊日期</p>
@@ -1220,15 +1220,26 @@ onMounted(() => {
 
   .calendar-right {
     padding: 0.8rem;
-    margin-top: 1.25rem; /* 移动端整体上提一点 */
+    margin-top: 1rem; /* 移动端整体上提一点，为下方留空间 */
   }
 
   .days-grid {
-    gap: 3px;
+    gap: 2px;
+  }
+
+  .calendar-body {
+    gap: 0.6rem;
+  }
+
+  .calendar-left {
+    gap: 0.4rem;
   }
 
   .calendar-body .day-cell {
-    min-height: 44px;
+    aspect-ratio: auto; /* 变为长方形 */
+    height: 38px;
+    min-height: 0;
+    padding: 4px 0;
   }
 
   /* 移动端提升“最近的特殊日”可读性 */
