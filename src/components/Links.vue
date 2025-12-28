@@ -179,5 +179,11 @@ onMounted(() => {
       height: 180px;
     }
   }
+
+  @media (max-width: 720px) {
+    .line {
+      margin: 1.1rem 0.25rem 0.75rem; /* 移动端略微上移网站列表 */
+    }
+  }
 }
 </style>

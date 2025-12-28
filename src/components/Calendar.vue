@@ -1220,7 +1220,7 @@ onMounted(() => {
 
   .calendar-right {
     padding: 0.8rem;
-    margin-top: 2rem;
+    margin-top: 1.25rem; /* 移动端整体上提一点 */
   }
 
   .days-grid {
@@ -1231,10 +1231,34 @@ onMounted(() => {
     min-height: 44px;
   }
 
+  /* 移动端提升“最近的特殊日”可读性 */
+  .upcoming-list {
+    gap: 0.65rem;
+  }
+
+  .event-row {
+    align-items: flex-start;
+    padding: 12px;
+
+    .bullet {
+      width: 7px;
+      height: 7px;
+    }
+
+    .event-title {
+      font-size: 1rem;
+    }
+
+    .event-date,
+    .event-countdown {
+      font-size: 0.95rem;
+    }
+  }
+
   .mini-calendar {
     width: 92%;
     max-width: 380px;
-    margin: 0.7rem auto 0;
+    margin: 0.4rem auto 0; /* 略微上移迷你日历 */
 
     .calendar-card {
       padding: 8px;
