@@ -53,12 +53,16 @@ const siteUrl = computed(() => {
     @media (min-width: 720px) {
       display: none;
     }
+    @media (max-width: 720px) {
+      display: none; /* 移动端右侧隐藏 Doulor Logo */
+    }
   }
   @media (max-width: 720px) {
     margin-left: 0;
     width: 100%;
     padding-bottom: 80px; /* Maintain padding on mobile */
-    padding-top: 7.5rem; /* Push content further downward on mobile */
+    padding-top: 1.5rem; /* 移动端大幅上移 */
+    margin-top: -60px;   /* 强力上移整体位置 */
     &.hidden {
       display: none;
     }
