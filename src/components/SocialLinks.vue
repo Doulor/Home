@@ -52,6 +52,10 @@ const socialTip = ref("通过这里联系我吧");
     }
   }
 
+  @media (max-width: 720px) {
+    margin-top: 0.35rem; /* 移动端略微上移社交区 */
+  }
+
   .link {
     display: flex;
     align-items: center;

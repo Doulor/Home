@@ -45,6 +45,10 @@
             <div class="calendar-label">日历</div>
             <div class="calendar-sub">切换云事件或添加你的个人标注</div>
           </div>
+          <div class="header-nav-mobile">
+            <button class="control-btn" type="button" @click.stop="prevMonth">上一月</button>
+            <button class="control-btn" type="button" @click.stop="nextMonth">下一月</button>
+          </div>
           <div class="mode-switch">
             <button :class="{ active: mode === 'cloud' }" @click.stop="mode = 'cloud'">
               <CloudStorage class="mode-icon" />
@@ -109,7 +113,7 @@
               <h4 class="panel-title">
                 最近的特殊日
                 <span class="legend-tip" tabindex="0" aria-label="颜色说明">
-                  ！
+                  i
                   <div class="legend-tooltip">
                     <p><span class="legend-dot legend-dot--red"></span> 红色：公共节日</p>
                     <p><span class="legend-dot legend-dot--purple"></span> 紫色：站长定的特殊日期</p>
@@ -598,6 +602,35 @@ onMounted(() => {
   }
 }
 
+.header-nav-mobile {
+  display: none;
+  gap: 0.35rem;
+  align-items: center;
+  margin-left: auto;
+
+  .control-btn {
+    padding: 6px 11px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.12));
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+  }
+}
+
 .calendar-body {
   display: flex;
   flex-direction: row;
@@ -877,10 +910,10 @@ onMounted(() => {
   height: 18px;
   border-radius: 50%;
   border: 2.5px solid rgba(255, 255, 255, 0.6);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
   font-weight: 700;
-  padding-left: 5.5px;
+  padding-left: 0px;
   cursor: default;
   color: #fff;
   opacity: 0.8;
@@ -1177,7 +1210,7 @@ onMounted(() => {
   .expanded-calendar-container .calendar-card {
     width: 95vw;
     max-width: 95vw;
-    max-height: 90vh;
+    max-height: 86vh; /* 略微加高以利用剩余空间（仅移动端生效） */
     padding: 1rem;
   }
 
@@ -1220,21 +1253,73 @@ onMounted(() => {
 
   .calendar-right {
     padding: 0.8rem;
-    margin-top: 2rem;
+    margin-top: 0.6rem; /* 再上移，为下方留更多空间 */
   }
 
   .days-grid {
-    gap: 3px;
+    gap: 2px;
+  }
+
+  .calendar-body {
+    gap: 0.5rem;
+  }
+
+  .calendar-left {
+    gap: 0.35rem;
   }
 
   .calendar-body .day-cell {
-    min-height: 44px;
+    aspect-ratio: auto; /* 变为长方形 */
+    height: 34px;
+    min-height: 0;
+    padding: 4px 0;
+  }
+
+  /* 关闭按钮右置，便于移动端操作 */
+  .calendar-header {
+    align-items: center;
+
+    .close-btn {
+      margin-left: auto;
+    }
+
+    .header-nav-mobile {
+      display: inline-flex;
+    }
+  }
+
+  .calendar-controls {
+    display: none;
+  }
+
+  /* 移动端提升“最近的特殊日”可读性 */
+  .upcoming-list {
+    gap: 0.65rem;
+  }
+
+  .event-row {
+    align-items: flex-start;
+    padding: 12px;
+
+    .bullet {
+      width: 7px;
+      height: 7px;
+    }
+
+    .event-title {
+      font-size: 1rem;
+    }
+
+    .event-date,
+    .event-countdown {
+      font-size: 0.95rem;
+    }
   }
 
   .mini-calendar {
     width: 92%;
     max-width: 380px;
-    margin: 0.7rem auto 0;
+    margin: 0.4rem auto 0; /* 略微上移迷你日历 */
 
     .calendar-card {
       padding: 8px;

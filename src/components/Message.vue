@@ -93,7 +93,8 @@ watch(
       font-family: "Pacifico-Regular";
 
       .bg {
-        font-size: 5rem;
+      max-width: 100%;
+      margin-top: 14px; /* 移动端下移 Doulor 文案 */
       }
 
       .sm {
@@ -151,6 +152,11 @@ watch(
       max-width: 100%;
       /* 恢复移动端点击功能 */
       pointer-events: auto;
+    }
+    @media (max-width: 720px) {
+      .description {
+        margin-top: 2.75rem; /* 稍微上移简介块 */
+      }
     }
   }
   @media (max-width: 390px) {
