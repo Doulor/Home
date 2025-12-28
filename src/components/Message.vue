@@ -105,6 +105,18 @@ watch(
         }
       }
     }
+
+    @media (min-width: 720px) {
+      .name {
+        .bg {
+          font-size: 4.2rem; // 调小为4.2rem
+        }
+
+        .sm {
+          font-size: 2rem; // 调小为2rem
+        }
+      }
+    }
     @media (max-width: 768px) {
       .logo-img {
         width: 100px;
