@@ -45,6 +45,10 @@
             <div class="calendar-label">日历</div>
             <div class="calendar-sub">切换云事件或添加你的个人标注</div>
           </div>
+          <div class="header-nav-mobile">
+            <button class="control-btn" type="button" @click.stop="prevMonth">上一月</button>
+            <button class="control-btn" type="button" @click.stop="nextMonth">下一月</button>
+          </div>
           <div class="mode-switch">
             <button :class="{ active: mode === 'cloud' }" @click.stop="mode = 'cloud'">
               <CloudStorage class="mode-icon" />
@@ -596,6 +600,13 @@ onMounted(() => {
       background: rgba(255, 255, 255, 0.2);
     }
   }
+}
+
+.header-nav-mobile {
+  display: none;
+  gap: 0.4rem;
+  align-items: center;
+  margin-left: auto;
 }
 
 .calendar-body {
@@ -1249,6 +1260,14 @@ onMounted(() => {
     .close-btn {
       margin-left: auto;
     }
+
+    .header-nav-mobile {
+      display: inline-flex;
+    }
+  }
+
+  .calendar-controls {
+    display: none;
   }
 
   /* 移动端提升“最近的特殊日”可读性 */
