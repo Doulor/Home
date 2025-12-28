@@ -1177,8 +1177,8 @@ onMounted(() => {
   .expanded-calendar-container .calendar-card {
     width: 95vw;
     max-width: 95vw;
-    max-height: 90vh;
-    padding: 1rem;
+    max-height: 82vh; /* 进一步降低高度呈长方形 */
+    padding: 0.9rem;
   }
 
   .calendar-header {
@@ -1220,7 +1220,7 @@ onMounted(() => {
 
   .calendar-right {
     padding: 0.8rem;
-    margin-top: 1rem; /* 移动端整体上提一点，为下方留空间 */
+    margin-top: 0.6rem; /* 再上移，为下方留更多空间 */
   }
 
   .days-grid {
@@ -1228,18 +1228,27 @@ onMounted(() => {
   }
 
   .calendar-body {
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
 
   .calendar-left {
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
 
   .calendar-body .day-cell {
     aspect-ratio: auto; /* 变为长方形 */
-    height: 38px;
+    height: 34px;
     min-height: 0;
     padding: 4px 0;
+  }
+
+  /* 关闭按钮右置，便于移动端操作 */
+  .calendar-header {
+    align-items: center;
+
+    .close-btn {
+      margin-left: auto;
+    }
   }
 
   /* 移动端提升“最近的特殊日”可读性 */

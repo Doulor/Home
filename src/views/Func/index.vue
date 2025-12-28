@@ -88,20 +88,20 @@ onBeforeUnmount(() => {
   }
 
   .search-card {
-    margin-top: 16px; /* 搜索框随整体下移一些 */
+    margin-top: 18px; /* 随高度压缩略微下移 */
   }
 
   .content-row {
-    gap: 14px;
+    gap: 12px;
   }
 
   .time-weather-card {
-    padding: 6px 10px; /* 降低高度但不改字体 */
+    padding: 4px 10px; /* 进一步降低高度但不改字体 */
   }
 
   .weather-section {
-    margin-top: 6px;
-    padding-top: 6px;
+    margin-top: 4px;
+    padding-top: 4px;
   }
 }
 
