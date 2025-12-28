@@ -604,9 +604,31 @@ onMounted(() => {
 
 .header-nav-mobile {
   display: none;
-  gap: 0.4rem;
+  gap: 0.35rem;
   align-items: center;
   margin-left: auto;
+
+  .control-btn {
+    padding: 6px 11px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.12));
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+  }
 }
 
 .calendar-body {
@@ -888,10 +910,10 @@ onMounted(() => {
   height: 18px;
   border-radius: 50%;
   border: 2.5px solid rgba(255, 255, 255, 0.6);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
   font-weight: 700;
-  padding-left: 5.5px;
+  padding-left: 0px;
   cursor: default;
   color: #fff;
   opacity: 0.8;
@@ -1188,8 +1210,8 @@ onMounted(() => {
   .expanded-calendar-container .calendar-card {
     width: 95vw;
     max-width: 95vw;
-    max-height: 82vh; /* 进一步降低高度呈长方形 */
-    padding: 0.9rem;
+    max-height: 86vh; /* 略微加高以利用剩余空间（仅移动端生效） */
+    padding: 1rem;
   }
 
   .calendar-header {
