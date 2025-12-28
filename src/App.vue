@@ -53,6 +53,7 @@ import config from "@/../package.json";
 const store = mainStore();
 const isMobileSize = ref(true); // 默认为移动端尺寸
 const fallbackTimer = ref(null); // 壁纸兜底计时器，防止因加载异常导致页面不展示
+const upcomingTimer = ref(null); // 最近特殊日提醒延时器
 
 // 页面宽度
 const getWidth = () => {
@@ -72,11 +73,14 @@ const loadComplete = () => {
       hasCalledHello.value = true;
     }
 
-    if (!hasShownUpcoming.value) {
-      const upcoming = showUpcomingCloudHello();
-      if (upcoming) {
-        hasShownUpcoming.value = true;
-      }
+    if (!hasShownUpcoming.value && !upcomingTimer.value) {
+      upcomingTimer.value = setTimeout(() => {
+        const upcoming = showUpcomingCloudHello();
+        if (upcoming) {
+          hasShownUpcoming.value = true;
+        }
+        upcomingTimer.value = null;
+      }, 1600); // 问候与提醒之间增加间隔
     }
     // 默哀模式
     checkDays();
@@ -159,6 +163,9 @@ onBeforeUnmount(() => {
   window.removeEventListener("resize", getWidth);
   if (fallbackTimer.value) {
     clearTimeout(fallbackTimer.value);
+  }
+  if (upcomingTimer.value) {
+    clearTimeout(upcomingTimer.value);
   }
 });
 </script>
