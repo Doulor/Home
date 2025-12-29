@@ -9,6 +9,7 @@
         <span class="sm">.{{ siteUrl[1] }}</span>
       </div>
     </div>
+
     <!-- 简介 -->
     <div class="description cards" @click="changeBox">
       <div class="content">
@@ -30,7 +31,7 @@
 <script setup>
 import { Icon } from "@vicons/utils";
 import { QuoteLeft, QuoteRight } from "@vicons/fa";
-import { Error } from "@icon-park/vue-next";
+
 import { mainStore } from "@/store";
 const store = mainStore();
 
@@ -76,6 +77,8 @@ watch(
 
 <style lang="scss" scoped>
 .message {
+  position: relative;
+
   .logo {
     display: flex;
     flex-direction: row;

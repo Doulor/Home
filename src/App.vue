@@ -34,6 +34,8 @@
       <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
     </Icon>
   </Transition>
+  <!-- 音乐播放器 -->
+  <Music />
 </template>
 <script setup>
 import { helloInit, checkDays, showUpcomingCloudHello } from "@/utils/getTime.js";
@@ -47,6 +49,7 @@ import Background from "@/components/Background.vue";
 import Footer from "@/components/Footer.vue";
 import Box from "@/views/Box/index.vue";
 import MoreSet from "@/views/MoreSet/index.vue";
+import Music from "@/components/Music.vue";
 import cursorInit from "@/utils/cursor.js";
 import config from "@/../package.json";
 
