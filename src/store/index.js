@@ -27,6 +27,7 @@ export const mainStore = defineStore("main", {
       playerOrder: "list", // 循环顺序 "list", "random"
       playList: [], // 播放列表
       currentSongIndex: 0, // 当前播放索引
+      randomLockIds: [], // 随机播放锁定歌曲ID列表
     };
   },
   getters: {
@@ -94,7 +95,8 @@ export const mainStore = defineStore("main", {
       "playerAutoplay",
       "playerLoop",
       "playerOrder",
-      "currentSongIndex"
+      "currentSongIndex",
+      "randomLockIds"
     ],
   },
 });

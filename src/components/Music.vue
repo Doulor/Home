@@ -77,6 +77,10 @@
           </div>
           
           <div class="panel-tools">
+            <div class="tool-btn" @click="store.playerAutoplay = !store.playerAutoplay">
+              <check-one theme="filled" size="16" :fill="store.playerAutoplay ? '#409eff' : '#999'" />
+              <span>自动播放</span>
+            </div>
             <div class="tool-btn" @click="triggerFileInput">
               <folder-open theme="outline" size="16" />
               <span>本地上传</span>
@@ -95,6 +99,7 @@
             <div v-if="playList.length === 0" class="empty">
               <music theme="outline" size="48" fill="#ffffff80" />
               <p>暂无歌曲</p>
+              <el-button type="primary" plain class="load-btn" @click="loadDefaultMusic">加载预设音乐</el-button>
             </div>
             <ul v-else>
               <li 
@@ -108,7 +113,10 @@
                   <div class="name">{{ song.name }}</div>
                   <div class="artist">{{ song.artist }}</div>
                 </div>
-                <delete theme="filled" size="16" fill="#ff4d4f" class="del-btn" @click.stop="removeSong(song.id)" />
+                <div class="actions">
+                  <lock theme="filled" size="16" :fill="store.randomLockIds.includes(song.id) ? '#409eff' : '#ffffff40'" class="action-btn" @click.stop="toggleLock(song.id)" />
+                  <delete theme="filled" size="16" fill="#ff4d4f" class="action-btn del-btn" @click.stop="removeSong(song.id)" />
+                </div>
               </li>
             </ul>
           </div>
@@ -155,7 +163,7 @@ import { ref, reactive, onMounted, nextTick, watch } from 'vue';
 import {
   MusicOne, PlayOne, Pause, GoStart, GoEnd, 
   VolumeSmall, List, CloseOne, Close, Down,
-  FolderOpen, LinkOne, Delete, Music
+  FolderOpen, LinkOne, Delete, Music, Lock, Unlock, CheckOne
 } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import { addSong, getAllSongs, deleteSong, clearSongs } from "@/utils/musicDb";
@@ -183,7 +191,44 @@ const urlForm = reactive({ name: "", artist: "", url: "" });
 onMounted(async () => {
   await loadPlayList();
   if (audioRef.value) audioRef.value.volume = volumeNum.value;
-  if (playList.value.length > 0) loadSong(store.currentSongIndex);
+  
+  // 随机播放逻辑
+  if (playList.value.length > 0) {
+    // 获取随机池
+    let pool = playList.value;
+    if (store.randomLockIds.length > 0) {
+      const locked = playList.value.filter(s => store.randomLockIds.includes(s.id));
+      if (locked.length > 0) pool = locked;
+    }
+    
+    // 随机选取一首
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    const song = pool[randomIndex];
+    const index = playList.value.findIndex(s => s.id === song.id);
+    
+    if (index !== -1) {
+      loadSong(index);
+      // 如果开启了自动播放，则播放
+      if (store.playerAutoplay) {
+        // 延迟播放以等待DOM更新和浏览器准备
+        setTimeout(async () => {
+          try {
+            if (audioRef.value) {
+              await audioRef.value.play();
+              store.setPlayerState(true);
+            }
+          } catch (error) {
+            console.warn("自动播放被浏览器拦截:", error);
+            store.setPlayerState(false);
+            ElMessage.info("点击播放器开始播放");
+          }
+        }, 500);
+      } else {
+        store.setPlayerState(false);
+      }
+    }
+  }
+  
   window.$openList = openMusicList;
 });
 
@@ -191,28 +236,44 @@ onMounted(async () => {
 const loadPlayList = async () => {
   try {
     playList.value = await getAllSongs();
-    // 如果列表为空，加载本地预设音乐
-    if (playList.value.length === 0) {
-      const modules = import.meta.glob('@/assets/music/*.{mp3,flac,wav,m4a}', { eager: true, as: 'url' });
-      for (const path in modules) {
-        const url = modules[path];
-        // 从文件名解析歌名和歌手 (假设格式: 歌手 - 歌名.mp3 或 歌名.mp3)
-        const fileName = path.split('/').pop().replace(/\.[^/.]+$/, "");
-        let artist = "本地音乐";
-        let name = fileName;
-        
-        if (fileName.includes(" - ")) {
-          const parts = fileName.split(" - ");
-          artist = parts[0];
-          name = parts.slice(1).join(" - ");
-        }
-        
-        await addSong({ name, artist, url, created: new Date() });
-      }
-      playList.value = await getAllSongs();
-    }
     store.setPlayList(playList.value);
   } catch (e) { console.error(e); }
+};
+
+const loadDefaultMusic = async () => {
+  try {
+    const modules = import.meta.glob('@/assets/music/*.{mp3,flac,wav,m4a}', { eager: true, as: 'url' });
+    let count = 0;
+    for (const path in modules) {
+      const url = modules[path];
+      // 从文件名解析歌名和歌手 (假设格式: 歌手 - 歌名.mp3 或 歌名.mp3)
+      const fileName = path.split('/').pop().replace(/\.[^/.]+$/, "");
+      let artist = "本地音乐";
+      let name = fileName;
+      
+      if (fileName.includes(" - ")) {
+        const parts = fileName.split(" - ");
+        artist = parts[0];
+        name = parts.slice(1).join(" - ");
+      }
+      
+      await addSong({ name, artist, url, created: new Date() });
+      count++;
+    }
+    if (count > 0) {
+      await loadPlayList();
+      ElMessage.success(`已加载 ${count} 首预设音乐`);
+      // 加载第一首
+      if (playList.value.length > 0) {
+        loadSong(0);
+      }
+    } else {
+      ElMessage.warning("未找到预设音乐文件");
+    }
+  } catch (e) {
+    console.error(e);
+    ElMessage.error("加载失败");
+  }
 };
 
 const loadSong = (index) => {
@@ -363,6 +424,15 @@ const clearAll = () => {
     store.setPlayerData(null, null);
     currentUrl.value = "";
   }).catch(() => {});
+};
+
+const toggleLock = (id) => {
+  const index = store.randomLockIds.indexOf(id);
+  if (index === -1) {
+    store.randomLockIds.push(id);
+  } else {
+    store.randomLockIds.splice(index, 1);
+  }
 };
 
 watch(() => store.musicVolume, (val) => {
@@ -582,6 +652,16 @@ watch(() => store.musicVolume, (val) => {
         align-items: center;
         color: rgba(255,255,255,0.3);
         gap: 10px;
+        .load-btn {
+          margin-top: 10px;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: #fff;
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+          }
+        }
       }
       ul {
         list-style: none;
@@ -608,8 +688,13 @@ watch(() => store.musicVolume, (val) => {
             .name { font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .artist { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
           }
-          .del-btn { opacity: 0; transition: 0.2s; }
-          &:hover .del-btn { opacity: 1; }
+          .actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .action-btn { opacity: 0; transition: 0.2s; }
+          }
+          &:hover .actions .action-btn { opacity: 1; }
         }
       }
     }
