@@ -5,8 +5,9 @@
     <div 
       class="music-mini" 
       v-show="!isExpanded" 
-      @click="isExpanded = true"
+      @click.stop="isExpanded = true"
       :class="{ playing: store.playerState }"
+      ref="musicMiniRef"
     >
       <div class="vinyl-disk">
         <div class="vinyl-cover">
@@ -15,9 +16,16 @@
       </div>
     </div>
 
+    <!-- 提示气泡 -->
+    <Transition name="fade-slide">
+      <div class="music-tip-bubble" v-if="showSpaceTip && !isExpanded">
+        点击空格播放音乐(点击后不再显示)
+      </div>
+    </Transition>
+
     <!-- 展开的播放器卡片 -->
     <Transition name="slide-up">
-      <div class="music-player" v-show="isExpanded">
+      <div class="music-player" v-show="isExpanded" ref="musicPlayerRef" @click.stop>
         <!-- 顶部栏 -->
         <div class="header">
           <div class="info">
@@ -72,15 +80,20 @@
       <div class="music-list-modal" v-show="musicListShow" @click="closeMusicList">
         <div class="list-panel" @click.stop>
           <div class="panel-header">
-            <h3>播放列表 ({{ playList.length }})</h3>
+            <div class="header-left" style="display: flex; align-items: center; gap: 6px;">
+              <h3>播放列表 ({{ playList.length }})</h3>
+              <el-tooltip
+                content="点击歌曲右侧的锁图标，锁定歌曲参与随机播放"
+                placement="top"
+                effect="dark"
+              >
+                <info theme="outline" size="15" fill="#efefef" style="cursor: help; opacity: 0.6; margin-top: 2px;" />
+              </el-tooltip>
+            </div>
             <close theme="outline" size="24" fill="#fff" class="close-btn" @click="closeMusicList" />
           </div>
           
           <div class="panel-tools">
-            <div class="tool-btn" @click="store.playerAutoplay = !store.playerAutoplay">
-              <check-one theme="filled" size="16" :fill="store.playerAutoplay ? '#409eff' : '#999'" />
-              <span>自动播放</span>
-            </div>
             <div class="tool-btn" @click="triggerFileInput">
               <folder-open theme="outline" size="16" />
               <span>本地上传</span>
@@ -159,11 +172,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick, watch } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import {
   MusicOne, PlayOne, Pause, GoStart, GoEnd, 
   VolumeSmall, List, CloseOne, Close, Down,
-  FolderOpen, LinkOne, Delete, Music, Lock, Unlock, CheckOne
+  FolderOpen, LinkOne, Delete, Music, Lock, Unlock, CheckOne, Info
 } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import { addSong, getAllSongs, deleteSong, clearSongs } from "@/utils/musicDb";
@@ -173,9 +186,12 @@ import { ElMessage, ElMessageBox } from "element-plus";
 const store = mainStore();
 const audioRef = ref(null);
 const fileInput = ref(null);
+const musicPlayerRef = ref(null);
+const musicMiniRef = ref(null);
 const isExpanded = ref(false); // 默认收起
 const musicListShow = ref(false);
 const showUrlInput = ref(false);
+const showSpaceTip = ref(false); // 空格提示气泡
 const playList = ref([]);
 const currentUrl = ref("");
 const volumeNum = ref(store.musicVolume);
@@ -187,9 +203,67 @@ const isDragging = ref(false);
 
 const urlForm = reactive({ name: "", artist: "", url: "" });
 
+// 点击外部关闭播放器
+const handleClickOutside = (event) => {
+  if (isExpanded.value) {
+    // 如果点击的是播放器内部，不做处理
+    if (musicPlayerRef.value && musicPlayerRef.value.contains(event.target)) return;
+    // 如果点击的是悬浮球，不做处理
+    if (musicMiniRef.value && musicMiniRef.value.contains(event.target)) return;
+    // 如果点击的是播放列表弹窗，不做处理
+    if (musicListShow.value) return;
+    
+    isExpanded.value = false;
+  }
+};
+
+// 全局点击尝试播放（解决自动播放限制）
+// const handleGlobalClick = () => {
+//   if (store.playerAutoplay && audioRef.value && audioRef.value.paused && store.playerState) {
+//     audioRef.value.play().catch(() => {});
+//   }
+//   // 只需要触发一次
+//   document.removeEventListener('click', handleGlobalClick);
+// };
+
+const handleKeydown = (e) => {
+  if (e.code === 'Space') {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    e.preventDefault();
+    togglePlay();
+    // 只有在气泡显示时点击空格，才永久关闭提示
+    if (showSpaceTip.value) {
+      showSpaceTip.value = false;
+      store.spaceTipSeen = true;
+    }
+  }
+};
+
 // 初始化
 onMounted(async () => {
+  window.addEventListener('keydown', handleKeydown);
+  document.addEventListener('click', handleClickOutside);
+  // document.addEventListener('click', handleGlobalClick);
+  
+  // 调试用：如果想再次看到气泡，请取消下面这行的注释，刷新页面后再注释回去
+  // store.spaceTipSeen = false;
+
+  // 随机提示逻辑 (30%概率)
+  if (!store.spaceTipSeen && Math.random() < 0.8) {
+    showSpaceTip.value = true;
+    // 8秒后自动消失
+    setTimeout(() => {
+      showSpaceTip.value = false;
+    }, 8000);
+  }
+
   await loadPlayList();
+
+  // 如果列表为空，自动加载预设音乐
+  if (playList.value.length === 0) {
+    await loadDefaultMusic();
+  }
+
   if (audioRef.value) audioRef.value.volume = volumeNum.value;
   
   // 随机播放逻辑
@@ -208,28 +282,17 @@ onMounted(async () => {
     
     if (index !== -1) {
       loadSong(index);
-      // 如果开启了自动播放，则播放
-      if (store.playerAutoplay) {
-        // 延迟播放以等待DOM更新和浏览器准备
-        setTimeout(async () => {
-          try {
-            if (audioRef.value) {
-              await audioRef.value.play();
-              store.setPlayerState(true);
-            }
-          } catch (error) {
-            console.warn("自动播放被浏览器拦截:", error);
-            store.setPlayerState(false);
-            ElMessage.info("点击播放器开始播放");
-          }
-        }, 500);
-      } else {
-        store.setPlayerState(false);
-      }
+      store.setPlayerState(false);
     }
   }
   
   window.$openList = openMusicList;
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+  document.removeEventListener('click', handleClickOutside);
+  // document.removeEventListener('click', handleGlobalClick);
 });
 
 // 核心逻辑
@@ -458,7 +521,12 @@ watch(() => store.musicVolume, (val) => {
   z-index: 9998;
   box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   border: 2px solid rgba(255,255,255,0.1);
+  
+  // 开场动画
+  transform: scale(1.2);
   transition: transform 0.3s;
+  animation: fade-blur-main-in 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-delay: 0.5s;
   
   &:hover { transform: scale(1.1); }
   
@@ -491,6 +559,45 @@ watch(() => store.musicVolume, (val) => {
   &.playing .vinyl-disk {
     animation: rotate 4s linear infinite;
   }
+}
+
+/* 提示气泡 */
+.music-tip-bubble {
+  position: fixed;
+  bottom: 80px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 9999;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 24px;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+  }
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
 @keyframes rotate {

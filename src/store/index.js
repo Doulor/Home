@@ -22,12 +22,12 @@ export const mainStore = defineStore("main", {
       playerLrc: "暂无歌词", // 当前播放歌词
       playerLrcShow: true, // 是否显示底栏歌词
       footerBlur: true, // 底栏模糊
-      playerAutoplay: false, // 是否自动播放
       playerLoop: "all", // 循环播放 "all", "one", "none"
       playerOrder: "list", // 循环顺序 "list", "random"
       playList: [], // 播放列表
       currentSongIndex: 0, // 当前播放索引
       randomLockIds: [], // 随机播放锁定歌曲ID列表
+      spaceTipSeen: false, // 是否已提示过空格播放
     };
   },
   getters: {
@@ -92,11 +92,11 @@ export const mainStore = defineStore("main", {
       "musicClick",
       "playerLrcShow",
       "footerBlur",
-      "playerAutoplay",
       "playerLoop",
       "playerOrder",
       "currentSongIndex",
-      "randomLockIds"
+      "randomLockIds",
+      "spaceTipSeen"
     ],
   },
 });
