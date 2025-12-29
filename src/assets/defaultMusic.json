@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Demo Song 1",
+    "artist": "Demo Artist",
+    "url": "https://music.163.com/song/media/outer/url?id=1901371647.mp3"
+  },
+  {
+    "name": "Demo Song 2",
+    "artist": "Demo Artist",
+    "url": "https://music.163.com/song/media/outer/url?id=1436709403.mp3"
+  }
+]

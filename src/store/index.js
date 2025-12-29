@@ -9,7 +9,7 @@ export const mainStore = defineStore("main", {
       siteStartShow: false, // 建站日期显示
       musicClick: false, // 音乐链接是否跳转
       musicIsOk: false, // 音乐是否加载完成
-      musicVolume: 0, // 音乐音量;
+      musicVolume: 0.7, // 音乐音量;
       musicOpenState: false, // 音乐面板开启状态
       backgroundShow: false, // 壁纸展示状态
       boxOpenState: false, // 盒子开启状态
@@ -17,14 +17,17 @@ export const mainStore = defineStore("main", {
       mobileFuncState: false, // 移动端功能区开启状态
       setOpenState: false, // 设置页面开启状态
       playerState: false, // 当前播放状态
-      playerTitle: null, // 当前播放歌曲名
-      playerArtist: null, // 当前播放歌手名
-      playerLrc: "歌词加载中", // 当前播放歌词
+      playerTitle: "未播放", // 当前播放歌曲名
+      playerArtist: "未知艺术家", // 当前播放歌手名
+      playerLrc: "暂无歌词", // 当前播放歌词
       playerLrcShow: true, // 是否显示底栏歌词
       footerBlur: true, // 底栏模糊
-      playerAutoplay: false, // 是否自动播放
       playerLoop: "all", // 循环播放 "all", "one", "none"
       playerOrder: "list", // 循环顺序 "list", "random"
+      playList: [], // 播放列表
+      currentSongIndex: 0, // 当前播放索引
+      randomLockIds: [], // 随机播放锁定歌曲ID列表
+      spaceTipSeen: false, // 是否已提示过空格播放
     };
   },
   getters: {
@@ -55,11 +58,7 @@ export const mainStore = defineStore("main", {
     },
     // 更改播放状态
     setPlayerState(value) {
-      if (value) {
-        this.playerState = false;
-      } else {
-        this.playerState = true;
-      }
+      this.playerState = value;
     },
     // 更改歌词
     setPlayerLrc(value) {
@@ -74,6 +73,14 @@ export const mainStore = defineStore("main", {
     setImgLoadStatus(value) {
       this.imgLoadStatus = value;
     },
+    // 设置播放列表
+    setPlayList(list) {
+      this.playList = list;
+    },
+    // 设置当前播放索引
+    setCurrentSongIndex(index) {
+      this.currentSongIndex = index;
+    }
   },
   persist: {
     key: "data",
@@ -85,9 +92,11 @@ export const mainStore = defineStore("main", {
       "musicClick",
       "playerLrcShow",
       "footerBlur",
-      "playerAutoplay",
       "playerLoop",
       "playerOrder",
+      "currentSongIndex",
+      "randomLockIds",
+      "spaceTipSeen"
     ],
   },
 });

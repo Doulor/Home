@@ -299,6 +299,9 @@ const setupGlobalKeyListener = () => {
     }
 
     if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      // 如果是空格且当前没有搜索内容，则忽略（避免与播放暂停冲突）
+      if (e.key === ' ' && !searchText.value) return;
+      
       e.preventDefault();
       if (!isFocused.value) {
         isFocused.value = true;
