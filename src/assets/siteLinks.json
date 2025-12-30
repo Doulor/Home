@@ -2,56 +2,61 @@
   {
     "icon": "Blog",
     "name": "博客",
-    "link": "https://blog.doulor.cn"
+    "link": "https://blog.doulor.cn",
+    "description": "Doulor个人博客，记录学习与生活"
   },
   {
     "icon": "Cloud",
     "name": "Cloudflare",
-    "link": "https://dash.cloudflare.com/83fdea7d910cbc683e6d53fa6baf45ab/home/domains"
+    "link": "https://dash.cloudflare.com/83fdea7d910cbc683e6d53fa6baf45ab/home/domains",
+    "description": "CDN 与 DNS 服务管理"
   },
   {
     "icon": "Mountain",
     "name": "Vercel",
-    "link": "https://vercel.com/"
+    "link": "https://vercel.com/",
+    "description": "前端部署与托管平台"
   },
   {
     "icon": "Amilia",
     "name": "Digitalplat",
-    "link": "https://dash.domain.digitalplat.org/auth/login"
+    "link": "https://dash.domain.digitalplat.org/auth/login",
+    "description": "域名管理平台"
   },
- {
+  {
     "icon": "Meetup",
     "name": "Modrinth",
-    "link": "https://modrinth.com/mods"
+    "link": "https://modrinth.com/mods",
+    "description": "Minecraft 模组下载站"
   },
   {
     "icon": "Dochub",
     "name": "DNSHE",
-    "link": "https://my.dnshe.com/index.php?m=domain_hub"
+    "link": "https://my.dnshe.com/index.php?m=domain_hub",
+    "description": "DNSHE 域名控制台"
   },
   {
     "icon": "Blogger",
     "name": "TBlog",
-    "link": "https://tblog.doulor.cn/"
+    "link": "https://tblog.doulor.cn/",
+    "description": "测试博客站点"
   },
   {
     "icon": "Database",
     "name": "Supabase",
-    "link": "https://supabase.com/dashboard/project/nospgcbugwfwspqadjta/editor/17882?schema=public"
+    "link": "https://supabase.com/dashboard/project/nospgcbugwfwspqadjta/editor/17882?schema=public",
+    "description": "开源 Firebase 替代品，数据库管理"
   },
   {
     "icon": "Atom",
-    "name": "SakuraFRP",
-    "link": "https://www.natfrp.com/user/"
-  },
-  {
-    "icon": "Atom",
-    "name": "OpenFrp",
-    "link": "https://console.openfrp.net/dashboard"
+    "name": "Umami",
+    "link": "https://cloud.umami.is/analytics/us/websites/18f32723-55a4-4451-ab4d-9fd259ac5516",
+    "description": "网站统计分析托管平台"
   },
   {
     "icon": "Surprise",
     "name": "图标中心",
-    "link": "https://www.xicons.org"
+    "link": "https://www.xicons.org",
+    "description": "Vue 3 SVG 图标库"
   }
 ]

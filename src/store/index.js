@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
+import siteLinksData from "@/assets/siteLinks.json";
 
 export const mainStore = defineStore("main", {
   state: () => {
     return {
-  imgLoadStatus: true, // 壁纸加载状态，默认开启以避免界面被遮挡
+      imgLoadStatus: true, // 壁纸加载状态，默认开启以避免界面被遮挡
       innerWidth: null, // 当前窗口宽度
       coverType: "0", // 壁纸种类
       siteStartShow: false, // 建站日期显示
@@ -28,6 +29,7 @@ export const mainStore = defineStore("main", {
       currentSongIndex: 0, // 当前播放索引
       randomLockIds: [], // 随机播放锁定歌曲ID列表
       spaceTipSeen: false, // 是否已提示过空格播放
+      siteLinks: siteLinksData, // 网站列表
     };
   },
   getters: {
@@ -96,7 +98,8 @@ export const mainStore = defineStore("main", {
       "playerOrder",
       "currentSongIndex",
       "randomLockIds",
-      "spaceTipSeen"
+      "spaceTipSeen",
+      "siteLinks",
     ],
   },
 });
