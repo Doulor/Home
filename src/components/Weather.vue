@@ -145,7 +145,10 @@ onMounted(() => {
   // 气泡提示逻辑
   try {
     const hasShown = localStorage.getItem(TIP_STORAGE_KEY);
-    if (!hasShown) {
+    // 移动端不显示气泡 (宽度小于 720px)
+    const isMobile = window.innerWidth < 720;
+    
+    if (!hasShown && !isMobile) {
       // 1/3 概率触发
       if (Math.random() < 0.33) {
         // 延迟显示，等待开场动画结束（约2秒）
