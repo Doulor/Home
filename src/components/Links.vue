@@ -14,52 +14,40 @@
       />
     </div>
     <!-- 网站列表 -->
-    <Swiper
-      v-if="siteLinks[0]"
-      :modules="[Pagination, Mousewheel]"
-      :slides-per-view="1"
-      :space-between="40"
-      :pagination="{
-        el: '.swiper-pagination',
-        clickable: true,
-        bulletElement: 'div',
-      }"
-      :mousewheel="true"
-      class="link-swiper"
-      @sliderMove="disableTooltip"
-      @slideChangeTransitionStart="disableTooltip"
-      @transitionEnd="enableTooltip"
-    >
-      <SwiperSlide v-for="(page, index) in siteLinksList" :key="index">
-        <div class="link-grid">
-          <el-tooltip
-            v-for="(item, i) in page"
-            :key="i"
-            :content="item.description || item.name"
-            placement="top"
-            :show-after="500"
-            popper-class="link-tooltip"
-            :disabled="tooltipDisabled"
-          >
-            <div class="link-card" @click="jumpLink(item)">
-              <div class="icon-wrapper">
-                <Icon size="28" v-if="siteIcon[item.icon]">
-                  <component :is="siteIcon[item.icon]" />
-                </Icon>
-                <img
-                  v-else-if="item.icon && item.icon.startsWith('http')"
-                  :src="item.icon"
-                  class="icon-img"
-                />
-                <span v-else class="icon-text">{{ item.icon }}</span>
-              </div>
-              <span class="name text-hidden">{{ item.name }}</span>
+    <div class="link-scroll-container" v-if="siteLinks[0]">
+      <div
+        class="link-grid"
+        ref="scrollContainer"
+        @scroll="handleScroll"
+        @wheel="handleWheel"
+        :class="{ 'is-scrolling': isScrolling }"
+      >
+        <el-tooltip
+          v-for="(item, index) in siteLinks"
+          :key="index"
+          :content="item.description || item.name"
+          placement="top"
+          :show-after="500"
+          popper-class="link-tooltip"
+          :disabled="tooltipDisabled"
+        >
+          <div class="link-card" @click="jumpLink(item)">
+            <div class="icon-wrapper">
+              <Icon size="28" v-if="siteIcon[item.icon]">
+                <component :is="siteIcon[item.icon]" />
+              </Icon>
+              <img
+                v-else-if="item.icon && item.icon.startsWith('http')"
+                :src="item.icon"
+                class="icon-img"
+              />
+              <span v-else class="icon-text">{{ item.icon }}</span>
             </div>
-          </el-tooltip>
-        </div>
-      </SwiperSlide>
-      <div class="swiper-pagination" />
-    </Swiper>
+            <span class="name text-hidden">{{ item.name }}</span>
+          </div>
+        </el-tooltip>
+      </div>
+    </div>
     <div v-else class="empty-site">
       <Icon size="40">
         <Link />
@@ -172,16 +160,13 @@ import {
 } from "@vicons/fa";
 import { Editor } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
-import { Swiper, SwiperSlide } from "swiper/vue";
-import { Pagination, Mousewheel } from "swiper";
-import "swiper/css";
-import "swiper/css/pagination";
 import siteLinksData from "@/assets/siteLinks.json";
 
 const store = mainStore();
 const dialogVisible = ref(false);
 const isEditing = ref(false);
 const editIndex = ref(-1);
+const scrollContainer = ref(null);
 
 const form = reactive({
   name: "",
@@ -191,19 +176,11 @@ const form = reactive({
 });
 
 const tooltipDisabled = ref(false);
-const disableTooltip = () => (tooltipDisabled.value = true);
-const enableTooltip = () => (tooltipDisabled.value = false);
+const isScrolling = ref(false);
+let scrollEndTimer = null;
 
 // 计算网站链接
 const siteLinks = computed(() => store.siteLinks);
-const siteLinksList = computed(() => {
-  const result = [];
-  const chunkSize = 8; // 每页显示8个
-  for (let i = 0; i < siteLinks.value.length; i += chunkSize) {
-    result.push(siteLinks.value.slice(i, i + chunkSize));
-  }
-  return result;
-});
 
 // 网站链接图标
 const siteIcon = {
@@ -221,6 +198,37 @@ const siteIcon = {
   Atom,
   Tools,
   Dochub,
+};
+
+// 横向滚动处理
+const handleScroll = (e) => {
+  if (scrollContainer.value) {
+    // 禁用气泡
+    tooltipDisabled.value = true;
+    
+    // 滚动条显示状态
+    isScrolling.value = true;
+    
+    // 防抖恢复气泡和隐藏滚动条
+    clearTimeout(window.scrollTimer);
+    clearTimeout(scrollEndTimer);
+    
+    window.scrollTimer = setTimeout(() => {
+      tooltipDisabled.value = false;
+    }, 200);
+    
+    scrollEndTimer = setTimeout(() => {
+      isScrolling.value = false;
+    }, 1500);
+  }
+};
+
+// 鼠标滚轮横向滚动
+const handleWheel = (e) => {
+  if (scrollContainer.value) {
+    e.preventDefault();
+    scrollContainer.value.scrollLeft += e.deltaY;
+  }
 };
 
 // 链接跳转
@@ -308,6 +316,7 @@ const resetToDefault = () => {
 .links {
   .line {
     margin: 2rem 0.25rem 1rem;
+
     font-size: 1.1rem;
     display: flex;
     align-items: center;
@@ -329,50 +338,49 @@ const resetToDefault = () => {
     }
   }
 
-  .link-swiper {
+  .link-scroll-container {
     position: relative;
-    padding-bottom: 20px;
     animation: fade 0.5s;
-    
-    .swiper-pagination {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      
-      :deep(.swiper-pagination-bullet) {
-        background-color: #fff;
-        width: 20px;
-        height: 4px;
-        border-radius: 4px;
-        transition: opacity 0.3s;
-        opacity: 0.4;
-        margin: 0 4px;
-        
-        &.swiper-pagination-bullet-active {
-          opacity: 1;
-        }
-        
-        &:hover {
-          opacity: 0.8;
-        }
-      }
-    }
   }
 
   .link-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 100px);
+    grid-auto-flow: column;
+    grid-auto-columns: 100px;
     gap: 15px;
-    padding: 10px 5px;
-    min-height: 230px;
+    padding: 10px 30px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    
+    /* 边缘渐变遮罩 */
+    mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+    
+    /* 使用 CSS 变量控制滚动条颜色，配合 @property 实现过渡 */
+    --scrollbar-bg: transparent;
+    transition: --scrollbar-bg 0.5s ease;
+    
+    &.is-scrolling {
+      --scrollbar-bg: rgba(255, 255, 255, 0.2);
+    }
+
+    /* 滚动条样式 */
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-bg);
+      border-radius: 3px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
     .link-card {
       height: 100px;
+      width: 100px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -385,10 +393,11 @@ const resetToDefault = () => {
       backdrop-filter: blur(5px);
 
       &:hover {
-        transform: translateY(-5px);
+        transform: translateY(-5px) scale(1.05);
         background: rgba(0, 0, 0, 0.4);
-        border-color: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        z-index: 2;
         
         .icon-wrapper {
           transform: scale(1.1);
@@ -434,22 +443,17 @@ const resetToDefault = () => {
       margin: 0.55rem 0.25rem 0.5rem;
     }
     .link-grid {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 90px);
+      grid-auto-columns: 90px;
       gap: 10px;
-      min-height: 200px;
       
       .link-card {
         height: 90px;
+        width: 90px;
         .name {
           font-size: 0.85rem;
         }
       }
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .link-grid {
-      grid-template-columns: repeat(3, 1fr);
     }
   }
   
@@ -519,6 +523,13 @@ const resetToDefault = () => {
 </style>
 
 <style lang="scss">
+/* 定义滚动条颜色变量以支持过渡 */
+@property --scrollbar-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
 .link-tooltip {
   background: rgba(0, 0, 0, 0.6) !important;
   backdrop-filter: blur(10px);

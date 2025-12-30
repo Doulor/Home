@@ -49,15 +49,6 @@
       </el-collapse-item>
       <el-collapse-item title="播放器配置" name="3">
         <div class="item">
-          <span class="text">自动播放</span>
-          <el-switch
-            v-model="playerAutoplay"
-            inline-prompt
-            :active-icon="CheckSmall"
-            :inactive-icon="CloseSmall"
-          />
-        </div>
-        <div class="item">
           <span class="text">随机播放</span>
           <el-switch
             v-model="playerOrder"
@@ -77,8 +68,16 @@
           </el-radio-group>
         </div>
       </el-collapse-item>
-      <el-collapse-item title="其他设置" name="4">
-        <div>设置内容待增加</div>
+      <el-collapse-item title="组件功能" name="4">
+        <div class="item">
+          <span class="text">搜索联想 (Bing)</span>
+          <el-switch
+            v-model="searchSuggestion"
+            inline-prompt
+            :active-icon="CheckSmall"
+            :inactive-icon="CloseSmall"
+          />
+        </div>
       </el-collapse-item>
     </el-collapse>
   </div>
@@ -96,9 +95,9 @@ const {
   musicClick,
   playerLrcShow,
   footerBlur,
-  playerAutoplay,
   playerOrder,
   playerLoop,
+  searchSuggestion,
 } = storeToRefs(store);
 
 // 默认选中项
