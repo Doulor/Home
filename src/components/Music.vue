@@ -2,15 +2,9 @@
   <!-- 全局音乐容器 -->
   <div class="music-global">
     <!-- 迷你悬浮球 (当播放器收起时显示) -->
-<<<<<<< Updated upstream
     <div
       class="music-mini"
       v-show="!isExpanded"
-=======
-    <div 
-      class="music-mini" 
-      v-show="!isExpanded" 
->>>>>>> Stashed changes
       @click.stop="handleMiniClick"
       :class="{ playing: store.playerState, 'mobile-idle': isIdle && isMobile }"
       ref="musicMiniRef"
@@ -616,11 +610,7 @@ watch(() => store.musicVolume, (val) => {
   &.playing .vinyl-disk {
     animation: rotate 4s linear infinite;
   }
-<<<<<<< Updated upstream
 
-=======
-  
->>>>>>> Stashed changes
   /* 移动端闲置状态 */
   &.mobile-idle {
     left: -24px;
