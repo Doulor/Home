@@ -73,6 +73,8 @@ import { ref, onMounted, nextTick } from "vue";
 import { Edit } from "@icon-park/vue-next";
 
 // 配置区域 - 在这里修改默认城市
+
+// 配置区域 - 在这里修改默认城市
 const DEFAULT_CITY = "荆州"; 
 const STORAGE_KEY = "home-weather-city";
 

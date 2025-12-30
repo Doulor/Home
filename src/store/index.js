@@ -30,6 +30,8 @@ export const mainStore = defineStore("main", {
       randomLockIds: [], // 随机播放锁定歌曲ID列表
       spaceTipSeen: false, // 是否已提示过空格播放
       siteLinks: siteLinksData, // 网站列表
+      // 新增功能开关
+      searchSuggestion: true, // 搜索联想
     };
   },
   getters: {

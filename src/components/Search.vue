@@ -96,13 +96,17 @@ onMounted(() => {
   }
 });
 
+import { mainStore } from "@/store";
+const store = mainStore();
+
 // 控制联想框显示
 const shouldShowSuggestions = computed(() => {
-  return isFocused.value && suggestions.value.length > 0 && !isLoading.value && !suggestError.value && !showEnvError.value;
+  return store.searchSuggestion && isFocused.value && suggestions.value.length > 0 && !isLoading.value && !suggestError.value && !showEnvError.value;
 });
 
 // 输入处理
 const handleInput = (e) => {
+  if (!store.searchSuggestion) return;
   clearTimeout(debounceTimer);
   const value = e.target.value.trim();
   
