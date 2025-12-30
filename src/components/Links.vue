@@ -25,22 +25,25 @@
         bulletElement: 'div',
       }"
       :mousewheel="true"
+      class="link-swiper"
+      @sliderMove="disableTooltip"
+      @slideChangeTransitionStart="disableTooltip"
+      @transitionEnd="enableTooltip"
     >
-      <SwiperSlide v-for="(site, index) in siteLinksList" :key="index">
-        <el-row class="link-all" :gutter="20">
-          <el-col v-for="(item, i) in site" :span="8" :key="i">
-            <el-tooltip
-              :content="item.description || item.name"
-              placement="top"
-              :show-after="500"
-              popper-class="link-tooltip"
-            >
-              <div
-                class="item cards"
-                :style="i < 3 ? 'margin-bottom: 20px' : null"
-                @click="jumpLink(item)"
-              >
-                <Icon size="26" v-if="siteIcon[item.icon]">
+      <SwiperSlide v-for="(page, index) in siteLinksList" :key="index">
+        <div class="link-grid">
+          <el-tooltip
+            v-for="(item, i) in page"
+            :key="i"
+            :content="item.description || item.name"
+            placement="top"
+            :show-after="500"
+            popper-class="link-tooltip"
+            :disabled="tooltipDisabled"
+          >
+            <div class="link-card" @click="jumpLink(item)">
+              <div class="icon-wrapper">
+                <Icon size="28" v-if="siteIcon[item.icon]">
                   <component :is="siteIcon[item.icon]" />
                 </Icon>
                 <img
@@ -49,11 +52,11 @@
                   class="icon-img"
                 />
                 <span v-else class="icon-text">{{ item.icon }}</span>
-                <span class="name text-hidden">{{ item.name }}</span>
               </div>
-            </el-tooltip>
-          </el-col>
-        </el-row>
+              <span class="name text-hidden">{{ item.name }}</span>
+            </div>
+          </el-tooltip>
+        </div>
       </SwiperSlide>
       <div class="swiper-pagination" />
     </Swiper>
@@ -171,6 +174,8 @@ import { Editor } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Pagination, Mousewheel } from "swiper";
+import "swiper/css";
+import "swiper/css/pagination";
 import siteLinksData from "@/assets/siteLinks.json";
 
 const store = mainStore();
@@ -185,13 +190,17 @@ const form = reactive({
   description: "",
 });
 
+const tooltipDisabled = ref(false);
+const disableTooltip = () => (tooltipDisabled.value = true);
+const enableTooltip = () => (tooltipDisabled.value = false);
+
 // 计算网站链接
 const siteLinks = computed(() => store.siteLinks);
 const siteLinksList = computed(() => {
   const result = [];
-  for (let i = 0; i < siteLinks.value.length; i += 6) {
-    const subArr = siteLinks.value.slice(i, i + 6);
-    result.push(subArr);
+  const chunkSize = 8; // 每页显示8个
+  for (let i = 0; i < siteLinks.value.length; i += chunkSize) {
+    result.push(siteLinks.value.slice(i, i + chunkSize));
   }
   return result;
 });
@@ -319,91 +328,128 @@ const resetToDefault = () => {
       }
     }
   }
-  .swiper {
-    left: -10px;
-    width: calc(100% + 20px);
-    padding: 5px 10px 0;
-    z-index: 0;
-    margin-bottom: 10px;
-    .swiper-slide {
-      height: 100%;
-    }
+
+  .link-swiper {
+    position: relative;
+    padding-bottom: 20px;
+    animation: fade 0.5s;
+    
     .swiper-pagination {
-      position: static;
-      margin-top: 4px;
-      margin-bottom: 20px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      
       :deep(.swiper-pagination-bullet) {
         background-color: #fff;
-        width: 18px;
+        width: 20px;
         height: 4px;
         border-radius: 4px;
         transition: opacity 0.3s;
-        &:hover {
+        opacity: 0.4;
+        margin: 0 4px;
+        
+        &.swiper-pagination-bullet-active {
           opacity: 1;
+        }
+        
+        &:hover {
+          opacity: 0.8;
         }
       }
     }
   }
-  .link-all {
-    height: 220px;
-    .item {
+
+  .link-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 15px;
+    padding: 10px 5px;
+    min-height: 230px;
+
+    .link-card {
       height: 100px;
-      width: 100%;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      flex-direction: row;
       justify-content: center;
-      padding: 0 10px;
-      animation: fade 0.5s;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
       cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(5px);
 
       &:hover {
-        transform: scale(1.02);
-        background: rgb(0 0 0 / 40%);
-        transition: 0.3s;
+        transform: translateY(-5px);
+        background: rgba(0, 0, 0, 0.4);
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        
+        .icon-wrapper {
+          transform: scale(1.1);
+        }
       }
 
       &:active {
-        transform: scale(1);
+        transform: scale(0.98);
+      }
+
+      .icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+        transition: transform 0.3s;
+        height: 32px;
+        width: 32px;
       }
 
       .name {
-        font-size: 1.1rem;
-        margin-left: 8px;
+        font-size: 0.9rem;
+        color: #eee;
+        text-align: center;
+        width: 100%;
+        padding: 0 5px;
       }
+
       .icon-img {
-        width: 26px;
-        height: 26px;
-        border-radius: 4px;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
       }
+      
       .icon-text {
         font-size: 24px;
       }
-      @media (min-width: 720px) and (max-width: 820px) {
-        .name {
-          display: none;
-        }
-      }
-      @media (max-width: 720px) {
-        height: 80px;
-      }
-      @media (max-width: 460px) {
-        flex-direction: column;
-        .name {
-          font-size: 1rem;
-          margin-left: 0;
-          margin-top: 8px;
-        }
-      }
-    }
-    @media (max-width: 720px) {
-      height: 180px;
     }
   }
 
   @media (max-width: 720px) {
     .line {
       margin: 0.55rem 0.25rem 0.5rem;
+    }
+    .link-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      min-height: 200px;
+      
+      .link-card {
+        height: 90px;
+        .name {
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .link-grid {
+      grid-template-columns: repeat(3, 1fr);
     }
   }
   
