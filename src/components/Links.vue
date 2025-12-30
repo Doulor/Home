@@ -124,7 +124,10 @@
             <span class="link-name">{{ item.name }}</span>
           </div>
           <div class="actions">
-            <el-button size="small" @click="editLink(index)">编辑</el-button>
+            <el-button
+              v-if="index !== 0"
+              size="small"
+              @click="editLink(index)">编辑</el-button>
             <el-button
               v-if="index !== 0"
               size="small"
