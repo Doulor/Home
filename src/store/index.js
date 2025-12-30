@@ -4,7 +4,7 @@ import siteLinksData from "@/assets/siteLinks.json";
 export const mainStore = defineStore("main", {
   state: () => {
     return {
-      imgLoadStatus: true, // 壁纸加载状态，默认开启以避免界面被遮挡
+      imgLoadStatus: false, // 壁纸加载状态
       innerWidth: null, // 当前窗口宽度
       coverType: "0", // 壁纸种类
       siteStartShow: false, // 建站日期显示
