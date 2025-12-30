@@ -34,8 +34,8 @@
         
         <div v-else class="empty-state">
           <div class="empty-icon">💭</div>
-          <p>时光胶囊中还没有留言</p>
-          <p class="empty-subtitle">成为第一个留下印记的人吧</p>
+          <p>正在加载时光胶囊中的留言...</p>
+          <p class="empty-subtitle">耐心等待一会即可</p>
         </div>
       </div>
 

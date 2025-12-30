@@ -6,8 +6,7 @@
       class="bg"
       alt="cover"
       @load="imgLoadComplete"
-      @error.once="imgLoadError"
-      @animationend="imgAnimationEnd"
+      @error="imgLoadError"
     />
     <div :class="store.backgroundShow ? 'gray hidden' : 'gray'" />
     <Transition name="fade" mode="out-in">
@@ -24,6 +23,7 @@
 </template>
 
 <script setup>
+import { ref, watch, onMounted, onBeforeUnmount, h } from "vue";
 import { mainStore } from "@/store";
 import { Error } from "@icon-park/vue-next";
 
@@ -32,20 +32,24 @@ const bgUrl = ref(null);
 const imgTimeout = ref(null);
 const emit = defineEmits(["loadComplete"]);
 
+// 错误重试次数
+const retryCount = ref(0);
+const MAX_RETRY = 5;
+
 // 壁纸随机数
-// 请依据文件夹内的图片个数修改 Math.random() 后面的第一个数字
-const bgRandom = Math.floor(Math.random() * 19 + 1);
+const getBgRandom = () => Math.floor(Math.random() * 20 + 1);
 
 // 更换壁纸链接
 const changeBg = (type) => {
   let newBgUrl;
+  const randomNum = getBgRandom();
+  
   if (type == 0) {
-    newBgUrl = `/images/background${bgRandom}.jpg`;
+    newBgUrl = `/images/background${randomNum}.jpg`;
   } else if (type == 1) {
     newBgUrl = "https://api.dujin.org/bing/1920.php";
   } else {
-    // 如果是无效的类型值（如之前的2或3），则使用默认壁纸
-    newBgUrl = `/images/background${bgRandom}.jpg`;
+    newBgUrl = `/images/background${randomNum}.jpg`;
   }
 
   console.log("设置壁纸URL:", newBgUrl);
@@ -54,45 +58,58 @@ const changeBg = (type) => {
 
 // 图片加载完成
 const imgLoadComplete = () => {
-  console.log("图片加载完成事件触发");
-  // 立即设置加载状态，以便Loading组件可以消失
-  if (!store.imgLoadStatus) {  // 防止重复设置
+  console.log("图片加载完成");
+  retryCount.value = 0; // 重置重试计数
+  if (!store.imgLoadStatus) {
     store.setImgLoadStatus(true);
   }
-  // 触发loadComplete事件
-  emit("loadComplete");
-};
-
-// 图片动画完成
-const imgAnimationEnd = () => {
-  console.log("壁纸加载且动画完成");
-  // 加载完成事件
   emit("loadComplete");
 };
 
 // 图片显示失败
 const imgLoadError = () => {
   console.error("壁纸加载失败：", bgUrl.value);
-  ElMessage({
-    message: "壁纸加载失败，已临时切换回默认",
-    icon: h(Error, {
-      theme: "filled",
-      fill: "#efefef",
-    }),
-  });
-  // 即使加载失败也要继续执行，不能让加载界面卡住
-  if (!store.imgLoadStatus) {  // 防止重复设置
-    store.setImgLoadStatus(true);
+  
+  if (retryCount.value < MAX_RETRY) {
+    retryCount.value++;
+    console.log(`正在尝试第 ${retryCount.value} 次重试...`);
+    
+    // 如果是必应壁纸失败，尝试切换回本地随机壁纸
+    if (store.coverType == 1) {
+      const randomNum = getBgRandom();
+      bgUrl.value = `/images/background${randomNum}.jpg`;
+    } else {
+      // 如果是本地壁纸失败，尝试换一个随机数
+      const randomNum = getBgRandom();
+      bgUrl.value = `/images/background${randomNum}.jpg`;
+    }
+  } else {
+    // 超过最大重试次数，使用保底壁纸
+    console.error("超过最大重试次数，使用保底壁纸");
+    bgUrl.value = "/images/background1.jpg";
+    
+    ElMessage({
+      message: "壁纸加载失败，已切换至默认",
+      type: "error",
+      icon: h(Error, {
+        theme: "filled",
+        fill: "#efefef",
+      }),
+    });
+
+    // 即使彻底失败也要让加载界面消失，防止卡死
+    if (!store.imgLoadStatus) {
+      store.setImgLoadStatus(true);
+    }
+    emit("loadComplete");
   }
-  // 触发loadComplete事件
-  emit("loadComplete");
-  bgUrl.value = `/images/background${bgRandom}.jpg`;
 };
 
 // 监听壁纸切换
 watch(
   () => store.coverType,
   (value) => {
+    retryCount.value = 0;
     changeBg(value);
   },
 );
@@ -103,15 +120,14 @@ onMounted(() => {
   // 加载壁纸
   changeBg(store.coverType);
 
-  // 设置一个合理的超时时间，确保即使图片加载事件未触发，也不会卡住加载界面
-  // 在开发环境中，图片加载可能因为缓存或其他原因表现不同
+  // 超时保护
   loadTimeout = setTimeout(() => {
     if (!store.imgLoadStatus) {
       console.warn("壁纸加载超时，强制进入主页");
       store.setImgLoadStatus(true);
       emit("loadComplete");
     }
-  }, 3000); // 3秒后强制完成加载
+  }, 5000); // 增加到5秒，给慢网络一点时间
 });
 
 onBeforeUnmount(() => {
