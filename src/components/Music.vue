@@ -1,49 +1,10 @@
 <template>
-<<<<<<< Updated upstream
-  <!-- 音乐控制面板 -->
-  <div
-    class="music"
-    @mouseenter="volumeShow = true"
-    @mouseleave="volumeShow = false"
-    v-show="store.musicOpenState"
-  >
-    <div class="btns">
-      <span @click="openMusicList()">音乐列表</span>
-      <span @click="store.musicOpenState = false">回到一言</span>
-    </div>
-    <div class="control">
-      <go-start theme="filled" size="30" fill="#efefef" @click="changeMusicIndex(0)" />
-      <div class="state" @click="changePlayState">
-        <play-one theme="filled" size="50" fill="#efefef" v-show="!store.playerState" />
-        <pause theme="filled" size="50" fill="#efefef" v-show="store.playerState" />
-      </div>
-      <go-end theme="filled" size="30" fill="#efefef" @click="changeMusicIndex(1)" />
-    </div>
-    <div class="menu">
-      <div class="name" v-show="!volumeShow">
-        <span>{{
-          store.getPlayerData.name
-            ? store.getPlayerData.name + " - " + store.getPlayerData.artist
-            : "未播放音乐"
-        }}</span>
-      </div>
-      <div class="volume" v-show="volumeShow">
-        <div class="icon">
-          <volume-mute theme="filled" size="24" fill="#efefef" v-if="volumeNum == 0" />
-          <volume-small
-            theme="filled"
-            size="24"
-            fill="#efefef"
-            v-else-if="volumeNum > 0 && volumeNum < 0.7"
-          />
-          <volume-notice theme="filled" size="24" fill="#efefef" v-else />
-=======
   <!-- 全局音乐容器 -->
   <div class="music-global">
     <!-- 迷你悬浮球 (当播放器收起时显示) -->
-    <div 
-      class="music-mini" 
-      v-show="!isExpanded" 
+    <div
+      class="music-mini"
+      v-show="!isExpanded"
       @click.stop="handleMiniClick"
       :class="{ playing: store.playerState, 'mobile-idle': isIdle && isMobile }"
       ref="musicMiniRef"
@@ -51,79 +12,184 @@
       <div class="vinyl-disk">
         <div class="vinyl-cover">
            <music-one theme="filled" size="20" fill="#fff" />
->>>>>>> Stashed changes
         </div>
-        <el-slider v-model="volumeNum" :show-tooltip="false" :min="0" :max="1" :step="0.01" />
       </div>
     </div>
-  </div>
-  <!-- 音乐列表弹窗 -->
-  <Transition name="fade" mode="out-in">
-    <div class="music-list" v-show="musicListShow" @click="closeMusicList()">
-      <Transition name="zoom">
-        <div class="list" v-show="musicListShow" @click.stop>
-          <close-one
-            class="close"
-            theme="filled"
-            size="28"
-            fill="#ffffff60"
-            @click="closeMusicList()"
-          />
-          <Player
-            ref="playerRef"
-            :songServer="playerData.server"
-            :songType="playerData.type"
-            :songId="playerData.id"
-            :volume="volumeNum"
-          />
+
+    <!-- 提示气泡 -->
+    <Transition name="fade-slide">
+      <div class="music-tip-bubble" v-if="showSpaceTip && !isExpanded">
+        点击空格播放音乐(点击后不再显示)
+      </div>
+    </Transition>
+
+    <!-- 展开的播放器卡片 -->
+    <Transition name="slide-up">
+      <div class="music-player" v-show="isExpanded" ref="musicPlayerRef" @click.stop>
+        <!-- 顶部栏 -->
+        <div class="header">
+          <div class="info">
+            <span class="name" :title="store.getPlayerData.name">{{ store.getPlayerData.name || '未播放' }}</span>
+            <span class="artist">{{ store.getPlayerData.artist || '---' }}</span>
+          </div>
+          <div class="ops">
+            <down theme="filled" size="20" fill="#fff" class="op-btn" @click="isExpanded = false" title="收起" />
+          </div>
         </div>
-      </Transition>
-    </div>
-  </Transition>
+
+        <!-- 进度条 -->
+        <div class="progress-bar">
+          <span class="time">{{ formatTime(currentTime) }}</span>
+          <el-slider
+            v-model="currentTime"
+            :max="duration"
+            :show-tooltip="false"
+            @change="onProgressChange"
+            @input="isDragging = true"
+            size="small"
+          />
+          <span class="time">{{ formatTime(duration) }}</span>
+        </div>
+
+        <!-- 控制区 -->
+        <div class="controls">
+          <div class="main-ctrl">
+            <go-start theme="filled" size="28" fill="#fff" class="ctrl-btn" @click="changeSong(-1)" />
+            <div class="play-btn" @click="togglePlay">
+              <play-one theme="filled" size="40" fill="#fff" v-show="!store.playerState" />
+              <pause theme="filled" size="40" fill="#fff" v-show="store.playerState" />
+            </div>
+            <go-end theme="filled" size="28" fill="#fff" class="ctrl-btn" @click="changeSong(1)" />
+          </div>
+
+          <div class="sub-ctrl">
+            <!-- 音量 -->
+            <div class="volume-wrap">
+              <volume-small theme="filled" size="20" fill="#fff" class="vol-icon" />
+              <el-slider v-model="volumeNum" :min="0" :max="1" :step="0.01" @input="changeVolume" class="vol-slider" />
+            </div>
+            <!-- 列表按钮 -->
+            <list theme="filled" size="22" fill="#fff" class="list-btn" @click="openMusicList" title="播放列表" />
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 播放列表弹窗 (独立层级) -->
+    <Transition name="fade">
+      <div class="music-list-modal" v-show="musicListShow" @click="closeMusicList">
+        <div class="list-panel" @click.stop>
+          <div class="panel-header">
+            <div class="header-left" style="display: flex; align-items: center; gap: 6px;">
+              <h3>播放列表 ({{ playList.length }})</h3>
+              <el-tooltip
+                content="点击歌曲右侧的锁图标，锁定歌曲参与随机播放"
+                placement="top"
+                effect="dark"
+              >
+                <info theme="outline" size="15" fill="#efefef" style="cursor: help; opacity: 0.6; margin-top: 2px;" />
+              </el-tooltip>
+            </div>
+            <close theme="outline" size="24" fill="#fff" class="close-btn" @click="closeMusicList" />
+          </div>
+
+          <div class="panel-tools">
+            <div class="tool-btn" @click="triggerFileInput">
+              <folder-open theme="outline" size="16" />
+              <span>本地上传</span>
+            </div>
+            <div class="tool-btn" @click="showUrlInput = true">
+              <link-one theme="outline" size="16" />
+              <span>网络链接</span>
+            </div>
+            <div class="tool-btn danger" @click="clearAll">
+              <delete theme="outline" size="16" />
+              <span>清空列表</span>
+            </div>
+          </div>
+
+          <div class="song-list">
+            <div v-if="playList.length === 0" class="empty">
+              <music theme="outline" size="48" fill="#ffffff80" />
+              <p>暂无歌曲</p>
+              <el-button type="primary" plain class="load-btn" @click="loadDefaultMusic">加载预设音乐</el-button>
+            </div>
+            <ul v-else>
+              <li
+                v-for="(song, index) in playList"
+                :key="song.id"
+                :class="{ active: index === store.currentSongIndex }"
+                @click="playSong(index)"
+              >
+                <span class="index">{{ index + 1 }}</span>
+                <div class="info">
+                  <div class="name">{{ song.name }}</div>
+                  <div class="artist">{{ song.artist }}</div>
+                </div>
+                <div class="actions">
+                  <lock theme="filled" size="16" :fill="store.randomLockIds.includes(song.id) ? '#409eff' : '#ffffff40'" class="action-btn" @click.stop="toggleLock(song.id)" />
+                  <delete theme="filled" size="16" fill="#ff4d4f" class="action-btn del-btn" @click.stop="removeSong(song.id)" />
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 隐藏元素 -->
+    <audio
+      ref="audioRef"
+      :src="currentUrl"
+      @ended="onEnded"
+      @error="onError"
+      @timeupdate="onTimeUpdate"
+      @loadedmetadata="onLoadedMetadata"
+    ></audio>
+    <input type="file" ref="fileInput" accept="audio/*" multiple style="display: none" @change="handleFileChange" />
+
+    <!-- URL弹窗 -->
+    <el-dialog v-model="showUrlInput" title="添加网络音乐" width="400px" append-to-body center class="music-dialog" :show-close="false">
+      <el-form :model="urlForm" label-width="50px" class="music-form">
+        <el-form-item label="歌名">
+          <el-input v-model="urlForm.name" placeholder="请输入歌名" />
+        </el-form-item>
+        <el-form-item label="歌手">
+          <el-input v-model="urlForm.artist" placeholder="请输入歌手" />
+        </el-form-item>
+        <el-form-item label="链接">
+          <el-input v-model="urlForm.url" placeholder="http(s)://..." />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showUrlInput = false" class="cancel-btn">取消</el-button>
+          <el-button type="primary" @click="addUrlSong" class="confirm-btn">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
->>>>>>> Stashed changes
-=======
-import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
->>>>>>> Stashed changes
 import {
-  GoStart,
-  PlayOne,
-  Pause,
-  GoEnd,
-  CloseOne,
-  VolumeMute,
-  VolumeSmall,
-  VolumeNotice,
+  MusicOne, PlayOne, Pause, GoStart, GoEnd,
+  VolumeSmall, List, CloseOne, Close, Down,
+  FolderOpen, LinkOne, Delete, Music, Lock, Unlock, CheckOne, Info
 } from "@icon-park/vue-next";
-import Player from "@/components/Player.vue";
 import { mainStore } from "@/store";
+import { addSong, getAllSongs, deleteSong, clearSongs } from "@/utils/musicDb";
+import { ElMessage, ElMessageBox } from "element-plus";
+// import defaultMusic from "@/assets/defaultMusic.json";
+
 const store = mainStore();
-
-// 音量条数据
-const volumeShow = ref(false);
-const volumeNum = ref(store.musicVolume ? store.musicVolume : 0.7);
-
-// 播放列表数据
+const audioRef = ref(null);
+const fileInput = ref(null);
+const musicPlayerRef = ref(null);
+const musicMiniRef = ref(null);
+const isExpanded = ref(false); // 默认收起
 const musicListShow = ref(false);
-<<<<<<< Updated upstream
-const playerRef = ref(null);
-const playerData = reactive({
-  server: import.meta.env.VITE_SONG_SERVER,
-  type: import.meta.env.VITE_SONG_TYPE,
-  id: import.meta.env.VITE_SONG_ID,
-});
-
-// 开启播放列表
-const openMusicList = () => {
-  musicListShow.value = true;
-  playerRef.value.toggleList();
-=======
 const showUrlInput = ref(false);
 const showSpaceTip = ref(false); // 空格提示气泡
 const playList = ref([]);
@@ -165,38 +231,34 @@ const handleClickOutside = (event) => {
     if (musicMiniRef.value && musicMiniRef.value.contains(event.target)) return;
     // 如果点击的是播放列表弹窗，不做处理
     if (musicListShow.value) return;
-    
+
     isExpanded.value = false;
   }
->>>>>>> Stashed changes
 };
 
-// 关闭播放列表
-const closeMusicList = () => {
-  musicListShow.value = false;
-  playerRef.value.toggleList();
+// 键盘事件处理
+const handleKeydown = (e) => {
+  if (e.code === 'Space') {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    e.preventDefault();
+    togglePlay();
+    // 只有在气泡显示时点击空格，才永久关闭提示
+    if (showSpaceTip.value) {
+      showSpaceTip.value = false;
+      store.spaceTipSeen = true;
+    }
+  }
 };
 
-// 音乐播放暂停
-const changePlayState = () => {
-  playerRef.value.playToggle();
-};
+// 初始化
+onMounted(async () => {
+  window.addEventListener('keydown', handleKeydown);
+  document.addEventListener('click', handleClickOutside);
+  // document.addEventListener('click', handleGlobalClick);
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-// 音乐上下曲
-const changeMusicIndex = (type) => {
-  playerRef.value.changeSong(type);
-};
+  // 调试用：如果想再次看到气泡，请取消下面这行的注释，刷新页面后再注释回去
+  // store.spaceTipSeen = false;
 
-onMounted(() => {
-  // 空格键事件
-  window.addEventListener("keydown", (e) => {
-    if (!store.musicIsOk) {
-      return ;
-=======
-=======
->>>>>>> Stashed changes
   // 随机提示逻辑 (30%概率) - 仅在非移动端显示
   if (!isMobile.value && !store.spaceTipSeen && Math.random() < 0.8) {
     showSpaceTip.value = true;
@@ -219,7 +281,7 @@ onMounted(() => {
   }
 
   if (audioRef.value) audioRef.value.volume = volumeNum.value;
-  
+
   // 随机播放逻辑
   if (playList.value.length > 0) {
     // 获取随机池
@@ -227,33 +289,22 @@ onMounted(() => {
     if (store.randomLockIds.length > 0) {
       const locked = playList.value.filter(s => store.randomLockIds.includes(s.id));
       if (locked.length > 0) pool = locked;
->>>>>>> Stashed changes
     }
-    if (e.code == "Space") {
-      changePlayState();
+
+    // 随机选取一首
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    const song = pool[randomIndex];
+    const index = playList.value.findIndex(s => s.id === song.id);
+
+    if (index !== -1) {
+      loadSong(index);
+      store.setPlayerState(false);
     }
-  });
-  // 挂载方法至 window
+  }
+
   window.$openList = openMusicList;
 });
 
-<<<<<<< Updated upstream
-// 监听音量变化
-watch(
-  () => volumeNum.value,
-  (value) => {
-    store.musicVolume = value;
-    playerRef.value.changeVolume(store.musicVolume);
-  },
-);
-</script>
-
-<style lang="scss" scoped>
-.music {
-  width: 100%;
-  height: 100%;
-  background: #00000040;
-=======
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
   document.removeEventListener('click', handleClickOutside);
@@ -313,13 +364,13 @@ const loadDefaultMusic = async () => {
       const fileName = path.split('/').pop().replace(/\.[^/.]+$/, "");
       let artist = "本地音乐";
       let name = fileName;
-      
+
       if (fileName.includes(" - ")) {
         const parts = fileName.split(" - ");
         artist = parts[0];
         name = parts.slice(1).join(" - ");
       }
-      
+
       await addSong({ name, artist, url, created: new Date() });
       count++;
     }
@@ -521,29 +572,29 @@ watch(() => store.musicVolume, (val) => {
   z-index: 9998;
   box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   border: 2px solid rgba(255,255,255,0.1);
-  
+
   // 开场动画
   transform: scale(1.2);
   transition: all 0.3s;
   animation: fade-blur-main-in 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   animation-delay: 0.5s;
-  
+
   &:hover { transform: scale(1.1); }
-  
+
   .vinyl-disk {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     background: repeating-radial-gradient(
-      #111 0, 
-      #111 2px, 
-      #222 3px, 
+      #111 0,
+      #111 2px,
+      #222 3px,
       #222 4px
     );
     display: flex;
     justify-content: center;
     align-items: center;
-    
+
     .vinyl-cover {
       width: 24px;
       height: 24px;
@@ -555,11 +606,11 @@ watch(() => store.musicVolume, (val) => {
       border: 1px solid rgba(255,255,255,0.2);
     }
   }
-  
+
   &.playing .vinyl-disk {
     animation: rotate 4s linear infinite;
   }
-  
+
   /* 移动端闲置状态 */
   &.mobile-idle {
     left: -24px;
@@ -580,166 +631,355 @@ watch(() => store.musicVolume, (val) => {
   font-size: 12px;
   z-index: 9999;
   pointer-events: none;
->>>>>>> Stashed changes
   backdrop-filter: blur(10px);
   border-radius: 6px;
   padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-direction: column;
-  animation: fade 0.5s;
-  .btns {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 24px;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+  }
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 展开的播放器 */
+.music-player {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 320px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 9999;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+
+  .header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
-    span {
-      background: #ffffff26;
-      padding: 2px 8px;
-      border-radius: 6px;
-      margin: 0px 6px;
-      text-overflow: ellipsis;
-      overflow-x: hidden;
-      white-space: nowrap;
-      &:hover {
-        background: #ffffff4d;
-      }
+    margin-bottom: 12px;
+    .info {
+      flex: 1;
+      overflow: hidden;
+      .name { display: block; font-size: 15px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .artist { display: block; font-size: 12px; opacity: 0.6; margin-top: 2px; }
+    }
+    .ops {
+      display: flex;
+      gap: 10px;
+      .op-btn { cursor: pointer; opacity: 0.7; &:hover { opacity: 1; } }
     }
   }
-  .control {
+
+  .progress-bar {
     display: flex;
-    flex-direction: row;
     align-items: center;
-    justify-content: space-evenly;
-    width: 100%;
-    .state {
-      .i-icon {
-        width: 50px;
-        height: 50px;
-        display: block;
-      }
+    gap: 8px;
+    margin-bottom: 12px;
+    .time { font-size: 12px; opacity: 0.6; width: 35px; text-align: center; }
+    .el-slider {
+      flex: 1;
+      --el-slider-main-bg-color: #fff;
+      --el-slider-runway-bg-color: rgba(255, 255, 255, 0.2);
+      --el-slider-button-size: 12px;
     }
-    .i-icon {
-      width: 36px;
-      height: 36px;
+  }
+
+  .controls {
+    .main-ctrl {
       display: flex;
-      border-radius: 6px;
-      align-items: center;
       justify-content: center;
-      border-radius: 6px;
-      transform: scale(1);
-      &:hover {
-        background: #ffffff33;
-      }
-      &:active {
-        transform: scale(0.95);
-      }
-    }
-  }
-  .menu {
-    height: 26px;
-    width: 100%;
-    line-height: 26px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    .name {
-      width: 100%;
-      text-align: center;
-      text-overflow: ellipsis;
-      overflow-x: hidden;
-      white-space: nowrap;
-      animation: fade 0.3s;
-    }
-    .volume {
-      width: 100%;
-      padding: 0 12px;
-      display: flex;
       align-items: center;
-      flex-direction: row;
-      animation: fade 0.3s;
-      .icon {
-        margin-right: 12px;
-        span {
-          width: 24px;
-          height: 24px;
-          display: block;
-        }
+      gap: 24px;
+      margin-bottom: 16px;
+      .ctrl-btn { cursor: pointer; opacity: 0.8; &:hover { opacity: 1; transform: scale(1.1); } transition: 0.2s; }
+      .play-btn { cursor: pointer; &:hover { transform: scale(1.1); } transition: 0.2s; }
+    }
+    .sub-ctrl {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .volume-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 120px;
+        .vol-slider { flex: 1; --el-slider-main-bg-color: #fff; --el-slider-runway-bg-color: rgba(255, 255, 255, 0.2); --el-slider-button-size: 10px; }
       }
-      :deep(*) {
-        transition: none;
-      }
-      :deep(.el-slider__button) {
-        transition: 0.3s;
-      }
-      .el-slider {
-        margin-right: 12px;
-        --el-slider-main-bg-color: #efefef;
-        --el-slider-runway-bg-color: #ffffff40;
-        --el-slider-button-size: 16px;
-      }
+      .list-btn { cursor: pointer; opacity: 0.8; &:hover { opacity: 1; } }
     }
   }
 }
-.music-list {
+
+/* 播放列表弹窗 - 暗黑磨砂风格 */
+.music-list-modal {
   position: fixed;
   top: 0;
   left: 0;
-  margin: auto;
-  width: 100%;
-  height: 100%;
-  background-color: #00000080;
-  backdrop-filter: blur(20px);
-  z-index: 1;
-  .list {
-    position: absolute;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .list-panel {
+    width: 400px;
+    height: 500px;
+    background: rgba(30, 30, 30, 0.9);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    top: calc(50% - 300px);
-    left: calc(50% - 320px);
-    width: 640px;
-    height: 600px;
-    background-color: #ffffff66;
-    border-radius: 6px;
-    z-index: 999;
-    @media (max-width: 720px) {
-      left: calc(50% - 45%);
-      width: 90%;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+
+    .panel-header {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      h3 { margin: 0; font-size: 16px; color: #fff; }
+      .close-btn { cursor: pointer; opacity: 0.7; &:hover { opacity: 1; } }
     }
-    .close {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 28px;
-      height: 28px;
-      display: block;
-      &:hover {
-        transform: scale(1.2);
+
+    .panel-tools {
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      gap: 10px;
+
+      .tool-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.1);
+        padding: 8px 0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: 0.2s;
+
+        &:hover { background: rgba(255,255,255,0.2); }
+
+        &.danger {
+          color: #ff4d4f;
+          background: rgba(255, 77, 79, 0.1);
+          &:hover { background: rgba(255, 77, 79, 0.2); }
+        }
       }
-      &:active {
-        transform: scale(0.95);
+    }
+
+    .song-list {
+      flex: 1;
+      overflow-y: auto;
+
+      /* 滚动条样式 */
+      &::-webkit-scrollbar { width: 4px; }
+      &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+      .empty {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: rgba(255,255,255,0.3);
+        gap: 10px;
+        .load-btn {
+          margin-top: 10px;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: #fff;
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+          }
+        }
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        li {
+          display: flex;
+          align-items: center;
+          padding: 12px 16px;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+          cursor: pointer;
+          transition: 0.2s;
+
+          &:hover { background: rgba(255,255,255,0.08); }
+          &.active {
+            background: rgba(255,255,255,0.12);
+            .index, .name { color: #409eff; font-weight: bold; }
+          }
+
+          .index { width: 30px; color: rgba(255,255,255,0.4); font-size: 12px; }
+          .info {
+            flex: 1;
+            min-width: 0;
+            .name { font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .artist { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+          }
+          .actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .action-btn { opacity: 0; transition: 0.2s; }
+          }
+          &:hover .actions .action-btn { opacity: 1; }
+        }
       }
     }
   }
 }
 
-// 弹窗动画
-.zoom-enter-active {
-  animation: zoom 0.4s ease-in-out;
-}
-.zoom-leave-active {
-  animation: zoom 0.3s ease-in-out reverse;
-}
-@keyframes zoom {
-  0% {
-    opacity: 0;
-    transform: scale(0) translateY(-600px);
+/* 动画 */
+.slide-up-enter-active, .slide-up-leave-active { transition: all 0.3s ease; }
+.slide-up-enter-from, .slide-up-leave-to { transform: translateY(20px); opacity: 0; }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>
+
+<style lang="scss">
+.music-dialog {
+  background: rgba(30, 30, 30, 0.8) !important;
+  backdrop-filter: blur(20px);
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6) !important;
+
+  .el-dialog__header {
+    margin-right: 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    .el-dialog__title {
+      color: #fff !important;
+      font-size: 16px;
+    }
   }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+
+  .el-dialog__body {
+    padding: 20px !important;
+
+    .el-form-item__label {
+      color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    .el-input__wrapper {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      box-shadow: none !important;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: 0.3s;
+
+      &:hover, &.is-focus {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .el-input__inner {
+        color: #fff !important;
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.3);
+        }
+      }
+    }
+  }
+
+  .el-dialog__footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px !important;
+
+    .el-button {
+      border: none;
+      &.cancel-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        &:hover { background: rgba(255, 255, 255, 0.2); }
+      }
+      &.confirm-btn {
+        background: #409eff;
+        color: #fff;
+        &:hover { background: #66b1ff; }
+      }
+    }
+  }
+}
+
+.music-message-box {
+  background: rgba(30, 30, 30, 0.8) !important;
+  backdrop-filter: blur(20px);
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6) !important;
+  padding-bottom: 20px !important;
+
+  .el-message-box__header {
+    .el-message-box__title {
+      color: #fff !important;
+    }
+    .el-message-box__close {
+      color: rgba(255, 255, 255, 0.6) !important;
+      &:hover { color: #fff !important; }
+    }
+  }
+
+  .el-message-box__content {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  .el-message-box__btns {
+    .el-button {
+      border: none;
+      &--default {
+        background: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #fff !important;
+        &:hover {
+          background: rgba(255, 255, 255, 0.1) !important;
+          border-color: rgba(255, 255, 255, 0.3) !important;
+          color: #fff !important;
+        }
+      }
+      &--primary {
+        background: #409eff;
+        color: #fff;
+        &:hover { background: #66b1ff; }
+      }
+    }
   }
 }
 </style>

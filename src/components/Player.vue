@@ -118,6 +118,7 @@ const onPlay = () => {
   playIndex.value = player.value.aplayer.index;
   // 播放状态
   store.setPlayerState(player.value.audioRef.paused);
+  store.playerAutoplay = true; // 记忆播放状态
   // 储存播放器信息
   store.setPlayerData(playList.value[playIndex.value].name, playList.value[playIndex.value].artist);
   ElMessage({
@@ -133,6 +134,7 @@ const onPlay = () => {
 // 暂停
 const onPause = () => {
   store.setPlayerState(player.value.audioRef.paused);
+  store.playerAutoplay = false; // 记忆暂停状态
 };
 
 // 音频时间更新事件
@@ -153,25 +155,27 @@ const onTimeUp = () => {
 
 // 切换播放暂停事件
 const playToggle = () => {
-  player.value.toggle();
+  player.value && player.value.toggle();
 };
 
 // 切换音量事件
 const changeVolume = (value) => {
-  player.value.setVolume(value, false);
+  player.value && player.value.setVolume(value, false);
 };
 
 // 切换上下曲
 const changeSong = (type) => {
-  type === 0 ? player.value.skipBack() : player.value.skipForward();
-  nextTick(() => {
-    player.value.play();
-  });
+  if (player.value) {
+    type === 0 ? player.value.skipBack() : player.value.skipForward();
+    nextTick(() => {
+      player.value.play();
+    });
+  }
 };
 
 // 切换歌曲列表状态
 const toggleList = () => {
-  player.value.toggleList();
+  player.value && player.value.toggleList();
 };
 
 // 加载音频错误

@@ -34,6 +34,8 @@
       <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
     </Icon>
   </Transition>
+  <!-- 音乐播放器 -->
+  <Music />
 </template>
 <script setup>
 import { helloInit, checkDays, showUpcomingCloudHello } from "@/utils/getTime.js";
@@ -47,6 +49,7 @@ import Background from "@/components/Background.vue";
 import Footer from "@/components/Footer.vue";
 import Box from "@/views/Box/index.vue";
 import MoreSet from "@/views/MoreSet/index.vue";
+import Music from "@/components/Music.vue";
 import cursorInit from "@/utils/cursor.js";
 import config from "@/../package.json";
 
@@ -147,14 +150,15 @@ onMounted(() => {
   const styleTitle1 = "font-size: 20px;font-weight: 600;color: rgb(244,167,89);";
   const styleTitle2 = "font-size:12px;color: rgb(244,167,89);";
   const styleContent = "color: rgb(30,152,255);";
-  const title1 = "無名の主页";
+  const title1 = "Doulor的主页";
   const title2 = `
- _____ __  __  _______     ____     __
-|_   _|  \\/  |/ ____\\ \\   / /\\ \\   / /
-  | | | \\  / | (___  \\ \\_/ /  \\ \\_/ /
-  | | | |\\/| |\\___ \\  \\   /    \\   /
- _| |_| |  | |____) |  | |      | |
-|_____|_|  |_|_____/   |_|      |_|`;
+ _____              _            
+|  __ \\            | |           
+| |  | | ___  _   _| | ___  _ __ 
+| |  | |/ _ \\| | | | |/ _ \\| '__|
+| |__| | (_) | |_| | | (_) | |   
+|_____/ \\___/ \\__,_|_|\\___/|_|   
+`;
   const content = `\n\n版本: ${config.version}\n主页: ${config.home}\nGithub: ${config.github}`;
   console.info(`%c${title1} %c${title2} %c${content}`, styleTitle1, styleTitle2, styleContent);
 });
