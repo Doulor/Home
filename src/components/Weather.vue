@@ -84,6 +84,10 @@ const AMAP_WEB_KEY = import.meta.env.VITE_WEATHER_KEY || "";
 const GEOCODE_API = "https://restapi.amap.com/v3/geocode/geo";
 const WEATHER_API = "https://restapi.amap.com/v3/weather/weatherInfo";
 
+// OpenMeteo API 配置 (无 Key 限制)
+const OPEN_METEO_GEO_API = "https://geocoding-api.open-meteo.com/v1/search";
+const OPEN_METEO_WEATHER_API = "https://api.open-meteo.com/v1/forecast";
+
 // 状态管理
 const isLoading = ref(false);
 const errorMessage = ref("");
@@ -93,6 +97,41 @@ const showSearch = ref(false);
 const searchInput = ref(null);
 const showTip = ref(false);
 const TIP_STORAGE_KEY = "weather-location-tip-shown";
+
+// WMO 天气代码映射
+const getWmoWeatherIcon = (code) => {
+  const map = {
+    0: { icon: "☀️", text: "晴" },
+    1: { icon: "🌤️", text: "多云" },
+    2: { icon: "⛅", text: "多云" },
+    3: { icon: "☁️", text: "阴" },
+    45: { icon: "🌫️", text: "雾" },
+    48: { icon: "🌫️", text: "雾" },
+    51: { icon: "🌧️", text: "小雨" },
+    53: { icon: "🌧️", text: "中雨" },
+    55: { icon: "🌧️", text: "大雨" },
+    56: { icon: "🌧️", text: "冻雨" },
+    57: { icon: "🌧️", text: "冻雨" },
+    61: { icon: "🌧️", text: "小雨" },
+    63: { icon: "🌧️", text: "中雨" },
+    65: { icon: "🌧️", text: "大雨" },
+    66: { icon: "🌧️", text: "冻雨" },
+    67: { icon: "🌧️", text: "冻雨" },
+    71: { icon: "❄️", text: "小雪" },
+    73: { icon: "❄️", text: "中雪" },
+    75: { icon: "❄️", text: "大雪" },
+    77: { icon: "❄️", text: "雪粒" },
+    80: { icon: "🌧️", text: "阵雨" },
+    81: { icon: "🌧️", text: "阵雨" },
+    82: { icon: "🌧️", text: "阵雨" },
+    85: { icon: "❄️", text: "阵雪" },
+    86: { icon: "❄️", text: "阵雪" },
+    95: { icon: "⛈️", text: "雷阵雨" },
+    96: { icon: "⛈️", text: "雷阵雨" },
+    99: { icon: "⛈️", text: "雷阵雨" },
+  };
+  return map[code] || { icon: "🌤️", text: "未知" };
+};
 
 // 天气状况 -> 天气符号映射（覆盖常见天气）
 const getWeatherIcon = (condition) => {
@@ -208,7 +247,7 @@ const hideSearchOnBlur = () => {
   }
 };
 
-// 查询天气主函数（无修改）
+// 查询天气主函数
 const fetchWeather = async () => {
   const city = cityName.value.trim();
   if (!city) {
@@ -219,45 +258,99 @@ const fetchWeather = async () => {
   isLoading.value = true;
   errorMessage.value = "";
   
+  // 优先尝试高德 API，如果失败或 Key 无效，则降级到 OpenMeteo
   try {
-    const geocodeRes = await fetch(
-      `${GEOCODE_API}?address=${encodeURIComponent(city)}&city=${encodeURIComponent(city)}&key=${AMAP_WEB_KEY}`
-    );
-    const geocodeData = await geocodeRes.json();
-    
-    if (geocodeData.status !== "1" || !geocodeData.geocodes?.length) {
-      throw new Error("无法识别城市");
+    if (AMAP_WEB_KEY) {
+      await fetchAmapWeather(city);
+    } else {
+      throw new Error("未配置高德 Key");
     }
-
-    const adcode = geocodeData.geocodes[0].adcode;
-    const weatherRes = await fetch(
-      `${WEATHER_API}?city=${adcode}&extensions=base&key=${AMAP_WEB_KEY}`
-    );
-    const weatherDataRes = await weatherRes.json();
-    
-    if (weatherDataRes.status !== "1" || !weatherDataRes.lives?.length) {
-      throw new Error("查询失败");
+  } catch (amapErr) {
+    console.warn("高德 API 失败，尝试 OpenMeteo:", amapErr);
+    try {
+      await fetchOpenMeteoWeather(city);
+    } catch (omErr) {
+      errorMessage.value = "天气查询失败";
+      showSearchBox();
     }
-
-    const weather = weatherDataRes.lives[0];
-    weatherData.value = {
-      city: weather.city,
-      temp: weather.temperature,
-      condition: weather.weather,
-      updateTime: weather.reporttime.slice(11, 16)
-    };
-
-    cityName.value = weather.city;
-    saveCity(weather.city);
-
-    showSearch.value = false;
-  } catch (err) {
-    errorMessage.value = err.message;
-    showSearchBox();
   } finally {
     isLoading.value = false;
   }
 };
+
+// 高德 API 实现
+const fetchAmapWeather = async (city) => {
+  const geocodeRes = await fetch(
+    `${GEOCODE_API}?address=${encodeURIComponent(city)}&city=${encodeURIComponent(city)}&key=${AMAP_WEB_KEY}`
+  );
+  const geocodeData = await geocodeRes.json();
+  
+  if (geocodeData.status !== "1" || !geocodeData.geocodes?.length) {
+    throw new Error("无法识别城市");
+  }
+
+  const adcode = geocodeData.geocodes[0].adcode;
+  const weatherRes = await fetch(
+    `${WEATHER_API}?city=${adcode}&extensions=base&key=${AMAP_WEB_KEY}`
+  );
+  const weatherDataRes = await weatherRes.json();
+  
+  if (weatherDataRes.status !== "1" || !weatherDataRes.lives?.length) {
+    throw new Error("查询失败");
+  }
+
+  const weather = weatherDataRes.lives[0];
+  weatherData.value = {
+    city: weather.city,
+    temp: weather.temperature,
+    condition: weather.weather,
+    updateTime: weather.reporttime.slice(11, 16)
+  };
+
+  cityName.value = weather.city;
+  saveCity(weather.city);
+  showSearch.value = false;
+};
+
+// OpenMeteo API 实现 (无 Key)
+const fetchOpenMeteoWeather = async (city) => {
+  // 1. 地理编码
+  const geoRes = await fetch(
+    `${OPEN_METEO_GEO_API}?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`
+  );
+  const geoData = await geoRes.json();
+  
+  if (!geoData.results?.length) {
+    throw new Error("无法识别城市");
+  }
+
+  const location = geoData.results[0];
+  
+  // 2. 获取天气
+  const weatherRes = await fetch(
+    `${OPEN_METEO_WEATHER_API}?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true&timezone=auto`
+  );
+  const weatherDataRes = await weatherRes.json();
+  
+  if (!weatherDataRes.current_weather) {
+    throw new Error("查询失败");
+  }
+
+  const current = weatherDataRes.current_weather;
+  const wmo = getWmoWeatherIcon(current.weathercode);
+
+  weatherData.value = {
+    city: location.name, // OpenMeteo 返回的城市名
+    temp: Math.round(current.temperature),
+    condition: wmo.text,
+    updateTime: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  };
+
+  cityName.value = location.name;
+  saveCity(location.name);
+  showSearch.value = false;
+};
+
 </script>
 
 <style lang="scss">
