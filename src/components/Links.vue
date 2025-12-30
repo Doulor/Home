@@ -531,9 +531,9 @@ const resetToDefault = () => {
 }
 
 .link-tooltip {
-  background: #222 !important;
+  background: #000 !important;
   color: #fff !important;
-  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
   border-radius: 8px !important;
   padding: 8px 12px !important;
   box-shadow: 0 4px 16px rgba(0,0,0,0.18);
