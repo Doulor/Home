@@ -79,7 +79,8 @@ const DEFAULT_CITY = "荆州";
 const STORAGE_KEY = "home-weather-city";
 
 // 高德API配置
-const AMAP_WEB_KEY = "3b3b7736c187fa7bffae3bb1ecb30ef0"; 
+// 修改：优先使用环境变量，如果没有则使用空字符串或抛出警告
+const AMAP_WEB_KEY = import.meta.env.VITE_WEATHER_KEY || ""; 
 const GEOCODE_API = "https://restapi.amap.com/v3/geocode/geo";
 const WEATHER_API = "https://restapi.amap.com/v3/weather/weatherInfo";
 
