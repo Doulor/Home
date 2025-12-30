@@ -168,7 +168,7 @@ onMounted(() => {
 
 // 处理搜索按钮点击
 const handleSearchClick = () => {
-  showSearch.value = !showSearch;
+  showSearch.value = !showSearch.value;
   
   // 如果气泡正在显示，点击后标记为不再显示
   if (showTip.value) {
