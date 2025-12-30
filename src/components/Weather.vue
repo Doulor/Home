@@ -95,7 +95,7 @@ const OPEN_METEO_WEATHER_API = "https://api.open-meteo.com/v1/forecast";
 
 // API 优先级配置 (可手动调整顺序)
 // 可选值: "amap" (高德), "qweather" (和风), "openmeteo" (OpenMeteo)
-const API_PRIORITY = ["qweather", "amap", "openmeteo"];
+const API_PRIORITY = ["amap", "qweather", "openmeteo"];
 
 // 状态管理
 const isLoading = ref(false);
