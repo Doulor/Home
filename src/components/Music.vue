@@ -84,6 +84,10 @@
 
 <script setup>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
+>>>>>>> Stashed changes
 =======
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 >>>>>>> Stashed changes
@@ -179,6 +183,7 @@ const changePlayState = () => {
 };
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // 音乐上下曲
 const changeMusicIndex = (type) => {
   playerRef.value.changeSong(type);
@@ -190,6 +195,8 @@ onMounted(() => {
     if (!store.musicIsOk) {
       return ;
 =======
+=======
+>>>>>>> Stashed changes
   // 随机提示逻辑 (30%概率) - 仅在非移动端显示
   if (!isMobile.value && !store.spaceTipSeen && Math.random() < 0.8) {
     showSpaceTip.value = true;
