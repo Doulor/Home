@@ -219,7 +219,7 @@ const handleScroll = (e) => {
     
     scrollEndTimer = setTimeout(() => {
       isScrolling.value = false;
-    }, 1000);
+    }, 1500);
   }
 };
 
@@ -316,6 +316,7 @@ const resetToDefault = () => {
 .links {
   .line {
     margin: 2rem 0.25rem 1rem;
+
     font-size: 1.1rem;
     display: flex;
     align-items: center;
@@ -357,16 +358,21 @@ const resetToDefault = () => {
     mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
     
+    /* 使用 CSS 变量控制滚动条颜色，配合 @property 实现过渡 */
+    --scrollbar-bg: transparent;
+    transition: --scrollbar-bg 0.5s ease;
+    
+    &.is-scrolling {
+      --scrollbar-bg: rgba(255, 255, 255, 0.2);
+    }
+
     /* 滚动条样式 */
     &::-webkit-scrollbar {
       height: 6px;
     }
     &::-webkit-scrollbar-thumb {
-      background: transparent;
+      background: var(--scrollbar-bg);
       border-radius: 3px;
-    }
-    &.is-scrolling::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
     }
     &::-webkit-scrollbar-track {
       background: transparent;
@@ -517,6 +523,13 @@ const resetToDefault = () => {
 </style>
 
 <style lang="scss">
+/* 定义滚动条颜色变量以支持过渡 */
+@property --scrollbar-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
 .link-tooltip {
   background: rgba(0, 0, 0, 0.6) !important;
   backdrop-filter: blur(10px);
