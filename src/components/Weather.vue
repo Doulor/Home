@@ -84,9 +84,18 @@ const AMAP_WEB_KEY = import.meta.env.VITE_WEATHER_KEY || "";
 const GEOCODE_API = "https://restapi.amap.com/v3/geocode/geo";
 const WEATHER_API = "https://restapi.amap.com/v3/weather/weatherInfo";
 
+// 和风天气 API 配置
+const QWEATHER_KEY = import.meta.env.VITE_QWEATHER_KEY || "";
+const QWEATHER_GEO_API = "https://geoapi.qweather.com/v2/city/lookup";
+const QWEATHER_WEATHER_API = "https://devapi.qweather.com/v7/weather/now";
+
 // OpenMeteo API 配置 (无 Key 限制)
 const OPEN_METEO_GEO_API = "https://geocoding-api.open-meteo.com/v1/search";
 const OPEN_METEO_WEATHER_API = "https://api.open-meteo.com/v1/forecast";
+
+// API 优先级配置 (可手动调整顺序)
+// 可选值: "amap" (高德), "qweather" (和风), "openmeteo" (OpenMeteo)
+const API_PRIORITY = ["qweather", "amap", "openmeteo"];
 
 // 状态管理
 const isLoading = ref(false);
@@ -258,24 +267,73 @@ const fetchWeather = async () => {
   isLoading.value = true;
   errorMessage.value = "";
   
-  // 优先尝试高德 API，如果失败或 Key 无效，则降级到 OpenMeteo
-  try {
-    if (AMAP_WEB_KEY) {
-      await fetchAmapWeather(city);
-    } else {
-      throw new Error("未配置高德 Key");
-    }
-  } catch (amapErr) {
-    console.warn("高德 API 失败，尝试 OpenMeteo:", amapErr);
+  let lastError = null;
+
+  // 按优先级尝试 API
+  for (const apiName of API_PRIORITY) {
     try {
-      await fetchOpenMeteoWeather(city);
-    } catch (omErr) {
-      errorMessage.value = "天气查询失败";
-      showSearchBox();
+      if (apiName === "amap") {
+        if (!AMAP_WEB_KEY) throw new Error("未配置高德 Key");
+        await fetchAmapWeather(city);
+        return; // 成功则直接返回
+      } else if (apiName === "qweather") {
+        if (!QWEATHER_KEY) throw new Error("未配置和风 Key");
+        await fetchQWeather(city);
+        return; // 成功则直接返回
+      } else if (apiName === "openmeteo") {
+        await fetchOpenMeteoWeather(city);
+        return; // 成功则直接返回
+      }
+    } catch (err) {
+      console.warn(`${apiName} API 失败:`, err);
+      lastError = err;
+      // 继续尝试下一个 API
     }
-  } finally {
-    isLoading.value = false;
   }
+
+  // 所有 API 都失败
+  errorMessage.value = "天气查询失败";
+  showSearchBox();
+  isLoading.value = false;
+};
+
+// 和风天气 API 实现
+const fetchQWeather = async (city) => {
+  // 1. 城市地理编码
+  const geoRes = await fetch(
+    `${QWEATHER_GEO_API}?location=${encodeURIComponent(city)}&key=${QWEATHER_KEY}`
+  );
+  const geoData = await geoRes.json();
+  
+  if (geoData.code !== "200" || !geoData.location?.length) {
+    throw new Error("无法识别城市");
+  }
+
+  const location = geoData.location[0];
+  const locationId = location.id;
+
+  // 2. 获取实时天气
+  const weatherRes = await fetch(
+    `${QWEATHER_WEATHER_API}?location=${locationId}&key=${QWEATHER_KEY}`
+  );
+  const weatherDataRes = await weatherRes.json();
+  
+  if (weatherDataRes.code !== "200" || !weatherDataRes.now) {
+    throw new Error("查询失败");
+  }
+
+  const now = weatherDataRes.now;
+  weatherData.value = {
+    city: location.name,
+    temp: now.temp,
+    condition: now.text,
+    updateTime: now.obsTime.slice(11, 16)
+  };
+
+  cityName.value = location.name;
+  saveCity(location.name);
+  showSearch.value = false;
+  isLoading.value = false;
 };
 
 // 高德 API 实现
@@ -310,6 +368,7 @@ const fetchAmapWeather = async (city) => {
   cityName.value = weather.city;
   saveCity(weather.city);
   showSearch.value = false;
+  isLoading.value = false;
 };
 
 // OpenMeteo API 实现 (无 Key)
@@ -349,6 +408,7 @@ const fetchOpenMeteoWeather = async (city) => {
   cityName.value = location.name;
   saveCity(location.name);
   showSearch.value = false;
+  isLoading.value = false;
 };
 
 </script>
