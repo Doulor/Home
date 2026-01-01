@@ -32,6 +32,7 @@ export const mainStore = defineStore("main", {
       siteLinks: siteLinksData, // 网站列表
       // 新增功能开关
       searchSuggestion: true, // 搜索联想
+      messageBubbleShow: false, // 留言气泡显示
     };
   },
   getters: {
@@ -102,6 +103,8 @@ export const mainStore = defineStore("main", {
       "randomLockIds",
       "spaceTipSeen",
       "siteLinks",
+      "searchSuggestion",
+      "messageBubbleShow",
     ],
   },
 });

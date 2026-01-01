@@ -1,6 +1,15 @@
 <template>
   <!-- 基本信息 -->
   <div class="message">
+    <!-- 留言气泡 -->
+    <Transition name="fade-slide-up">
+      <div v-if="bubbleShow" class="message-bubble" @click="bubbleShow = false">
+        <div class="bubble-content">
+          <span class="text">{{ bubbleContent }}</span>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Logo -->
     <div class="logo">
       <img class="logo-img" :src="siteLogo" alt="logo" />
@@ -31,9 +40,47 @@
 <script setup>
 import { Icon } from "@vicons/utils";
 import { QuoteLeft, QuoteRight } from "@vicons/fa";
+import { createClient } from "@supabase/supabase-js";
 
 import { mainStore } from "@/store";
 const store = mainStore();
+
+// 留言气泡逻辑
+const bubbleShow = ref(false);
+const bubbleContent = ref("");
+
+onMounted(async () => {
+  // 检查开关和概率 (30% 概率出现)
+  if (!store.messageBubbleShow || Math.random() > 0.3) return;
+
+  try {
+    const supabase = createClient(
+      import.meta.env.VITE_SUPABASE_URL,
+      import.meta.env.VITE_SUPABASE_ANON_KEY
+    );
+
+    // 获取最新的一条留言（按 id 倒序）
+    const { data, error } = await supabase
+      .from("messages")
+      .select("content")
+      .order("id", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data?.content) return;
+
+    // 显示气泡
+    bubbleContent.value = data.content;
+    bubbleShow.value = true;
+
+    // 10秒后自动消失
+    setTimeout(() => {
+      bubbleShow.value = false;
+    }, 10000);
+  } catch (err) {
+    console.error("Message bubble error:", err);
+  }
+});
 
 // 主页站点logo
 const siteLogo = import.meta.env.VITE_SITE_MAIN_LOGO;
@@ -174,6 +221,57 @@ watch(
       }
     }
   }
+
+  .message-bubble {
+    position: absolute;
+    top: -70px;
+    left: 140px;
+    z-index: 10;
+    cursor: pointer;
+    animation: float 4s ease-in-out infinite;
+
+    .bubble-content {
+      position: relative;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 260px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+      .text {
+        font-size: 14px;
+        color: #fff;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      }
+
+      /* 小三角 - 指向下方 */
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 20px;
+        width: 0;
+        height: 0;
+        border-top: 8px solid rgba(0, 0, 0, 0.6);
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+      }
+    }
+
+    /* 移动端隐藏 */
+    @media (max-width: 1200px) {
+      display: none;
+    }
+  }
+
   @media (max-width: 390px) {
     .logo {
       flex-direction: column;

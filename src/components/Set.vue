@@ -78,6 +78,15 @@
             :inactive-icon="CloseSmall"
           />
         </div>
+        <div class="item">
+          <span class="text">留言气泡显示(30%概率)</span>
+          <el-switch
+            v-model="messageBubbleShow"
+            inline-prompt
+            :active-icon="CheckSmall"
+            :inactive-icon="CloseSmall"
+          />
+        </div>
       </el-collapse-item>
     </el-collapse>
   </div>
@@ -98,6 +107,7 @@ const {
   playerOrder,
   playerLoop,
   searchSuggestion,
+  messageBubbleShow,
 } = storeToRefs(store);
 
 // 默认选中项
