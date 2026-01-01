@@ -101,9 +101,15 @@ export const helloInit = () => {
 export const showUpcomingCloudHello = (limitDays = 7) => {
   const nextEvent = getUpcomingCloudEvent(limitDays);
   if (!nextEvent) return null;
+
+  const message =
+    nextEvent.daysLeft === 0
+      ? `今天是 <strong>${nextEvent.title}</strong>`
+      : `<strong>${nextEvent.title}</strong> 还有 ${nextEvent.daysLeft} 天到来（${nextEvent.date}）`;
+
   ElMessage({
     dangerouslyUseHTMLString: true,
-    message: `<strong>${nextEvent.title}</strong> 还有 ${nextEvent.daysLeft} 天到来（${nextEvent.date}）`,
+    message: message,
     duration: 5200,
   });
   return nextEvent;

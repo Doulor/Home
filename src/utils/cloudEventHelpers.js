@@ -49,7 +49,8 @@ const getNextOccurrenceForEvent = (event, referenceDate = new Date()) => {
   const entries = getEventDateList(event);
   if (!entries.length) return null;
 
-  const now = referenceDate;
+  const now = new Date(referenceDate);
+  now.setHours(0, 0, 0, 0);
   const msPerDay = 1000 * 60 * 60 * 24;
 
   const candidates = entries.map((entry) => {
@@ -79,7 +80,7 @@ const getNextOccurrenceForEvent = (event, referenceDate = new Date()) => {
 
   if (!next) return null;
 
-  const daysLeft = Math.ceil((next.dateObj - now) / msPerDay);
+  const daysLeft = Math.round((next.dateObj - now) / msPerDay);
   return {
     iso: formatIso(next.entry.year, next.entry.month, next.entry.day),
     dateObj: next.dateObj,
