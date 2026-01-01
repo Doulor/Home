@@ -30,7 +30,11 @@
           <div class="temperature">{{ weatherData.temp }}°C</div>
           <!-- 天气符号 + 天气文字（大小=原温度大小） -->
           <div class="condition-wrap">
-            <span class="weather-icon">{{ getWeatherIcon(weatherData.condition) }}</span>
+            <span class="weather-icon-wrapper">
+              <span :class="['weather-icon', getWeatherAnimationClass(weatherData.condition)]">
+                {{ getWeatherIcon(weatherData.condition) }}
+              </span>
+            </span>
             <span class="condition">{{ weatherData.condition }}</span>
           </div>
         </div>
@@ -164,6 +168,16 @@ const getWeatherIcon = (condition) => {
     "阵雪": "❄️"
   };
   return weatherMap[condition] || "🌤️";
+};
+
+// 获取天气动画类
+const getWeatherAnimationClass = (weather) => {
+  if (!weather) return "anim-float";
+  if (weather.includes("晴")) return "anim-rotate";
+  if (weather.includes("雨") || weather.includes("雪")) return "anim-rain";
+  if (weather.includes("云") || weather.includes("阴")) return "anim-shake";
+  if (weather.includes("雷") || weather.includes("电")) return "anim-flash";
+  return "anim-float";
 };
 
 // 加载本地存储城市
@@ -625,9 +639,45 @@ const fetchOpenMeteoWeather = async (city) => {
 }
 
 /* 天气符号：与天气文字同高，避免不协调 */
+.weather-icon-wrapper {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: scale(1.4);
+  }
+}
+
 .weather-icon {
   font-size: 28px; /* 等于原温度大小，与天气文字匹配 */
   line-height: 1;
+  display: inline-block; /* 必须为 inline-block 才能应用 transform */
+  
+  /* 默认浮动动画 */
+  &.anim-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  
+  /* 晴天旋转 */
+  &.anim-rotate {
+    animation: rotate 12s linear infinite;
+  }
+  
+  /* 雨天/雪天下落感 */
+  &.anim-rain {
+    animation: rain-drop 1.5s ease-in-out infinite;
+  }
+  
+  /* 多云摇晃 */
+  &.anim-shake {
+    animation: shake 4s ease-in-out infinite;
+  }
+  
+  /* 雷电闪烁 */
+  &.anim-flash {
+    animation: flash 2s ease-in-out infinite;
+  }
 }
 
 /* 核心修改2：天气文字大小=原温度大小（原14px→28px） */

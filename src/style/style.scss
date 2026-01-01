@@ -241,6 +241,51 @@ button:hover > svg,
   }
 }
 
+// 动画效果定义
+
+// 旋转
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 摇晃（用于多云/阴天）
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+// 雨滴下落（用于雨天）
+@keyframes rain-drop {
+  0% { transform: translateY(-2px); opacity: 0.5; }
+  50% { transform: translateY(2px); opacity: 1; }
+  100% { transform: translateY(-2px); opacity: 0.5; }
+}
+
+// 闪烁（用于雷电/雪）
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+// 悬浮漂浮
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
 // 隐藏元素
 @media (min-width: 910px) and (max-width: 1200px) {
   .sm-hidden {

@@ -755,8 +755,8 @@ onMounted(() => {
   &.has-event::before {
     content: "";
     position: absolute;
-    top: 12%;
-    left: 12%;
+    top: 13%;
+    left: 10.5%;
     width: 76%;
     height: 76%;
     border: 1.5px solid rgba(239, 51, 64, 0.55);
@@ -771,7 +771,7 @@ onMounted(() => {
     content: "";
     position: absolute;
     top: 7%;
-    left: 7%;
+    left: 4%;
     width: 86%;
     height: 86%;
     border: 2px solid #ef3340;
