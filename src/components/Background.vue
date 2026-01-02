@@ -26,6 +26,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, h } from "vue";
 import { mainStore } from "@/store";
 import { Error } from "@icon-park/vue-next";
+import { getAllBgs, addBg } from "@/utils/bgDb";
 
 const store = mainStore();
 const bgUrl = ref(null);
@@ -36,25 +37,90 @@ const emit = defineEmits(["loadComplete"]);
 const retryCount = ref(0);
 const MAX_RETRY = 5;
 
-// 壁纸随机数
-const getBgRandom = () => Math.floor(Math.random() * 20 + 1);
+const defaultBgNames = [
+  "天空之境上的钢琴", "黄昏小溪", "落日拱门", "蔚蓝银河", "云海草地",
+  "黄昏光晕", "栏杆下的午后云影", "Online", "穿透云层的烟花", "月光下的阶梯小镇",
+  "烟花易逝", "路口的猫", "云影列车", "彩云步道", "天空之境上的风车",
+  "耀阳下的阶梯小镇", "田野", "西海紫云", "树影星河", "星轨山川"
+];
+
+// 初始化壁纸列表
+const initBgList = async () => {
+  try {
+    let list = await getAllBgs();
+    if (list.length === 0) {
+      // 初始化默认壁纸
+      for (let i = 1; i <= 20; i++) {
+        await addBg({
+          name: defaultBgNames[i - 1] || `默认壁纸 ${i}`,
+          url: `/images/background${i}.jpg`,
+          type: 'local',
+          created: new Date()
+        });
+      }
+      list = await getAllBgs();
+    }
+    
+    // 处理 Blob URL
+    store.bgList = list.map(item => {
+      if (item.blob) {
+        return { ...item, url: URL.createObjectURL(item.blob) };
+      }
+      return item;
+    });
+  } catch (e) {
+    console.error("壁纸加载失败:", e);
+    // 兜底
+    if (!store.bgList || store.bgList.length === 0) {
+      const list = [];
+      for (let i = 1; i <= 20; i++) {
+        list.push({
+          id: i,
+          name: defaultBgNames[i - 1] || `默认壁纸 ${i}`,
+          url: `/images/background${i}.jpg`,
+          type: 'local'
+        });
+      }
+      store.bgList = list;
+    }
+  }
+};
 
 // 更换壁纸链接
-const changeBg = (type) => {
-  let newBgUrl;
-  const randomNum = getBgRandom();
-  
-  if (type == 0) {
-    newBgUrl = `/images/background${randomNum}.jpg`;
-  } else if (type == 1) {
-    newBgUrl = "https://api.dujin.org/bing/1920.php";
-  } else {
-    newBgUrl = `/images/background${randomNum}.jpg`;
+const changeBg = async () => {
+  // 确保列表已初始化
+  if (!store.bgList || store.bgList.length === 0) {
+    await initBgList();
   }
 
-  console.log("设置壁纸URL:", newBgUrl);
-  bgUrl.value = newBgUrl;
+  // 筛选可用列表 (如果有锁定，只在锁定中随机)
+  let list = store.bgList;
+  if (store.bgLockIds && store.bgLockIds.length > 0) {
+    list = list.filter(item => store.bgLockIds.includes(item.id));
+  }
+  
+  // 如果筛选后为空（比如锁定的都被删了），则重置为全部
+  if (list.length === 0) {
+    list = store.bgList;
+  }
+
+  if (list.length === 0) {
+     // 极端情况：列表全空
+     bgUrl.value = "/images/background1.jpg";
+     return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * list.length);
+  const item = list[randomIndex];
+  bgUrl.value = item.url;
+
+  console.log("设置壁纸URL:", item.url);
 };
+
+onMounted(async () => {
+  await initBgList();
+  changeBg();
+});
 
 // 图片加载完成
 const imgLoadComplete = () => {
@@ -73,16 +139,7 @@ const imgLoadError = () => {
   if (retryCount.value < MAX_RETRY) {
     retryCount.value++;
     console.log(`正在尝试第 ${retryCount.value} 次重试...`);
-    
-    // 如果是必应壁纸失败，尝试切换回本地随机壁纸
-    if (store.coverType == 1) {
-      const randomNum = getBgRandom();
-      bgUrl.value = `/images/background${randomNum}.jpg`;
-    } else {
-      // 如果是本地壁纸失败，尝试换一个随机数
-      const randomNum = getBgRandom();
-      bgUrl.value = `/images/background${randomNum}.jpg`;
-    }
+    changeBg();
   } else {
     // 超过最大重试次数，使用保底壁纸
     console.error("超过最大重试次数，使用保底壁纸");
@@ -208,5 +265,17 @@ onBeforeUnmount(() => {
       transform: scale(1);
     }
   }
+}
+
+.el-dialog__footer .el-button--default {
+  background: #222 !important;
+  color: #fff !important;
+  border: 1px solid #444 !important;
+}
+
+.el-popover .el-button--default {
+  background: #222 !important;
+  color: #fff !important;
+  border: 1px solid #444 !important;
 }
 </style>

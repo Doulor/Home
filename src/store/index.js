@@ -33,6 +33,12 @@ export const mainStore = defineStore("main", {
       // 新增功能开关
       searchSuggestion: true, // 搜索联想
       messageBubbleShow: false, // 留言气泡显示
+      minimalistMode: false, // 极简模式
+  minimalistTimeVisible: true, // 极简模式显示时间
+      // 壁纸列表
+      bgList: [], 
+      // 锁定的壁纸ID
+      bgLockIds: [],
     };
   },
   getters: {
@@ -105,6 +111,9 @@ export const mainStore = defineStore("main", {
       "siteLinks",
       "searchSuggestion",
       "messageBubbleShow",
+      "minimalistMode",
+  "minimalistTimeVisible",
+      "bgLockIds",
     ],
   },
 });

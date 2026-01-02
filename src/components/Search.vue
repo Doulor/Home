@@ -1,7 +1,7 @@
 <template>
   <div class="search-wrapper">
     <div class="search-container">
-      <div class="search-box">
+      <div class="search-box" :class="{ 'focused': isFocused }">
         <input
           type="text"
           v-model="searchText"
@@ -15,17 +15,15 @@
           @keydown.esc="handleEsc"
           @focus="handleFocus"
           @blur="handleBlur"
-          :class="{ 'search-input--focused': isFocused }"
         />
         <button 
           @click="handleSearch" 
           class="search-btn"
-          :class="{ 'search-btn--focused': isFocused }"
         >
           <Search 
-            theme="filled" 
+            theme="outline" 
             size="18" 
-            fill="#efefef" 
+            fill="#fff" 
           />
         </button>
       </div>
@@ -364,62 +362,78 @@ onUnmounted(() => {
 
 .search-box {
   display: flex;
-  gap: 8px;
+  align-items: center;
   width: 100%;
+  background-color: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 6px;
+  padding: 4px 6px 4px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  &.focused {
+    background-color: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .search-input {
   flex: 1;
-  padding: 10px 16px;
+  padding: 8px 0;
   border: none;
-  border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
+  background: transparent;
+  color: #fff;
+  font-size: 15px;
   outline: none;
-  transition: all 0.3s;
+  min-width: 0;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.3s;
+  }
+
+  &:focus::placeholder {
+    color: rgba(255, 255, 255, 0.2);
   }
 }
 
-.search-input--focused {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
 .search-btn {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   background-color: rgba(255, 255, 255, 0.1);
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: 8px;
+  flex-shrink: 0;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
   }
-}
-
-.search-btn--focused {
-  background-color: rgba(64, 158, 255, 0.3);
-  border: 1px solid rgba(64, 158, 255, 0.5);
-
-  &:hover {
-    background-color: rgba(64, 158, 255, 0.4);
+  
+  &:active {
+    transform: scale(0.95);
   }
 }
 
 .search-hint {
   margin-top: 8px;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-  text-align: right;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 .loading-text {
@@ -432,39 +446,62 @@ onUnmounted(() => {
 
 .suggestions {
   position: absolute;
-  top: 50px;
+  top: 54px;
   left: 0;
   right: 0;
-  background-color: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
-  padding: 8px 0;
+  background-color: rgba(30, 30, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 6px;
   z-index: 100;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
   max-height: 300px;
   overflow-y: auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: slide-down 0.2s ease-out;
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .suggestion-item {
-  padding: 10px 16px;
+  padding: 10px 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
-  color: rgba(255, 255, 255, 1);
+  transition: all 0.2s;
+  color: rgba(255, 255, 255, 0.8);
   text-align: left;
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 14px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
 
-  &.hover {
-    background-color: rgba(255, 255, 255, 0.18);
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin-right: 10px;
+    transition: background-color 0.2s;
+  }
+
+  &.hover, &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
     color: #fff;
+    padding-left: 18px;
+    
+    &::before {
+      background-color: #409eff;
+    }
   }
 }
 
 /* 滚动条样式 */
 .suggestions::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
 }
 
 .suggestions::-webkit-scrollbar-track {
@@ -472,29 +509,27 @@ onUnmounted(() => {
 }
 
 .suggestions::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
 }
 
 /* 移动端适配 */
 @media (max-width: 768px) {
+  .search-box {
+    padding: 4px 6px 4px 14px;
+  }
+  
   .search-input {
-    font-size: 0.9rem;
-    padding: 8px 12px;
+    font-size: 14px;
   }
 
   .search-btn {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
 
   .suggestions {
-    top: 44px;
-  }
-
-  .suggestion-item {
-    padding: 8px 12px;
-    font-size: 0.9rem;
+    top: 48px;
   }
 }
 </style>

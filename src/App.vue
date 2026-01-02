@@ -8,7 +8,7 @@
     <main id="main" v-if="store.imgLoadStatus">
       <div class="container" v-show="!store.backgroundShow">
         <section class="all" v-show="!store.setOpenState">
-          <MainLeft />
+          <MainLeft v-show="!store.minimalistMode" />
           <MainRight />
           <Box v-show="store.boxOpenState" class="box-overlay" />
         </section>
@@ -18,7 +18,7 @@
       </div>
       <!-- 页脚 -->
       <Transition name="fade" mode="out-in">
-        <Footer v-show="!store.backgroundShow && !store.setOpenState" />
+        <Footer v-show="!store.backgroundShow && !store.setOpenState && !store.minimalistMode" />
       </Transition>
     </main>
   </Transition>
@@ -35,7 +35,7 @@
     </Icon>
   </Transition>
   <!-- 音乐播放器 -->
-  <Music />
+  <Music v-show="!store.minimalistMode" />
 </template>
 <script setup>
 import { helloInit, checkDays, showUpcomingCloudHello } from "@/utils/getTime.js";

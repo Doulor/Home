@@ -6,7 +6,7 @@
     </div>
 
     <!-- 内容区：时间天气 -->
-    <div class="content-row">
+    <div class="content-row" v-show="!store.minimalistMode">
       <div class="time-weather-card">
         <div class="time-section">
           <div class="date">
@@ -28,9 +28,11 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { getCurrentTime } from "@/utils/getTime";
+import { mainStore } from "@/store";
 import Weather from "@/components/Weather.vue";
 import Search from "@/components/Search.vue";
 
+const store = mainStore();
 const currentTime = ref({});
 let timeInterval = null;
 

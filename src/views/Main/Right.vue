@@ -1,28 +1,66 @@
 <template>
-  <div :class="store.mobileOpenState ? 'right' : 'right hidden'">
+  <div :class="['right', !store.mobileOpenState ? 'hidden' : '', store.minimalistMode ? 'minimalist' : '']">
     <!-- 移动端 Logo -->
-    <div class="logo text-hidden" @click="store.mobileFuncState = !store.mobileFuncState">
+    <div class="logo text-hidden" @click="store.mobileFuncState = !store.mobileFuncState" v-show="!store.minimalistMode">
       <span class="bg">{{ siteUrl[0] }}</span>
       <span class="sm">.{{ siteUrl[1] }}</span>
     </div>
     <!-- 功能区 -->
     <Func />
     <!-- 网站链接 -->
-    <Link />
+    <Link v-show="!store.minimalistMode" />
+    <div class="minimalist-time" v-if="store.minimalistMode && store.minimalistTimeVisible">
+      <span class="time-text">{{ clockTime.hour }}:{{ clockTime.minute }}:{{ clockTime.second }}</span>
+      <span class="date-text">{{ clockTime.year }}-{{ clockTime.month }}-{{ clockTime.day }} · {{ clockTime.weekday }}</span>
+    </div>
+    
+    <!-- 极简模式退出按钮 -->
+    <div class="exit-minimalist" v-if="store.minimalistMode" @click="store.minimalistMode = false">
+      <setting-two theme="filled" size="24" fill="#ffffff60" />
+      <span>退出极简模式</span>
+    </div>
+
+    <!-- 极简模式进入按钮 (右下角触发) -->
+    <div class="enter-minimalist-trigger" v-if="!store.minimalistMode">
+      <div class="enter-minimalist" @click="store.minimalistMode = true">
+        <setting-two theme="filled" size="24" fill="#ffffff60" />
+        <span>进入极简模式</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
+import { computed, ref, onMounted, onBeforeUnmount } from "vue";
+import { SettingTwo } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import Func from "@/views/Func/index.vue";
 import Link from "@/components/Links.vue";
+import { getCurrentTime } from "@/utils/getTime";
 const store = mainStore();
 
-// 站点链接
+const clockTime = ref(getCurrentTime());
+let clockTimer = null;
+
+const updateClock = () => {
+  clockTime.value = getCurrentTime();
+};
+
+onMounted(() => {
+  updateClock();
+  clockTimer = setInterval(updateClock, 1000);
+});
+
+onBeforeUnmount(() => {
+  if (clockTimer) {
+    clearInterval(clockTimer);
+    clockTimer = null;
+  }
+});
+
 const siteUrl = computed(() => {
   const url = import.meta.env.VITE_SITE_URL;
   if (!url) return "imsyy.top".split(".");
-  // 判断协议前缀
   if (url.startsWith("http://") || url.startsWith("https://")) {
     const urlFormat = url.replace(/^(https?:\/\/)/, "");
     return urlFormat.split(".");
@@ -33,10 +71,10 @@ const siteUrl = computed(() => {
 
 <style lang="scss" scoped>
 .right {
-  // flex: 1 0 0%;
   width: 50%;
   margin-left: 0.75rem;
-  padding-bottom: 80px; /* Add padding to avoid content being hidden behind the floating menu button */
+  padding-bottom: 80px;
+  position: relative;
   .logo {
     width: 100%;
     font-family: "Pacifico-Regular";
@@ -54,17 +92,124 @@ const siteUrl = computed(() => {
       display: none;
     }
     @media (max-width: 720px) {
-      display: none; /* 移动端右侧隐藏 Doulor Logo */
+      display: none;
     }
   }
   @media (max-width: 720px) {
-    margin-left: 0;
-    width: 100%;
-    padding-bottom: 80px; /* Maintain padding on mobile */
-    padding-top: 1.5rem; /* 移动端大幅上移 */
-    margin-top: -60px;   /* 强力上移整体位置 */
     &.hidden {
       display: none;
+    }
+    margin-left: 0;
+    width: 100%;
+    padding-bottom: 80px;
+    padding-top: 1.5rem;
+    margin-top: -60px;
+  }
+  &.minimalist {
+    margin-left: 0;
+    width: 100%;
+    height: 100%;
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 60vh;
+    @media (max-width: 720px) {
+      margin-top: 0;
+      padding-top: 0;
+    }
+    :deep(.func-container) {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    :deep(.search-card) {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .minimalist-time {
+      margin-bottom: 20px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      .time-text {
+        display: block;
+        font-size: 2.5rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      .date-text {
+        display: block;
+        font-size: 0.9rem;
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+    .exit-minimalist {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      transition: all 0.3s;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      &:hover {
+        color: #fff;
+        background: rgba(0, 0, 0, 0.4);
+        :deep(.i-icon) {
+          fill: #fff !important;
+        }
+      }
+    }
+  }
+}
+.enter-minimalist-trigger {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 180px;
+  height: 100px;
+  z-index: 9999;
+  pointer-events: auto;
+  .enter-minimalist {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    transition: all 0.3s;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    transform: translateY(20px);
+    &:hover {
+      color: #fff;
+      background: rgba(0, 0, 0, 0.4);
+      :deep(.i-icon) {
+        fill: #fff !important;
+      }
+    }
+  }
+  &:hover {
+    .enter-minimalist {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }
