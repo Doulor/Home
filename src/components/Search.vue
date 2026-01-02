@@ -304,14 +304,8 @@ const setupGlobalKeyListener = () => {
       // 如果是空格且当前没有搜索内容，则忽略（避免与播放暂停冲突）
       if (e.key === ' ' && !searchText.value) return;
       
-      e.preventDefault();
-      if (!isFocused.value) {
-        isFocused.value = true;
-      }
-      searchText.value += e.key;
-      if (searchText.value.length >= 2) {
-        fetchSuggestions(searchText.value);
-      }
+      // 聚焦输入框，让浏览器原生处理输入（支持IME）
+      searchInput.value.focus();
     }
   };
 

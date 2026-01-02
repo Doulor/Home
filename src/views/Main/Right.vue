@@ -129,6 +129,10 @@ const siteUrl = computed(() => {
       width: 100%;
       max-width: 600px;
       margin: 0 auto;
+      background-color: transparent;
+      padding: 0;
+      box-shadow: none;
+      backdrop-filter: none;
     }
     .minimalist-time {
       margin-bottom: 20px;
