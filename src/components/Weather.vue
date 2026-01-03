@@ -7,22 +7,29 @@
           <span class="city-name">{{ weatherData.city }}</span>
           <span class="update-time">更新于 {{ weatherData.updateTime }}</span>
         </div>
-        <el-tooltip
-          content="点击此处修改默认天气地区"
-          placement="right"
-          v-model:visible="showTip"
-          :manual="true"
-          :show-arrow="false"
-          effect="dark"
-          popper-class="weather-tip-popper"
-        >
-          <button 
-            @click="handleSearchClick" 
-            class="search-toggle"
+        <div class="city-ops">
+          <el-tooltip content="自动定位" placement="top" effect="dark" :show-arrow="false">
+             <button @click="handleAutoLocation" class="search-toggle auto-loc-btn">
+               <Aiming theme="outline" size="20" fill="#fff" />
+             </button>
+          </el-tooltip>
+          <el-tooltip
+            content="点击此处修改默认天气地区"
+            placement="right"
+            v-model:visible="showTip"
+            :manual="true"
+            :show-arrow="false"
+            effect="dark"
+            popper-class="weather-tip-popper"
           >
-            <Edit theme="outline" size="20" fill="#fff"/>
-          </button>
-        </el-tooltip>
+            <button 
+              @click="handleSearchClick" 
+              class="search-toggle"
+            >
+              <Edit theme="outline" size="20" fill="#fff"/>
+            </button>
+          </el-tooltip>
+        </div>
       </div>
       <div class="weather-detail">
         <div class="temp-cond">
@@ -74,7 +81,8 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
-import { Edit } from "@icon-park/vue-next";
+import { Edit, Aiming } from "@icon-park/vue-next";
+import { ElMessage } from "element-plus";
 
 // 配置区域 - 在这里修改默认城市
 
@@ -85,6 +93,7 @@ const STORAGE_KEY = "home-weather-city";
 // 高德API配置
 // 修改：优先使用环境变量，如果没有则使用空字符串或抛出警告
 const AMAP_WEB_KEY = import.meta.env.VITE_WEATHER_KEY || ""; 
+const AMAP_IP_API = "https://restapi.amap.com/v3/ip";
 const GEOCODE_API = "https://restapi.amap.com/v3/geocode/geo";
 const WEATHER_API = "https://restapi.amap.com/v3/weather/weatherInfo";
 
@@ -180,16 +189,35 @@ const getWeatherAnimationClass = (weather) => {
   return "anim-float";
 };
 
+// IP 定位
+const getIpLocation = async () => {
+  if (!AMAP_WEB_KEY) return null;
+  try {
+    const res = await fetch(`${AMAP_IP_API}?key=${AMAP_WEB_KEY}`);
+    const data = await res.json();
+    if (data.status === "1") {
+      // 优先使用城市，如果是空（如直辖市可能返回空或者是省份名），则使用省份
+      const city = (data.city && typeof data.city === 'string' && data.city.length > 0) ? data.city : data.province;
+      return city;
+    }
+  } catch (e) {
+    console.error("IP Location failed", e);
+  }
+  return null;
+};
+
 // 加载本地存储城市
 const loadSavedCity = () => {
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (saved) {
       cityName.value = saved;
+      return true;
     }
   } catch (err) {
     console.warn("读取本地城市失败", err);
   }
+  return false;
 };
 
 const saveCity = (city) => {
@@ -201,9 +229,22 @@ const saveCity = (city) => {
 };
 
 // 组件挂载时加载默认/本地城市天气
-onMounted(() => {
-  loadSavedCity();
-  fetchWeather();
+onMounted(async () => {
+  // 1. 尝试加载本地存储
+  if (loadSavedCity()) {
+    fetchWeather();
+  } else {
+    // 2. 本地无数据，尝试自动定位
+    const locatedCity = await getIpLocation();
+    if (locatedCity) {
+      cityName.value = locatedCity;
+      fetchWeather();
+    } else {
+      // 3. 定位失败，使用默认城市
+      cityName.value = DEFAULT_CITY;
+      fetchWeather();
+    }
+  }
   
   // 气泡提示逻辑
   try {
@@ -228,6 +269,20 @@ onMounted(() => {
     console.warn("LocalStorage access failed", e);
   }
 });
+
+// 手动定位
+const handleAutoLocation = async () => {
+  isLoading.value = true;
+  const city = await getIpLocation();
+  if (city) {
+    cityName.value = city;
+    ElMessage.success(`已定位到: ${city}`);
+    fetchWeather();
+  } else {
+    ElMessage.warning("定位失败，请检查网络或配置");
+    isLoading.value = false;
+  }
+};
 
 // 处理搜索按钮点击
 const handleSearchClick = () => {
@@ -717,5 +772,26 @@ const fetchOpenMeteoWeather = async (city) => {
   .condition {
     font-size: 24px;
   }
+}
+
+.city-ops {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  
+  /* 默认隐藏自动定位按钮 */
+  .auto-loc-btn {
+    opacity: 0;
+    transform: translateX(10px);
+    pointer-events: none;
+    transition: all 0.3s ease;
+  }
+}
+
+/* 鼠标悬停在整个区域时显示自动定位按钮 */
+.city-update:hover .auto-loc-btn {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
 }
 </style>
