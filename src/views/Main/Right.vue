@@ -17,10 +17,12 @@
       <Weather />
     </div>
     
-    <!-- 极简模式退出按钮 -->
-    <div class="exit-minimalist" v-if="store.minimalistMode" @click="store.minimalistMode = false">
-      <setting-two theme="filled" size="24" fill="#ffffff60" />
-      <span>退出极简模式</span>
+    <!-- 极简模式退出按钮 (右下角触发) -->
+    <div class="exit-minimalist-trigger" v-if="store.minimalistMode">
+      <div class="exit-minimalist" @click="store.minimalistMode = false">
+        <setting-two theme="filled" size="24" fill="#ffffff60" />
+        <span>退出极简模式</span>
+      </div>
     </div>
 
     <!-- 极简模式进入按钮 (右下角触发) -->
@@ -186,29 +188,46 @@ const siteUrl = computed(() => {
         left: auto;
       }
     }
-    .exit-minimalist {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
-      transition: all 0.3s;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      z-index: 9999;
-      &:hover {
-        color: #fff;
-        background: rgba(0, 0, 0, 0.4);
-        :deep(.i-icon) {
-          fill: #fff !important;
-        }
+
+  }
+}
+.exit-minimalist-trigger {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 180px;
+  height: 100px;
+  z-index: 9999;
+  pointer-events: auto;
+  .exit-minimalist {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    transition: all 0.3s;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    transform: translateY(20px);
+    &:hover {
+      color: #fff;
+      background: rgba(0, 0, 0, 0.4);
+      :deep(.i-icon) {
+        fill: #fff !important;
       }
+    }
+  }
+  &:hover {
+    .exit-minimalist {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }
