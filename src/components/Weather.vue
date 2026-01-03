@@ -13,15 +13,7 @@
                <Aiming theme="outline" size="20" fill="#fff" />
              </button>
           </el-tooltip>
-          <el-tooltip
-            content="点击此处修改默认天气地区"
-            placement="right"
-            v-model:visible="showTip"
-            :manual="true"
-            :show-arrow="false"
-            effect="dark"
-            popper-class="weather-tip-popper"
-          >
+          <el-tooltip content="修改位置" placement="top" effect="dark" :show-arrow="false">
             <button 
               @click="handleSearchClick" 
               class="search-toggle"
@@ -117,8 +109,6 @@ const weatherData = ref(null);
 const cityName = ref(DEFAULT_CITY);
 const showSearch = ref(false);
 const searchInput = ref(null);
-const showTip = ref(false);
-const TIP_STORAGE_KEY = "weather-location-tip-shown";
 
 // WMO 天气代码映射
 const getWmoWeatherIcon = (code) => {
@@ -245,29 +235,6 @@ onMounted(async () => {
       fetchWeather();
     }
   }
-  
-  // 气泡提示逻辑
-  try {
-    const hasShown = localStorage.getItem(TIP_STORAGE_KEY);
-    // 移动端不显示气泡 (宽度小于 720px)
-    const isMobile = window.innerWidth < 720;
-    
-    if (!hasShown && !isMobile) {
-      // 1/3 概率触发
-      if (Math.random() < 0.33) {
-        // 延迟显示，等待开场动画结束（约2秒）
-        setTimeout(() => {
-          showTip.value = true;
-          // 5秒后自动消失，避免一直遮挡
-          setTimeout(() => {
-            showTip.value = false;
-          }, 5000);
-        }, 2000);
-      }
-    }
-  } catch (e) {
-    console.warn("LocalStorage access failed", e);
-  }
 });
 
 // 手动定位
@@ -287,19 +254,6 @@ const handleAutoLocation = async () => {
 // 处理搜索按钮点击
 const handleSearchClick = () => {
   showSearch.value = !showSearch.value;
-  
-  // 如果气泡正在显示，点击后标记为不再显示
-  if (showTip.value) {
-    showTip.value = false;
-    try {
-      localStorage.setItem(TIP_STORAGE_KEY, "true");
-    } catch (e) {}
-  } else {
-    // 即使用户没看到气泡，只要会用了，也可以标记为已读（可选，这里为了保险起见也标记）
-    try {
-      localStorage.setItem(TIP_STORAGE_KEY, "true");
-    } catch (e) {}
-  }
 
   if (showSearch.value) {
     nextTick(() => {
@@ -482,44 +436,7 @@ const fetchOpenMeteoWeather = async (city) => {
 
 </script>
 
-<style lang="scss">
-.weather-tip-popper {
-  /* 确保在深色背景下文字为白色 */
-  .el-popper__content {
-    color: #fff !important;
-    font-weight: 500;
-  }
-  
-  /* 自定义气泡样式 */
-  &.el-popper {
-    margin-left: 12px !important;
-    border-radius: 8px;
-    background: #000 !important; /* 纯黑背景 */
-    border: 1px solid rgba(255, 255, 255, 0.1) !important; /* 微弱边框 */
-    
-    /* 隐藏默认箭头（以防万一） */
-    .el-popper__arrow {
-      display: none;
-    }
 
-    /* 自定义左侧箭头（当气泡在右侧时） */
-    &[data-popper-placement^="right"]::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: -6px;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-top: 6px solid transparent;
-      border-bottom: 6px solid transparent;
-      border-right: 6px solid #000; /* 颜色与背景一致 */
-    }
-    
-    /* 简单的边框修饰（可选，为了完美衔接边框需要更复杂的双层伪元素，这里简化处理） */
-  }
-}
-</style>
 
 <style scoped>
 .weather-container {
