@@ -34,7 +34,9 @@ export const mainStore = defineStore("main", {
       searchSuggestion: true, // 搜索联想
       messageBubbleShow: false, // 留言气泡显示
       minimalistMode: false, // 极简模式
-  minimalistTimeVisible: true, // 极简模式显示时间
+      minimalistTimeVisible: true, // 极简模式显示时间
+      minimalistWeatherVisible: false, // 极简模式显示天气
+      minimalistEntryVisible: true, // 极简模式入口显示
       // 壁纸列表
       bgList: [], 
       // 锁定的壁纸ID
@@ -112,7 +114,9 @@ export const mainStore = defineStore("main", {
       "searchSuggestion",
       "messageBubbleShow",
       "minimalistMode",
-  "minimalistTimeVisible",
+      "minimalistTimeVisible",
+      "minimalistWeatherVisible",
+      "minimalistEntryVisible",
       "bgLockIds",
     ],
   },

@@ -1,5 +1,5 @@
 <template>
-  <div class="weather-container">
+  <div class="weather-container" :class="{ 'minimalist': store.minimalistMode }">
     <!-- 天气信息展示 -->
     <div v-if="weatherData" class="weather-card">
       <div class="city-update">
@@ -75,6 +75,9 @@
 import { ref, onMounted, nextTick } from "vue";
 import { Edit, Aiming } from "@icon-park/vue-next";
 import { ElMessage } from "element-plus";
+import { mainStore } from "@/store";
+
+const store = mainStore();
 
 // 配置区域 - 在这里修改默认城市
 
@@ -688,6 +691,70 @@ const fetchOpenMeteoWeather = async (city) => {
   /* 移动端天气文字：等于原温度24px */
   .condition {
     font-size: 24px;
+  }
+}
+
+/* 极简模式样式 */
+.weather-container.minimalist {
+  background: none;
+  padding: 0;
+  backdrop-filter: none;
+  box-shadow: none;
+  
+  .city-ops,
+  .update-time {
+    display: none !important;
+  }
+
+  .weather-card {
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .city-update {
+    justify-content: flex-end;
+    width: auto;
+    margin-bottom: 0;
+  }
+
+  .city-info-group {
+    justify-content: flex-end;
+    flex: none;
+  }
+
+  .city-name {
+    font-size: 16px;
+    opacity: 0.8;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+
+  .weather-detail {
+    display: block;
+    padding: 0;
+    margin-top: 0;
+  }
+
+  .temp-cond {
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .temperature {
+    font-size: 20px;
+    font-weight: 400;
+  }
+
+  .weather-icon {
+    font-size: 18px;
+    opacity: 0.9;
+  }
+
+  .condition {
+    font-size: 14px;
+    opacity: 0.7;
   }
 }
 

@@ -87,9 +87,9 @@
           />
         </div>
         <div class="item">
-          <span class="text">极简模式</span>
+          <span class="text">右下角极简模式入口</span>
           <el-switch
-            v-model="minimalistMode"
+            v-model="minimalistEntryVisible"
             inline-prompt
             :active-icon="CheckSmall"
             :inactive-icon="CloseSmall"
@@ -99,6 +99,15 @@
           <span class="text">极简模式显示时间</span>
           <el-switch
             v-model="minimalistTimeVisible"
+            inline-prompt
+            :active-icon="CheckSmall"
+            :inactive-icon="CloseSmall"
+          />
+        </div>
+        <div class="item">
+          <span class="text">极简模式显示天气</span>
+          <el-switch
+            v-model="minimalistWeatherVisible"
             inline-prompt
             :active-icon="CheckSmall"
             :inactive-icon="CloseSmall"
@@ -316,6 +325,8 @@ const {
   messageBubbleShow,
   minimalistMode,
   minimalistTimeVisible,
+  minimalistWeatherVisible,
+  minimalistEntryVisible,
 } = storeToRefs(store);
 
 // 监听极简模式开启

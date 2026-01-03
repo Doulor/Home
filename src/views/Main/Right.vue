@@ -13,6 +13,9 @@
       <span class="time-text">{{ clockTime.hour }}:{{ clockTime.minute }}:{{ clockTime.second }}</span>
       <span class="date-text">{{ clockTime.year }}-{{ clockTime.month }}-{{ clockTime.day }} · {{ clockTime.weekday }}</span>
     </div>
+    <div class="minimalist-weather" v-if="store.minimalistMode && store.minimalistWeatherVisible">
+      <Weather />
+    </div>
     
     <!-- 极简模式退出按钮 -->
     <div class="exit-minimalist" v-if="store.minimalistMode" @click="store.minimalistMode = false">
@@ -21,7 +24,7 @@
     </div>
 
     <!-- 极简模式进入按钮 (右下角触发) -->
-    <div class="enter-minimalist-trigger" v-if="!store.minimalistMode">
+    <div class="enter-minimalist-trigger" v-if="!store.minimalistMode && store.minimalistEntryVisible">
       <div class="enter-minimalist" @click="store.minimalistMode = true">
         <setting-two theme="filled" size="24" fill="#ffffff60" />
         <span>进入极简模式</span>
@@ -36,6 +39,7 @@ import { SettingTwo } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import Func from "@/views/Func/index.vue";
 import Link from "@/components/Links.vue";
+import Weather from "@/components/Weather.vue";
 import { getCurrentTime } from "@/utils/getTime";
 const store = mainStore();
 
@@ -109,7 +113,6 @@ const siteUrl = computed(() => {
     margin-left: 0;
     width: 100%;
     height: 100%;
-    padding-bottom: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -138,6 +141,7 @@ const siteUrl = computed(() => {
       margin-bottom: 20px;
       text-align: center;
       color: rgba(255, 255, 255, 0.8);
+      transition: all 0.3s;
       .time-text {
         display: block;
         font-size: 2.5rem;
@@ -149,6 +153,37 @@ const siteUrl = computed(() => {
         font-size: 0.9rem;
         margin-top: 4px;
         color: rgba(255, 255, 255, 0.6);
+      }
+    }
+    .minimalist-weather {
+      position: fixed;
+      top: 40px;
+      right: 40px;
+      left: auto;
+      width: auto;
+      display: flex;
+      justify-content: flex-end;
+      z-index: 10;
+      transition: all 0.3s;
+      
+      :deep(.weather-container) {
+        width: auto;
+        align-items: flex-end;
+      }
+      :deep(.weather-card) {
+        align-items: flex-end;
+      }
+      :deep(.city-update) {
+        justify-content: flex-end;
+        width: auto;
+      }
+      :deep(.weather-detail) {
+        justify-content: flex-end;
+      }
+      @media (max-width: 720px) {
+        top: 20px;
+        right: 20px;
+        left: auto;
       }
     }
     .exit-minimalist {
