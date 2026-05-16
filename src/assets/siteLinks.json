@@ -6,6 +6,12 @@
     "description": "Doulor个人博客，记录学习与生活"
   },
   {
+    "icon": "SlackHash",
+    "name": "MC-Web",
+    "link": "https://mc.doulor.cn/",
+    "description": "Doulor的minecraft服务器主页"
+  },
+  {
     "icon": "Cloud",
     "name": "Cloudflare",
     "link": "https://dash.cloudflare.com/83fdea7d910cbc683e6d53fa6baf45ab/home/domains",

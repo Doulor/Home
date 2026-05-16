@@ -147,6 +147,7 @@ import {
   Blog,
   Atom,
   Cloud,
+  SlackHash,
   Tools,
   Blogger,
   Fire,
