@@ -6,7 +6,7 @@
     "description": "Doulor个人博客，记录学习与生活"
   },
   {
-    "icon": "SlackHash",
+    "icon": "Splotch",
     "name": "MC-Web",
     "link": "https://mc.doulor.cn/",
     "description": "Doulor的minecraft服务器主页"
@@ -24,28 +24,22 @@
     "description": "前端部署与托管平台"
   },
   {
-    "icon": "Amilia",
-    "name": "Digitalplat",
-    "link": "https://dash.domain.digitalplat.org/auth/login",
-    "description": "域名管理平台"
-  },
-  {
     "icon": "Meetup",
     "name": "Modrinth",
     "link": "https://modrinth.com/mods",
     "description": "Minecraft 模组下载站"
   },
   {
+    "icon": "Amilia",
+    "name": "Digitalplat",
+    "link": "https://dash.domain.digitalplat.org/auth/login",
+    "description": "域名管理平台"
+  },
+  {
     "icon": "Dochub",
     "name": "DNSHE",
     "link": "https://my.dnshe.com/index.php?m=domain_hub",
     "description": "DNSHE 域名控制台"
-  },
-  {
-    "icon": "Blogger",
-    "name": "TBlog",
-    "link": "https://tblog.doulor.cn/",
-    "description": "测试博客站点"
   },
   {
     "icon": "Database",
@@ -58,6 +52,12 @@
     "name": "Umami",
     "link": "https://cloud.umami.is/analytics/us/websites/18f32723-55a4-4451-ab4d-9fd259ac5516",
     "description": "网站统计分析托管平台"
+  },
+  {
+    "icon": "Blogger",
+    "name": "TBlog",
+    "link": "https://tblog.doulor.cn/",
+    "description": "测试博客站点"
   },
   {
     "icon": "Surprise",
