@@ -1,144 +1,197 @@
-English | [Chinese](./README.md)
+English | [简体中文](./README.md)
 
 <p>
-<strong><h2>無名の主页</h2></strong>
-Simple little homepage, had enough of the original one and made a new one
+<strong><h2>Doulor's Homepage</h2></strong>
+A feature-rich personal browser homepage, heavily refactored from <a href="https://github.com/imsyy/home">imsyy/home</a>
 </p>
 
-![無名の主页](https://s2.loli.net/2022/07/14/K5JigfvDoNewtuS.webp)
+![Doulor's Homepage](/screenshots/main.jpg)
 
->The logo font on the home page has been compressed, so if you use a font other than this logo, it will change back to the default font, Here is the [full font](https://file.4everland.app/font/Other/Pacifico-Regular.ttf)  
+### Differences from Upstream
 
-### Demo
+This project is forked from [imsyy/home](https://github.com/imsyy/home). The upstream has been unmaintained for a long time with limited features. I've done a major refactoring and added many new capabilities:
 
->Due to CDN caching, you may need `Ctrl` + `F5` to force a browser cache refresh to see the latest results
+#### New Features
 
-- [無名の主页](https://www.imsyy.top)
-- [無名の主页 - Dev](https://home-imsyy.vercel.app)
-- [無名の主页 - Standby](https://home-5iw.pages.dev)
+- **Animated Loading Screen** — Multi-layered CSS animation with moon, orbital rings, shooting stars, constellations, stardust, nebula, and aurora
+- **Minimalist Mode** — One-click distraction-free mode, keeping only time, weather, and search bar
+- **Calendar Component** — Cloud calendar events (Chinese holidays/memorial days) and personal local events, with multi-date support and expand animation
+- **Time Capsule** — Day/week/month/year elapsed progress bars
+- **Guestbook System** — Supabase-powered message board with floating message bubbles
+- **Visitor Counter** — Total and unique visitor tracking via Supabase
+- **Bing Search Suggestions** — Smart search bar with Bing autocomplete, keyboard navigation, and global hotkeys
+- **Custom Wallpaper Management** — IndexedDB-based wallpaper system with local upload, URL import, rename, lock/unlock for random selection, and delete
+- **Custom Music Player** — Replaces upstream APlayer with a fully custom player supporting local file upload, network URL import, and playlist lock for random play
+- **Multi-API Weather Fallback** — AMap → QWeather → OpenMeteo automatic failover
+- **Mobile Menu** — Floating hamburger menu on mobile devices (< 720px)
+- **Horizontal Scroll with Mouse Wheel** — Website links grid supports mouse wheel horizontal scrolling
+- **PWA Support** — Offline access and installable to desktop
 
-### Functions
+#### Improvements
 
-- [x] Loading animation
-- [x] Site description
-- [x] Hitokoto
+- Music player replaced from APlayer + MetingJS to a fully custom implementation, removing the mainland China restriction
+- Weather API upgraded from single-source to tri-source automatic failover
+- Wallpapers increased from a few to 20 built-in + custom upload management
+- Global style overhaul with more animation details and visual polish
+- Comprehensive mobile adaptation
+
+### Live Demo
+
+- [Doulor's Homepage](https://Doulor.cn)
+
+### Features
+
+- [x] Moon-themed loading animation
+- [x] Site description & Hitokoto quotes
 - [x] Date and time
-- [x] Live weather
-- [x] Time progress bar
-- [x] Music player
+- [x] Live weather (tri-API auto fallback)
+- [x] Time capsule (day/week/month/year)
+- [x] Custom music player (local/network)
+- [x] Bing search suggestions
+- [x] Cloud + private calendar
+- [x] Guestbook system
+- [x] Visitor counter
+- [x] Minimalist mode
+- [x] Wallpaper management
+- [x] Social links
+- [x] Website shortcuts
+- [x] PWA offline support
 - [x] Mobile adaptation
-
-* [ ] Player cancels using Aplayer
 
 ### Deployment
 
-* **Installation** [node.js](https://nodejs.org/zh-cn/) **Environment**
+#### Auto Deploy (GitHub Actions)
 
-  > node > 16.16.0  
-  > npm > 8.15.0
-  
-* Then run the `cmd` terminal with **administrator privileges** and `cd` to the project root directory
-* In the `terminal` type:
+After forking the repo, go to the `Actions` page and enable workflows. Each push triggers an automatic build, producing a downloadable static file archive ready for deployment.
+
+#### Manual Deploy
+
+**Requirements:** Node.js > 16.16.0, npm > 8.15.0
 
 ```bash
 # Install pnpm
 npm install -g pnpm
 
-# Install the dependencies
+# Install dependencies
 pnpm install
 
-# Preview
+# Development preview
 pnpm dev
 
 # Build
 pnpm build
 ```
 
-> Once the build is complete, the files in the `dist` folder can be uploaded to the server or imported and automatically deployed with one click using a hosting platform such as `Vercel`.
+After building, upload the files from the **`dist`** directory to your server, or use platforms like `Vercel` for one-click import and auto deploy.
 
-### Weather
-
-Weather and area access requires `高德开放平台` related API
-
-- Go to [高德开放平台控制台](https://console.amap.com/dev/index) to create a `Key` of type `Web Service` and fill the `Key` into `VITE_WEATHER_KEY` in `.env` 
-
-It can also be replaced by other methods
-
-### Music
-
->This project uses the `Aplayer` music player based on `MetingJS` for quick song list customization  
->*Only supported in **Mainland China**
-
-Please change the song related parameters in the `.env` file to customize the song list
+#### Docker Deploy
 
 ```bash
-# Songs API address
-VITE_SONG_API = "https://api-meting.imsyy.top"
-# Song server ( netease-netease, tencent-qq music )
-VITE_SONG_SERVER = "netease"
-# Playback type ( song-song, playlist-playlist, album-album, search-search, artist-artist )
-VITE_SONG_TYPE = "playlist"
-# Playback ID
-VITE_SONG_ID = "7452421335"
+docker build -t home .
+docker run -p 12445:12445 -d home
 ```
 
-### Fonts
+### Configuration
 
-Now using `HarmonyOS Sans` open source font, using font splitting to improve loading speed
-
->Because this site's `CDN` has opened anti-leech, **non-site domain name is not accessible**, please change the font import link to the following content, otherwise **custom fonts will be invalid**
->
->`https://cdn.jsdelivr.net/gh/imsyy/file/font/HarmonyOS_Sans/regular.min.css`
-
-<details>
-<summary>old way</summary>
-
->As Chinese fonts are introduced in this project, Chinese fonts need to be compressed to improve the loading speed of the page (you can also cancel the use of Chinese fonts)
-
-#### Chinese font removal traditional
-
-- Install `Python 3.7` and `pip`
-- Run `pip install fonttools`
-- Download [sc_unicode.txt](https://gist.githubusercontent.com/imaegoo/d64e5088b723c2e02c40985f55ff12db/raw/5ebd2ce49418c73459a9dfe050483409306a6c1d/sc_unicode.txt)
-- Run `pyftsubset font-name.ttf --unicodes-file=sc_unicode.txt`
-
-#### fonts further compressed
-
-- Compile and install ``Google woff2``
+Configuration files are in `.env` and `.env.local` at the project root:
 
 ```bash
-sudo apt-get install -y git g++ make
-git clone --recursive https://github.com/google/woff2.git
-cd woff2
-make clean all
+# .env — Basic site info
+VITE_SITE_NAME = "Doulorの主页"
+VITE_SITE_ANTHOR = "Doulor"
+VITE_SITE_KEYWORDS = "Doulor,homepage"
+VITE_SITE_DES = "A simple homepage"
+VITE_SITE_URL = "Doulor.cn"
+VITE_SITE_START = "2025-9-18"
+
+# .env.local — Sensitive keys (create this file yourself)
+VITE_WEATHER_KEY = ""       # AMap Web Service Key
+VITE_QWEATHER_KEY = ""      # QWeather Key (optional, fallback)
+VITE_SUPABASE_URL = ""      # Supabase project URL
+VITE_SUPABASE_ANON_KEY = "" # Supabase anonymous key
 ```
 
-- Compress the font again
+#### Weather
 
+Weather supports tri-API auto failover: AMap → QWeather → OpenMeteo (no key required). At minimum, configure the AMap key.
+
+Go to [AMap Console](https://console.amap.com/dev/index), create a `Web Service` type Key, and fill it in `VITE_WEATHER_KEY` in `.env.local`.
+
+#### Music Player
+
+The music player has been replaced with a custom implementation supporting:
+- Local MP3 file upload (stored in IndexedDB)
+- Network URL import
+- Playlist locking (random play only selects from locked tracks)
+- Mini floating disc and expandable player card
+
+#### Website Shortcuts
+
+Configure in `src/assets/siteLinks.json`:
+
+```json
+{
+  "icon": "Blog",
+  "name": "Blog",
+  "link": "https://blog.imsyy.top/"
+}
 ```
-. /woff2_compress . /font_name.ttf
+
+Browse icons at [xicons](https://www.xicons.org) and import them in `src/components/Links/index.vue`.
+
+#### Social Links
+
+Configure in `src/assets/socialLinks.json`.
+
+#### Cloud Calendar Events
+
+The `date` field in `src/assets/calendarCloudEvents.json` supports comma-separated multiple ISO dates:
+
+```json
+{
+  "title": "Spring Festival",
+  "date": "2025-01-29, 2026-02-17"
+}
 ```
 
-- Eventually the original font can be slow loaded, **load the compressed font first**
+- If the current year is explicitly listed, the file date is used
+- Otherwise, the month/day is auto-mapped to the current year
 
->For more information, please go to [虹墨空间站](https://www.imaegoo.com/2020/chinese-font-compress/) to view the original article
+#### Wallpapers
 
-</details>
+The `public/images` directory contains 20 default wallpapers. You can also upload or import custom wallpapers via the settings panel — they are stored in IndexedDB.
 
-### Technology Stack
+#### Site Icons
 
-* [Vue](https://cn.vuejs.org/)
-* [Vite](https://vitejs.cn/vite3-cn/)
-* [Pinia](https://pinia.vuejs.org/zh/)
-* [IconPark](https://iconpark.oceanengine.com/official)
-* [xicons](https://xicons.org/)
-* [Aplayer](https://aplayer.js.org/)
+Replace icons in `public/images/icon`.
 
-### API
+### Tech Stack
 
-* [MetingAPI By 武恩赐](https://api.wuenci.com/meting/api/)
-* [搏天 API](https://api.btstu.cn/doc/sjbz.php)
-* [高德开放平台](https://lbs.amap.com/)
-* [Hitokoto 一言](https://hitokoto.cn/)
+- [Vue 3](https://vuejs.org/) — Frontend framework
+- [Vite](https://vitejs.dev/) — Build tool
+- [Pinia](https://pinia.vuejs.org/) — State management
+- [Element Plus](https://element-plus.org/) — UI component library
+- [Supabase](https://supabase.com/) — Backend (guestbook, visitor counter)
+- [IconPark](https://iconpark.oceanengine.com/official) — Icon library
+- [xicons](https://xicons.org/) — Icon library
+- [Sass](https://sass-lang.com/) — CSS preprocessor
+- [PWA](https://developer.mozilla.org/docs/Web/Progressive_web_apps) — Offline support
 
-<a title="SSL" target="_blank" href="https://myssl.com/seal/detail?domain=blog.imsyy.top"><img src="https://img.shields.io/badge/MySSL-安全认证-brightgreen"></a>&nbsp;<a title="CDN" target="_blank" href="https://cdnjs.com/"><img src="https://img.shields.io/badge/CDN-Cloudflare-blue"></a>&nbsp;<a title="Copyright" target="_blank" href="https://imsyy.top/"><img src="https://img.shields.io/badge/Copyright%20%C2%A9%202020--2023-%E7%84%A1%E5%90%8D-red"></a>
+### APIs Used
+
+- [Hitokoto](https://hitokoto.cn/)
+- [AMap (Gaode)](https://lbs.amap.com/)
+- [QWeather](https://dev.qweather.com/)
+- [OpenMeteo](https://open-meteo.com/)
+- [XiaoWai API](https://api.aixiaowai.cn)
+- [BoTian API](https://api.btstu.cn/doc/sjbz.php)
+
+### Acknowledgements
+
+This project is based on [imsyy/home](https://github.com/imsyy/home). Thanks to the original author for the initial work.
+
+### Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=imsyy/home&type=Date)](https://star-history.com/#imsyy/home&Date)
+
+<a title="CDN" target="_blank" href="https://cdnjs.com/"><img src="https://img.shields.io/badge/CDN-Cloudflare-blue"></a>&nbsp;<a title="Copyright" target="_blank" href="https://Doulor.cn/"><img src="https://img.shields.io/badge/Copyright%20%C2%A9%202025--2026-Doulor-red"></a>

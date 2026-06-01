@@ -1,55 +1,75 @@
 简体中文 | [English](./README_EN.md)
 
 <p>
-<strong><h2>無名の主页</h2></strong>
-简单的小主页，原来的看够了，重新弄了一个
+<strong><h2>Doulorの主页</h2></strong>
+一个功能丰富的个人浏览器主页，基于 <a href="https://github.com/imsyy/home">imsyy/home</a> 大规模重构而来
 </p>
 
-![無名の主页](/screenshots/main.jpg)
+![Doulorの主页](/screenshots/main.jpg)
 
->主页的 Logo 字体已经过压缩，若用本站 Logo 以外的字母会变回默认字体，这里是 [完整字体](https://file.imsyy.top/font/Other/Pacifico-Regular.ttf)，若无法下载，可将字体目录下的 `Pacifico-Regular-all.ttf` 进行替换
+### 与原项目的区别
 
-### Demo
+本项目 fork 自 [imsyy/home](https://github.com/imsyy/home)，原项目长期未维护，且功能较为单一。我在原项目基础上进行了大规模重构，新增了大量功能和优化：
 
->由于 CDN 缓存原因，查看最新效果可能需要 `Ctrl` + `F5` 强制刷新浏览器缓存
+#### 新增功能
 
-- [無名の主页](https://www.imsyy.top)
-- [無名の主页 - Dev](https://home-imsyy.vercel.app)
-- [無名の主页 - 备用线路](https://home-5iw.pages.dev)
+- **全新加载动画** — 包含月球、轨道环、流星、星座、星尘、星云、极光等多层 CSS 动画的载入画面
+- **极简模式** — 一键切换至无干扰模式，仅保留时间、天气和搜索栏
+- **日历组件** — 支持云端日历事件（中国传统节日/纪念日）与个人本地事件，支持多日期标注与展开动画
+- **时光进度条** — 展示当日/本周/本月/本年已过去的时间百分比
+- **留言板系统** — 基于 Supabase 的留言功能，留言以气泡形式展示在页面上
+- **访客统计** — 基于 Supabase 的总访问量和独立访客统计
+- **必应搜索建议** — 搜索栏支持必应联想词、键盘导航、全局快捷键
+- **自定义壁纸管理** — 基于 IndexedDB 的壁纸系统，支持本地上传、URL 导入、重命名、锁定/解锁随机切换、删除
+- **自定义音乐播放器** — 替代原项目的 APlayer，支持本地文件上传、网络 URL 导入、播放列表锁定随机播放
+- **天气多源回退** — 高德 → 和风天气 → OpenMeteo 三 API 自动故障转移
+- **移动端菜单** — 移动端悬浮菜单按钮，优化小屏体验
+- **鼠标滚轮横向滚动** — 网站链接区域支持鼠标滚轮横向滑动
+- **PWA 支持** — 支持离线访问，可安装到桌面
 
-### 功能
+#### 优化改进
 
-- [x] 载入动画
-- [x] 站点简介
-- [x] Hitokoto 一言
+- 音乐播放器从 APlayer + MetingJS 替换为完全自定义实现，解除仅限中国大陆的限制
+- 天气 API 从单源改为三源自动故障转移，保证可用性
+- 壁纸从固定几张增加到 20 张内置 + 自定义上传管理
+- 全局样式重构，更多动画细节和视觉优化
+- 全面支持移动端适配
+
+### 在线演示
+
+- [Doulorの主页](https://Doulor.cn)
+
+### 功能一览
+
+- [x] 月球主题载入动画
+- [x] 站点简介与一言（Hitokoto）
 - [x] 日期及时间
-- [x] 实时天气
-- [x] 时光进度条
-- [x] 音乐播放器
+- [x] 实时天气（三 API 自动回退）
+- [x] 时光进度条（日/周/月/年）
+- [x] 自定义音乐播放器（本地/网络）
+- [x] 必应搜索建议
+- [x] 云端 + 私有日历
+- [x] 留言板系统
+- [x] 访客统计
+- [x] 极简模式
+- [x] 壁纸自定义管理
+- [x] 社交链接
+- [x] 网站快捷链接
+- [x] PWA 离线支持
 - [x] 移动端适配
-- [x] 云+私有日历（支持 icon 事件标注与本地存储）
 
-### 自动部署
+### 部署
 
-如果遇到构建环境或者打包过程出现错误，则可以采用 `Github Actions` 来进行自动构建
+#### 自动部署（GitHub Actions）
 
-- 在成功 `fork` 仓库后，前往 `Actions` 页面，若您是首次开启，则会出现下面的提示，点击开启
-  
-  ![步骤1](/screenshots/step1.jpg)
+Fork 仓库后，前往 `Actions` 页面，开启工作流。每次推送后自动构建，生成可直接部署的静态文件压缩包。
 
-- 然后在仓库中进行任意修改后均会触发工作流的运行，在工作流完成后，会在下方生成一个可供下载的压缩包，这就是构建出的静态文件，可自行上传至服务器
-  
-  ![步骤2](/screenshots/step2.jpg)
+![步骤1](/screenshots/step1.jpg)
+![步骤2](/screenshots/step2.jpg)
 
-### 手动部署
+#### 手动部署
 
-* **安装** [node.js](https://nodejs.org/zh-cn/) **环境**
-
-  > node > 16.16.0  
-  > npm > 8.15.0
-  
-* 然后以 **管理员权限** 运行 `cmd` 终端，并 `cd` 到 项目根目录
-* 在 `终端` 中输入：
+**环境要求：** Node.js > 16.16.0，npm > 8.15.0
 
 ```bash
 # 安装 pnpm
@@ -58,85 +78,77 @@ npm install -g pnpm
 # 安装依赖
 pnpm install
 
-# 预览
+# 开发预览
 pnpm dev
 
 # 构建
 pnpm build
 ```
-> 构建完成后，静态资源会在 **`dist` 目录** 中生成，可将 **`dist` 文件夹下的文件**上传至服务器，也可使用 `Vercel` 等托管平台一键导入并自动部署
 
-> 如果 `pnpm dev` 在本地一直卡在加载动画，请确认 `vite.config.js` 中的 `AutoImport` 已将 `ElMessage` 包含进去（新的配置会自动引入 ElementPlus 的消息组件），否则运行时会因 `ElMessage` 未定义而挂起。
+构建完成后，静态资源在 **`dist` 目录** 中生成，可上传至服务器，或使用 `Vercel` 等平台一键导入自动部署。
 
-### Docker 部署
-
-> 安装及配置 Docker 将不在此处说明，请自行解决
+#### Docker 部署
 
 ```bash
-# 构建
 docker build -t home .
-# 运行
 docker run -p 12445:12445 -d home
 ```
 
-### 网站链接
+### 配置
 
-在 `src/assets/siteLinks.json` 中可以自定义网站链接（以指向自己的网站）:
+配置文件位于项目根目录的 `.env` 和 `.env.local`：
+
+```bash
+# .env — 站点基本信息
+VITE_SITE_NAME = "Doulorの主页"
+VITE_SITE_ANTHOR = "Doulor"
+VITE_SITE_KEYWORDS = "Doulor,个人主页"
+VITE_SITE_DES = "一个默默无闻的主页"
+VITE_SITE_URL = "Doulor.cn"
+VITE_SITE_START = "2025-9-18"
+
+# .env.local — 敏感信息（需自行创建）
+VITE_WEATHER_KEY = ""       # 高德开放平台 Web 服务 Key
+VITE_QWEATHER_KEY = ""      # 和风天气 Key（可选，作为备选）
+VITE_SUPABASE_URL = ""      # Supabase 项目 URL
+VITE_SUPABASE_ANON_KEY = "" # Supabase 匿名 Key
+```
+
+#### 天气配置
+
+天气支持三 API 自动故障转移：高德开放平台 → 和风天气 → OpenMeteo（无需 Key）。至少配置高德 Key 即可正常使用。
+
+前往 [高德开放平台控制台](https://console.amap.com/dev/index) 创建 `Web 服务` 类型的 Key，填入 `.env.local` 的 `VITE_WEATHER_KEY`。
+
+#### 音乐播放器
+
+音乐播放器已替换为自定义实现，支持：
+- 本地 MP3 文件上传（存储在 IndexedDB）
+- 网络 URL 导入
+- 播放列表锁定（锁定后随机播放只从锁定曲目中选择）
+- 迷你悬浮球和展开式播放卡片
+
+#### 网站快捷链接
+
+在 `src/assets/siteLinks.json` 中配置：
 
 ```json
 {
-  "icon": "Blog",						
-  "name": "博客",						
-  "link": "https://blog.imsyy.top/"	
-},
+  "icon": "Blog",
+  "name": "博客",
+  "link": "https://blog.imsyy.top/"
+}
 ```
 
-其中 `icon` 网站链接的图标可以在 `src/components/Links/index.vue` 中添加:
+图标名称可前往 [xicons](https://www.xicons.org) 挑选，并在 `src/components/Links/index.vue` 中引入。
 
-```js
-// 可前往 https://www.xicons.org 自行挑选并在此处引入
-// 此处引入的是 fa 类型
-import {
-  Link,
-  Blog,
-  Mountain,
-  SplotchHash,
-  Cloud,
-  Amilia,
-  Meetup,
-  Database,
-  Blogger,
-  Fire,
-  Music,
-  Surprise,
-  Atom,
-  Tools,
-} from "@vicons/fa";
+#### 社交链接
 
-...
+在 `src/assets/socialLinks.json` 中配置。
 
-// 网站链接图标
-const siteIcon = {
-  Link,
-  Blog,
-  Mountain,
-  Cloud,
-  SplotchHash,
-  Amilia,
-  Meetup,
-  Database,
-  Blogger,
-  Fire,
-  Music,
-  Surprise,
-  Atom,
-  Tools,
-};
-```
+#### 云端日历事件
 
-### 云日历事件日期格式
-
-`src/assets/calendarCloudEvents.json` 的 `date` 字段现在支持 **逗号分隔的多个 ISO 日期**，例如：
+`src/assets/calendarCloudEvents.json` 的 `date` 字段支持逗号分隔的多个 ISO 日期：
 
 ```json
 {
@@ -145,125 +157,44 @@ const siteIcon = {
 }
 ```
 
-- 如果当前年份在列表中已经写明，就按照文件里的日期显示。
-- 若当年没有明确日期，则继续沿用原来的「按月/日自动映射」逻辑；紫色/蓝色的自定义日期依旧默认每年同一天。
-- 即使同一个节日跨年有不同日期，也无需拆成多条数据，只需在 `date` 中写出多个日期即可。
-
-### 社交链接
-
-在 `src/assets/socialLinks.json` 中可以自定义社交链接。
-
-### 天气
-
-天气及地区获取需要 `高德开放平台` 相关 API
-
-- 前往 [高德开放平台控制台](https://console.amap.com/dev/index) 创建一个 `Web 服务` 类型的 `Key`，并将 `Key` 填入 `.env` 中的 `VITE_WEATHER_KEY` 中
-
-也可自行更换其他方式
-
-
-### 音乐
-
->本项目采用了基于 `MetingJS` 的 `Aplayer` 音乐播放器，可实现快速自定义歌单  
->*仅支持 **中国大陆地区**
-
-请在 `.env` 文件中更改歌曲相关参数即可实现自定义歌单列表
-
-```bash
-# 歌曲 API 地址
-VITE_SONG_API = "https://api-meting.imsyy.top"
-# 歌曲服务器 ( netease-网易云, tencent-qq音乐 )
-VITE_SONG_SERVER = "netease"
-# 播放类型 ( song-歌曲, playlist-播放列表, album-专辑, search-搜索, artist-艺术家 )
-VITE_SONG_TYPE = "playlist"
-# 播放 ID
-VITE_SONG_ID = "7452421335"
-```
-
-### 字体
-
-现采用 `HarmonyOS Sans` 开源字体，采用字体拆分，提升加载速度
-
->由于本站 `CDN` 已开启防盗链，**非本站域名不可访问**，请将字体引入链接更改为下方内容，否则 **自定义字体将失效**
->
->`https://s1.hdslb.com/bfs/static/jinkela/long/font/regular.css`
-
-<details>
-<summary>旧版方式</summary>
-
->由于本项目引入了中文字体，需要压缩中文字体以提高网页加载速度（ 也可以取消使用中文字体 ）
-
-#### 中文字体去除繁体
-
-- 安装 `Python 3.7` 和 `pip`
-- 运行 `pip install fonttools`
-- 下载 [sc_unicode.txt](https://gist.githubusercontent.com/imaegoo/d64e5088b723c2e02c40985f55ff12db/raw/5ebd2ce49418c73459a9dfe050483409306a6c1d/sc_unicode.txt)
-- 运行 `pyftsubset 字体名称.ttf --unicodes-file=sc_unicode.txt`
-
-#### 字体进一步压缩
-
-- 编译安装 `Google woff2`
-
-```bash
-sudo apt-get install -y git g++ make
-git clone --recursive https://github.com/google/woff2.git
-cd woff2
-make clean all
-```
-
-- 再压缩字体
-
-```
-./woff2_compress ./字体名称.ttf
-```
-
-- 最终可对原字体进行缓加载，**先行加载压缩后的字体**
-
->详细信息可前往 [虹墨空间站](https://www.imaegoo.com/2020/chinese-font-compress/) 查看原文
-
-</details>
-
-### 网站图标及网站背景
+- 若当年在列表中已写明日期，则按文件显示
+- 若当年未明确标注，则按「月/日」自动映射
 
 #### 网站背景
 
-可以在 `public/images` 中修改网站背景
-
-如果想要添加更多的本地图片作为网站背景，可以将图片重命名 `background+数字` 的形式，并在 `src/components/Background/index.vue` 中进行修改：
-
-```js
-
-if (type == 0) {
-  // 修改此处 Math.random() 后面的第一个数字为图片的数量
-  bgUrl.value = `/images/background${Math.floor(
-    Math.random() * 10 + 1
-  )}.webp`;
-}
-```
+`public/images` 目录下有 20 张默认壁纸。你也可以在设置面板中上传或导入自定义壁纸，壁纸存储在 IndexedDB 中。
 
 #### 网站图标
 
-可以在 `public/images/icon` 中修改网站图标。
+在 `public/images/icon` 中替换网站图标。
 
 ### 技术栈
 
-* [Vue](https://cn.vuejs.org/)
-* [Vite](https://vitejs.cn/vite3-cn/)
-* [Pinia](https://pinia.vuejs.org/zh/)
-* [IconPark](https://iconpark.oceanengine.com/official)
-* [xicons](https://xicons.org/)
-* [Aplayer](https://aplayer.js.org/)
+- [Vue 3](https://cn.vuejs.org/) — 前端框架
+- [Vite](https://vitejs.cn/) — 构建工具
+- [Pinia](https://pinia.vuejs.org/zh/) — 状态管理
+- [Element Plus](https://element-plus.org/) — UI 组件库
+- [Supabase](https://supabase.com/) — 后端服务（留言板、访客统计）
+- [IconPark](https://iconpark.oceanengine.com/official) — 图标库
+- [xicons](https://xicons.org/) — 图标库
+- [Sass](https://sass-lang.com/) — CSS 预处理
+- [PWA](https://developer.mozilla.org/docs/Web/Progressive_web_apps) — 离线支持
 
-### API
+### 使用的 API
 
-* [小歪 API](https://api.aixiaowai.cn)
-* [搏天 API](https://api.btstu.cn/doc/sjbz.php)
-* [教书先生 API](https://api.oioweb.cn/doc/weather/GetWeather)
-* [高德开放平台](https://lbs.amap.com/)
-* [Hitokoto 一言](https://hitokoto.cn/)
+- [Hitokoto 一言](https://hitokoto.cn/)
+- [高德开放平台](https://lbs.amap.com/)
+- [和风天气](https://dev.qweather.com/)
+- [OpenMeteo](https://open-meteo.com/)
+- [小歪 API](https://api.aixiaowai.cn)
+- [搏天 API](https://api.btstu.cn/doc/sjbz.php)
 
-## Star History
+### 鸣谢
+
+本项目基于 [imsyy/home](https://github.com/imsyy/home) 重构，感谢原作者的初始工作。
+
+### Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=imsyy/home&type=Date)](https://star-history.com/#imsyy/home&Date)
 
-<a title="SSL" target="_blank" href="https://myssl.com/seal/detail?domain=blog.imsyy.top"><img src="https://img.shields.io/badge/MySSL-安全认证-brightgreen"></a>&nbsp;<a title="CDN" target="_blank" href="https://cdnjs.com/"><img src="https://img.shields.io/badge/CDN-Cloudflare-blue"></a>&nbsp;<a title="Copyright" target="_blank" href="https://imsyy.top/"><img src="https://img.shields.io/badge/Copyright%20%C2%A9%202020--2023-%E7%84%A1%E5%90%8D-red"></a>
+<a title="CDN" target="_blank" href="https://cdnjs.com/"><img src="https://img.shields.io/badge/CDN-Cloudflare-blue"></a>&nbsp;<a title="Copyright" target="_blank" href="https://Doulor.cn/"><img src="https://img.shields.io/badge/Copyright%20%C2%A9%202025--2026-Doulor-red"></a>
