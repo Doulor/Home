@@ -37,6 +37,8 @@ export const mainStore = defineStore("main", {
       minimalistTimeVisible: true, // 极简模式显示时间
       minimalistWeatherVisible: false, // 极简模式显示天气
       minimalistEntryVisible: true, // 极简模式入口显示
+      calendarShow: true, // 日历显示
+      deviceStatusShow: false, // 设备状态显示
       // 壁纸列表
       bgList: [], 
       // 锁定的壁纸ID
@@ -117,6 +119,8 @@ export const mainStore = defineStore("main", {
       "minimalistTimeVisible",
       "minimalistWeatherVisible",
       "minimalistEntryVisible",
+      "calendarShow",
+      "deviceStatusShow",
       "bgLockIds",
     ],
   },

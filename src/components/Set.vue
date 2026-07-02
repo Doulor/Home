@@ -69,6 +69,24 @@
       </el-collapse-item>
       <el-collapse-item title="组件功能" name="4">
         <div class="item">
+          <span class="text">日历显示</span>
+          <el-switch
+            v-model="calendarShow"
+            inline-prompt
+            :active-icon="CheckSmall"
+            :inactive-icon="CloseSmall"
+          />
+        </div>
+        <div class="item">
+          <span class="text">设备状态显示</span>
+          <el-switch
+            v-model="deviceStatusShow"
+            inline-prompt
+            :active-icon="CheckSmall"
+            :inactive-icon="CloseSmall"
+          />
+        </div>
+        <div class="item">
           <span class="text">搜索联想 (Bing)</span>
           <el-switch
             v-model="searchSuggestion"
@@ -327,6 +345,8 @@ const {
   minimalistTimeVisible,
   minimalistWeatherVisible,
   minimalistEntryVisible,
+  calendarShow,
+  deviceStatusShow,
 } = storeToRefs(store);
 
 // 监听极简模式开启
