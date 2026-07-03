@@ -53,13 +53,16 @@
             <span class="media-title text-hidden">{{ device.media_title }}</span>
             <span v-if="device.media_detail" class="media-detail text-hidden">{{ device.media_detail }}</span>
           </div>
-          <el-progress
-            v-if="device.media_duration"
-            :percentage="mediaProgress(device)"
-            :show-text="false"
-            :stroke-width="3"
-            color="#1db954"
-          />
+          <div class="media-progress-row">
+            <el-progress
+              v-if="device.media_duration"
+              :percentage="mediaProgress(device)"
+              :show-text="false"
+              :stroke-width="3"
+              color="#1db954"
+            />
+            <span v-if="device.media_duration" class="media-time">{{ formatMediaTime(device.media_elapsed) }} / {{ formatMediaTime(device.media_duration) }}</span>
+          </div>
         </div>
 
         <!-- 系统指标 -->
@@ -204,6 +207,7 @@ const now = ref(Date.now())
 let nowTimer = null
 const detailDeviceId = ref(null)
 const isCollapsing = ref(false)
+let mediaTickTimer = null
 
 const detailDevice = computed(() => {
   if (!detailDeviceId.value) return null
@@ -283,6 +287,13 @@ function statusLabel(status) {
 function mediaProgress(device) {
   if (!device.media_duration || device.media_duration === 0) return 0
   return Math.round((device.media_elapsed / device.media_duration) * 100)
+}
+
+function formatMediaTime(seconds) {
+  if (!seconds || seconds <= 0) return '00:00'
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
 }
 
 function formatMemory(mb) {
@@ -540,6 +551,24 @@ onBeforeUnmount(() => {
       :deep(.el-progress) {
         .el-progress-bar__outer {
           background-color: rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      .media-progress-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        :deep(.el-progress) {
+          flex: 1;
+        }
+
+        .media-time {
+          font-size: 0.65rem;
+          color: rgba(255, 255, 255, 0.4);
+          white-space: nowrap;
+          min-width: 80px;
+          text-align: right;
         }
       }
     }
