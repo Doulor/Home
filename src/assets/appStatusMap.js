@@ -13,6 +13,7 @@ export const appStatusMap = {
   'Chrome': '正在冲浪 🌊',
   'firefox': '正在冲浪 🌊',
   'msedge': '正在冲浪 🌊',
+  'edge': '正在冲浪 🌊',
   'WindowsTerminal': '正在神秘黑框框终端里当黑客 ⬛',
   'java': '正在玩Minecraft 🎮',
   'clash-verge': '正在调试魔法 🪄',

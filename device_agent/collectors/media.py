@@ -20,6 +20,14 @@ MEDIA_PLAYERS = {
     "aimp": "AIMP",
 }
 
+# 浏览器进程名
+BROWSER_NAMES = {
+    "msedge": "Edge",
+    "chrome": "Chrome",
+    "firefox": "Firefox",
+    "brave": "Brave",
+}
+
 
 def _get_playing_processes():
     """通过 pycaw 获取当前正在播放音频的进程名集合"""
@@ -28,7 +36,7 @@ def _get_playing_processes():
         from pycaw.pycaw import AudioUtilities
         for session in AudioUtilities.GetAllSessions():
             try:
-                if session.Process and session.State == 1:  # 1 = AudioSessionStateActive
+                if session.Process and session.State == 1:
                     name = session.Process.name().replace(".exe", "").lower()
                     playing.add(name)
             except Exception:
@@ -38,8 +46,23 @@ def _get_playing_processes():
     return playing
 
 
+def _get_foreground_process():
+    """获取当前前台窗口的进程名（小写）"""
+    try:
+        hwnd = win32gui.GetForegroundWindow()
+        if not hwnd:
+            return None
+        _, pid = win32process.GetWindowThreadProcessId(hwnd)
+        if pid == 0:
+            return None
+        process = psutil.Process(pid)
+        return process.name().replace(".exe", "").lower()
+    except Exception:
+        return None
+
+
 def _enum_windows():
-    """枚举所有窗口，找到播放器的窗口标题"""
+    """枚举所有窗口，找到播放器和浏览器的窗口标题"""
     result = {}
 
     def callback(hwnd, _):
@@ -51,7 +74,7 @@ def _enum_windows():
                 return True
             process = psutil.Process(pid)
             name = process.name().replace(".exe", "").lower()
-            if name in MEDIA_PLAYERS:
+            if name in MEDIA_PLAYERS or name in BROWSER_NAMES:
                 title = win32gui.GetWindowText(hwnd)
                 if title and title not in ("", "Default IME", "MSCTFIME UI"):
                     result[name] = title
@@ -98,22 +121,74 @@ def _parse_title(title, player_name):
     }
 
 
+def _parse_browser_title(title, browser_name):
+    """解析浏览器标题，提取标签页标题和标签页数量"""
+    if not title or len(title) < 3:
+        return None
+
+    title = title.strip()
+    tab_count = None
+
+    # 提取标签页数量：格式 "xxx 和另外 N 个页面"
+    if " 和另外 " in title:
+        try:
+            count_part = title[title.index(" 和另外 ") + 5:]
+            count_str = count_part.split(" 个页面")[0].strip()
+            tab_count = int(count_str) + 1  # +1 是当前标签页
+        except (ValueError, IndexError):
+            pass
+
+    # 去掉浏览器后缀
+    clean_title = title
+    for suffix in (" - 个人 - Microsoft\u200b Edge", " - Microsoft\u200b Edge",
+                   " - Personal - Microsoft Edge", " - Microsoft Edge",
+                   " - Google Chrome", " - Firefox", " - Brave"):
+        if clean_title.endswith(suffix):
+            clean_title = clean_title[: -len(suffix)]
+            break
+
+    # 去掉 "和另外 N 个页面"
+    if " 和另外 " in clean_title:
+        clean_title = clean_title[: clean_title.index(" 和另外 ")]
+
+    clean_title = clean_title.strip()
+    if not clean_title:
+        return None
+
+    detail = clean_title
+    if tab_count:
+        detail = f"{clean_title} ({tab_count} 个标签页)"
+
+    return {
+        "type": "browser",
+        "title": detail,
+        "artist": None,
+        "player": BROWSER_NAMES.get(browser_name, browser_name),
+    }
+
+
 def get_media_info():
     """通过窗口标题 + pycaw 音频会话状态检测当前播放的媒体"""
     try:
-        # 先获取正在播放音频的进程
         playing_procs = _get_playing_processes()
-
+        foreground = _get_foreground_process()
         windows = _enum_windows()
         if not windows:
             return {}
 
+        # 优先检查专用播放器（需要音频会话正在播放）
         for proc_name in MEDIA_PLAYERS:
             if proc_name in windows:
-                # 必须同时满足：窗口存在 + 音频会话正在播放
                 if proc_name not in playing_procs:
                     continue
                 result = _parse_title(windows[proc_name], proc_name)
+                if result:
+                    return result
+
+        # 浏览器在前台时，始终显示标签页标题（不需要正在播放音频）
+        for proc_name in BROWSER_NAMES:
+            if proc_name in windows and proc_name == foreground:
+                result = _parse_browser_title(windows[proc_name], proc_name)
                 if result:
                     return result
 
