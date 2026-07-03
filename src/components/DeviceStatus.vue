@@ -18,6 +18,7 @@
         :key="device.device_id"
         class="device-card"
         :class="device.status"
+        @click="openDetail(device)"
       >
         <!-- 设备头部 -->
         <div class="device-header">
@@ -96,6 +97,94 @@
         </div>
       </div>
     </div>
+
+    <!-- 详情弹窗 -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="detailDevice" class="detail-overlay" @click="closeDetail">
+          <div class="detail-card" :class="{ collapsing: isCollapsing }" @click.stop>
+            <!-- 头部 -->
+            <div class="detail-header">
+              <span class="detail-device-icon">{{ detailDevice.device_type === 'phone' ? '&#128241;' : '&#128187;' }}</span>
+              <div class="detail-device-info">
+                <span class="detail-device-name">{{ detailDevice.device_name }}</span>
+                <span :class="['detail-status-dot', detailDevice.status]"></span>
+              </div>
+              <span class="detail-close" @click="closeDetail">&times;</span>
+            </div>
+
+            <!-- 状态标签 -->
+            <div class="detail-status-row">
+              <span :class="['detail-status-badge', detailDevice.status]">{{ statusLabel(detailDevice.status) }}</span>
+              <span v-if="detailDevice.custom_status" class="detail-charge">{{ chargeLabel(detailDevice.custom_status) }}</span>
+              <span v-if="detailDevice.status === 'offline'" class="detail-last-seen">{{ lastSeenText(detailDevice.updated_at) }}</span>
+            </div>
+
+            <!-- 当前活动 -->
+            <div v-if="detailDevice.status !== 'offline' && detailDevice.active_app" class="detail-section">
+              <div class="detail-section-title">当前应用</div>
+              <div class="detail-app">
+                <span class="detail-app-name">{{ detailDevice.active_app }}</span>
+                <span v-if="appStatusText(detailDevice.active_app)" class="detail-app-mood">{{ appStatusText(detailDevice.active_app) }}</span>
+              </div>
+            </div>
+
+            <!-- 歌曲信息 -->
+            <div v-if="detailDevice.media_title && !isPlaceholder(detailDevice.media_title)" class="detail-section">
+              <div class="detail-section-title">正在播放</div>
+              <div class="detail-media">
+                <span class="detail-media-title">{{ detailDevice.media_title }}</span>
+                <span v-if="detailDevice.media_detail" class="detail-media-artist">{{ detailDevice.media_detail }}</span>
+              </div>
+              <el-progress
+                v-if="detailDevice.media_duration"
+                :percentage="mediaProgress(detailDevice)"
+                :show-text="false"
+                :stroke-width="4"
+                color="#1db954"
+              />
+            </div>
+
+            <!-- 系统指标 -->
+            <div v-if="detailDevice.status !== 'offline'" class="detail-section">
+              <div class="detail-section-title">系统信息</div>
+              <div class="detail-metrics">
+                <div class="detail-metric" v-if="detailDevice.cpu_usage != null">
+                  <div class="detail-metric-header">
+                    <span class="detail-metric-label">CPU</span>
+                    <span class="detail-metric-value">{{ Math.round(detailDevice.cpu_usage) }}%</span>
+                  </div>
+                  <el-progress :percentage="Math.round(detailDevice.cpu_usage)" :stroke-width="6" :show-text="false" :color="progressColor(detailDevice.cpu_usage)" />
+                </div>
+                <div class="detail-metric" v-if="detailDevice.memory_usage != null">
+                  <div class="detail-metric-header">
+                    <span class="detail-metric-label">内存</span>
+                    <span class="detail-metric-value">{{ formatMemory(detailDevice.memory_used) }} / {{ formatMemory(detailDevice.memory_total) }}</span>
+                  </div>
+                  <el-progress :percentage="Math.round(detailDevice.memory_usage)" :stroke-width="6" :show-text="false" :color="progressColor(detailDevice.memory_usage)" />
+                </div>
+                <div class="detail-metric" v-if="detailDevice.battery_level != null">
+                  <div class="detail-metric-header">
+                    <span class="detail-metric-label">{{ detailDevice.battery_charging ? '&#9889; 电量' : '&#128267; 电量' }}</span>
+                    <span class="detail-metric-value">{{ Math.round(detailDevice.battery_level) }}%</span>
+                  </div>
+                  <el-progress :percentage="Math.round(detailDevice.battery_level)" :stroke-width="6" :show-text="false" :color="batteryColor(detailDevice.battery_level)" />
+                </div>
+              </div>
+              <div v-if="detailDevice.device_type === 'desktop' && detailDevice.extra?.uptime" class="detail-uptime">
+                <span class="uptime-icon">&#9201;</span> 已运行 {{ formatUptime(detailDevice.extra.uptime) }}
+              </div>
+            </div>
+
+            <!-- 底部 -->
+            <div class="detail-footer">
+              <span class="detail-device-type">{{ detailDevice.device_type === 'phone' ? '手机' : '桌面端' }}</span>
+              <span class="detail-updated">最后更新 {{ lastSeenText(detailDevice.updated_at) }}</span>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -113,6 +202,30 @@ const realtimeChannel = ref(null)
 let staleCheckTimer = null
 const now = ref(Date.now())
 let nowTimer = null
+const detailDeviceId = ref(null)
+const isCollapsing = ref(false)
+
+const detailDevice = computed(() => {
+  if (!detailDeviceId.value) return null
+  return devices.value.find(d => d.device_id === detailDeviceId.value) || null
+})
+
+function openDetail(device) {
+  detailDeviceId.value = device.device_id
+  isCollapsing.value = false
+}
+
+function closeDetail() {
+  isCollapsing.value = true
+  setTimeout(() => {
+    detailDeviceId.value = null
+    isCollapsing.value = false
+  }, 280)
+}
+
+function handleEsc(e) {
+  if (e.key === 'Escape' && detailDeviceId.value) closeDetail()
+}
 
 // 获取初始数据
 async function fetchDevices() {
@@ -228,6 +341,7 @@ function formatUptime(seconds) {
 onMounted(() => {
   fetchDevices()
   subscribeRealtime()
+  document.addEventListener('keydown', handleEsc)
   // 每 30 秒检查一次过时设备，自动标记离线
   staleCheckTimer = setInterval(async () => {
     try {
@@ -256,6 +370,7 @@ onBeforeUnmount(() => {
   }
   if (staleCheckTimer) clearInterval(staleCheckTimer)
   if (nowTimer) clearInterval(nowTimer)
+  document.removeEventListener('keydown', handleEsc)
 })
 </script>
 
@@ -311,6 +426,7 @@ onBeforeUnmount(() => {
     padding: 0.7rem 0.9rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
     transition: all 0.3s ease;
+    cursor: pointer;
 
     &:hover {
       background: rgba(255, 255, 255, 0.08);
@@ -470,5 +586,237 @@ onBeforeUnmount(() => {
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+</style>
+
+<style lang="scss">
+/* 详情弹窗 - 非 scoped，因为 Teleport 到 body */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.detail-card {
+  background: rgba(20, 20, 30, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+  animation: zoom-in 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+
+  &.collapsing {
+    animation: zoom-out 0.28s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  }
+
+  @media (max-width: 768px) {
+    max-width: 95vw;
+    max-height: 86vh;
+    padding: 1.2rem;
+  }
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+
+  .detail-device-icon {
+    font-size: 2rem;
+  }
+  .detail-device-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    .detail-device-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .detail-status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      &.online { background: #43b581; }
+      &.away { background: #faa61a; }
+      &.idle { background: #747f8d; }
+      &.offline { background: #747f8d; }
+    }
+  }
+  .detail-close {
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.5);
+    transition: color 0.2s;
+    line-height: 1;
+    &:hover { color: #fff; }
+  }
+}
+
+.detail-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.2rem;
+
+  .detail-status-badge {
+    font-size: 0.8rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    &.online { background: rgba(67, 181, 129, 0.2); color: #43b581; }
+    &.away { background: rgba(250, 166, 26, 0.2); color: #faa61a; }
+    &.idle { background: rgba(116, 127, 141, 0.2); color: #747f8d; }
+    &.offline { background: rgba(116, 127, 141, 0.2); color: #747f8d; }
+  }
+  .detail-charge {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .detail-last-seen {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.35);
+    margin-left: auto;
+  }
+}
+
+.detail-section {
+  margin-bottom: 1.2rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+
+  .detail-section-title {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.6rem;
+  }
+}
+
+.detail-app {
+  .detail-app-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    display: block;
+  }
+  .detail-app-mood {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    margin-top: 2px;
+    display: block;
+  }
+}
+
+.detail-media {
+  margin-bottom: 0.5rem;
+  .detail-media-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    display: block;
+  }
+  .detail-media-artist {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    display: block;
+    margin-top: 2px;
+  }
+}
+
+.detail-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  .detail-metric {
+    .detail-metric-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      .detail-metric-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .detail-metric-value {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+      }
+    }
+    :deep(.el-progress) {
+      .el-progress-bar__outer {
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+  }
+}
+
+.detail-uptime {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.detail-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  .detail-device-type {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .detail-updated {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.3);
+  }
 }
 </style>
