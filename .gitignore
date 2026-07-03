@@ -25,3 +25,14 @@ dist-ssr
 
 # Device agent secrets
 device_agent/config.py
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Claude Code
+.claude/
+.mcp.json
+
+# Supabase CLI local config
+supabase/
