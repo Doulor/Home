@@ -1,4 +1,4 @@
-"""媒体信息采集 - 通过检测音乐播放器窗口标题获取"""
+"""媒体信息采集 - 通过窗口标题 + 音频会话状态检测"""
 
 import win32gui
 import win32process
@@ -20,12 +20,26 @@ MEDIA_PLAYERS = {
     "aimp": "AIMP",
 }
 
-# 浏览器进程名
-BROWSERS = {"msedge", "chrome", "firefox", "brave"}
+
+def _get_playing_processes():
+    """通过 pycaw 获取当前正在播放音频的进程名集合"""
+    playing = set()
+    try:
+        from pycaw.pycaw import AudioUtilities
+        for session in AudioUtilities.GetAllSessions():
+            try:
+                if session.Process and session.State == 1:  # 1 = AudioSessionStateActive
+                    name = session.Process.name().replace(".exe", "").lower()
+                    playing.add(name)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return playing
 
 
 def _enum_windows():
-    """枚举所有窗口，找到播放器和浏览器的窗口标题"""
+    """枚举所有窗口，找到播放器的窗口标题"""
     result = {}
 
     def callback(hwnd, _):
@@ -37,7 +51,7 @@ def _enum_windows():
                 return True
             process = psutil.Process(pid)
             name = process.name().replace(".exe", "").lower()
-            if name in MEDIA_PLAYERS or name in BROWSERS:
+            if name in MEDIA_PLAYERS:
                 title = win32gui.GetWindowText(hwnd)
                 if title and title not in ("", "Default IME", "MSCTFIME UI"):
                     result[name] = title
@@ -49,15 +63,15 @@ def _enum_windows():
     return result
 
 
-def _parse_player_title(title, player_name):
-    """解析播放器窗口标题，提取歌名和艺术家。暂停时返回 None。"""
+def _parse_title(title, player_name):
+    """解析窗口标题，提取歌名和艺术家"""
     if not title or len(title) < 2:
         return None
 
     title = title.strip()
     display_name = MEDIA_PLAYERS.get(player_name, "")
 
-    # 如果标题就是播放器名本身（没有 " - "），说明暂停或未播放
+    # 标题只有播放器名本身（如 "酷狗音乐"）→ 未播放
     if title == display_name:
         return None
 
@@ -65,67 +79,41 @@ def _parse_player_title(title, player_name):
     if display_name and title.endswith(display_name):
         title = title[: -len(display_name)].rstrip(" -")
 
-    # 需要至少有一个 " - " 才算在播放（酷狗格式: "艺术家 - 歌名"）
-    if " - " in title:
-        parts = title.split(" - ", 1)
-        artist = parts[0].strip()
-        song = parts[1].strip()
-        return {
-            "type": "music",
-            "title": song,
-            "artist": artist,
-            "player": display_name,
-        }
-
-    # 只有一个词，可能是歌名但不确定，忽略
-    return None
-
-
-def _parse_browser_title(title):
-    """解析浏览器标题，检测 B站 视频播放"""
-    if not title or len(title) < 3:
+    # 需要至少一个 " - "（酷狗播放格式: "艺术家 - 歌名"）
+    if " - " not in title:
         return None
 
-    title = title.strip()
-    low = title.lower()
+    parts = title.split(" - ", 1)
+    artist = parts[0].strip()
+    song = parts[1].strip()
 
-    # B站视频标题格式: "视频标题 - 哔哩哔哩" 或 "视频标题_bilibili"
-    if "哔哩哔哩" in low or "bilibili" in low:
-        # 去掉网站后缀
-        for suffix in (" - 哔哩哔哩", " - bilibili", "_bilibili", "-哔哩哔哩"):
-            if title.endswith(suffix):
-                video_title = title[: -len(suffix)].strip()
-                if video_title:
-                    return {
-                        "type": "video",
-                        "title": video_title,
-                        "artist": None,
-                        "player": "哔哩哔哩",
-                    }
-        # 没有匹配到后缀但标题包含 B站标识
+    if not song:
         return None
 
-    return None
+    return {
+        "type": "music",
+        "title": song,
+        "artist": artist,
+        "player": display_name,
+    }
 
 
 def get_media_info():
-    """通过窗口标题检测当前播放的媒体信息"""
+    """通过窗口标题 + pycaw 音频会话状态检测当前播放的媒体"""
     try:
+        # 先获取正在播放音频的进程
+        playing_procs = _get_playing_processes()
+
         windows = _enum_windows()
         if not windows:
             return {}
 
-        # 优先检查专用播放器
         for proc_name in MEDIA_PLAYERS:
             if proc_name in windows:
-                result = _parse_player_title(windows[proc_name], proc_name)
-                if result:
-                    return result
-
-        # 再检查浏览器（B站等）
-        for proc_name in BROWSERS:
-            if proc_name in windows:
-                result = _parse_browser_title(windows[proc_name])
+                # 必须同时满足：窗口存在 + 音频会话正在播放
+                if proc_name not in playing_procs:
+                    continue
+                result = _parse_title(windows[proc_name], proc_name)
                 if result:
                     return result
 
