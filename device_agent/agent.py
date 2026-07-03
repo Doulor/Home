@@ -61,7 +61,7 @@ def build_payload(metrics, window, media, prev_payload):
         "battery_charging": metrics.get("battery_charging", False),
         "active_app": window,
         "media_type": media.get("type"),
-        "media_title": media.get("title"),
+        "media_title": f"{media.get('player', '')} - {media.get('title', '')}" if media.get("title") and media.get("player") else media.get("title"),
         "media_detail": media.get("artist"),
         "media_elapsed": media.get("elapsed"),
         "media_duration": media.get("duration"),
