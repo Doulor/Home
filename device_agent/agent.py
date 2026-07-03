@@ -93,7 +93,17 @@ def main():
     supabase = create_client(SUPABASE_URL, SERVICE_ROLE_KEY)
     prev_payload = None
 
-    print(f"设备状态 Agent 启动 (设备: {DEVICE_ID}, 间隔: {PUSH_INTERVAL}s)")
+    # 启动时强制推送一次（确保 uptime 等字段更新）
+    try:
+        metrics = get_system_metrics()
+        window = get_active_window()
+        media = get_media_info()
+        payload, _ = build_payload(metrics, window, media, None)
+        supabase.table("device_status").upsert(payload).execute()
+        prev_payload = payload
+        print(f"设备状态 Agent 启动 (设备: {DEVICE_ID}, 间隔: {PUSH_INTERVAL}s)")
+    except Exception as e:
+        print(f"首次推送失败: {e}")
 
     while True:
         try:
