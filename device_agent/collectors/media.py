@@ -117,7 +117,8 @@ def _get_smtc_info():
 
         result = subprocess.run(
             ['powershell', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script_path],
-            capture_output=True, text=True, timeout=10
+            capture_output=True, text=True, timeout=10,
+            creationflags=0x08000000  # CREATE_NO_WINDOW
         )
         os.unlink(script_path)
 

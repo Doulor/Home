@@ -30,7 +30,7 @@ except ImportError:
     SERVICE_ROLE_KEY = os.environ.get("SERVICE_ROLE_KEY", "")
 
 DEVICE_ID = "windows-pc"
-DEVICE_NAME = "Desktop"
+DEVICE_NAME = "Desktop  -  TX 6 Pro"
 PUSH_INTERVAL = 5  # 秒
 # ──────────────────────────────────────────────────────
 

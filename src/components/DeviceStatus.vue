@@ -41,6 +41,12 @@
           <span v-if="appStatusText(device.active_app)" class="app-mood text-hidden">{{ appStatusText(device.active_app) }}</span>
         </div>
 
+        <!-- 定位信息（仅手机在线时显示） -->
+        <div v-if="device.device_type === 'phone' && device.status !== 'offline' && !isPlaceholder(device.location)" class="location-info">
+          <span class="location-icon">&#128205;</span>
+          <span class="location-text text-hidden">{{ device.location }}</span>
+        </div>
+
         <!-- 开机时长（仅电脑在线时显示） -->
         <div v-if="device.device_type === 'desktop' && device.status !== 'offline' && device.extra?.uptime" class="uptime-info">
           <span class="uptime-icon">&#9201;</span>
@@ -179,6 +185,14 @@
               </div>
             </div>
 
+            <!-- 定位信息 -->
+            <div v-if="detailDevice.device_type === 'phone' && detailDevice.status !== 'offline' && !isPlaceholder(detailDevice.location)" class="detail-section">
+              <div class="detail-section-title">定位</div>
+              <div class="detail-location">
+                <span>&#128205;</span> {{ resolvedAddresses[detailDevice.device_id] || detailDevice.location }}
+              </div>
+            </div>
+
             <!-- 底部 -->
             <div class="detail-footer">
               <span class="detail-device-type">{{ detailDevice.device_type === 'phone' ? '手机' : '桌面端' }}</span>
@@ -247,6 +261,12 @@ async function fetchDevices() {
 
   if (!error && data) {
     devices.value = data
+    // 初始加载时解析已有位置
+    data.forEach(d => {
+      if (d.location && !isPlaceholder(d.location)) {
+        resolveLocation(d.device_id, d.location)
+      }
+    })
   }
 }
 
@@ -264,6 +284,10 @@ function subscribeRealtime() {
             devices.value[idx] = { ...devices.value[idx], ...payload.new }
           } else {
             devices.value.push(payload.new)
+          }
+          // 解析新位置
+          if (payload.new.location && !isPlaceholder(payload.new.location)) {
+            resolveLocation(payload.new.device_id, payload.new.location)
           }
         } else if (payload.eventType === 'DELETE') {
           devices.value = devices.value.filter(d => d.device_id !== payload.old.device_id)
@@ -504,6 +528,18 @@ onBeforeUnmount(() => {
       font-size: 0.7rem;
       color: rgba(255, 255, 255, 0.45);
       .uptime-icon {
+        font-size: 0.7rem;
+      }
+    }
+
+    .location-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 0.25rem;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.45);
+      .location-icon {
         font-size: 0.7rem;
       }
     }
@@ -827,6 +863,11 @@ onBeforeUnmount(() => {
   margin-top: 0.6rem;
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.45);
+}
+
+.detail-location {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .detail-footer {
