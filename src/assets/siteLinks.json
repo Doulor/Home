@@ -12,6 +12,12 @@
     "description": "Doulor的minecraft服务器主页"
   },
   {
+    "icon": "Route",
+    "name": "Firef API",
+    "link": "https://api.doulor.cn/",
+    "description": "Doulor的Firef、荧烛AI中转站"
+  },
+  {
     "icon": "Cloud",
     "name": "Cloudflare",
     "link": "https://dash.cloudflare.com/83fdea7d910cbc683e6d53fa6baf45ab/home/domains",
@@ -52,12 +58,6 @@
     "name": "Umami",
     "link": "https://cloud.umami.is/analytics/us/websites/18f32723-55a4-4451-ab4d-9fd259ac5516",
     "description": "网站统计分析托管平台"
-  },
-  {
-    "icon": "Blogger",
-    "name": "TBlog",
-    "link": "https://tblog.doulor.cn/",
-    "description": "测试博客站点"
   },
   {
     "icon": "Surprise",
