@@ -6,22 +6,22 @@
     "description": "Doulor个人博客，记录学习与生活"
   },
   {
+    "icon": "Cloud",
+    "name": "Doulor Cloud",
+    "link": "https://cloud.doulor.cn/",
+    "description": "Doulor的资源聚合云平台"
+  },
+  {
+    "icon": "Cloudflare",
+    "name": "Cloudflare",
+    "link": "https://dash.cloudflare.com/83fdea7d910cbc683e6d53fa6baf45ab/home/domains",
+    "description": "CDN 与 DNS 服务管理"
+  },
+  {
     "icon": "Splotch",
     "name": "MC-Web",
     "link": "https://mc.doulor.cn/",
     "description": "Doulor的minecraft服务器主页"
-  },
-  {
-    "icon": "Route",
-    "name": "Firef API",
-    "link": "https://api.doulor.cn/",
-    "description": "Doulor的Firef、荧烛AI中转站"
-  },
-  {
-    "icon": "Cloud",
-    "name": "Cloudflare",
-    "link": "https://dash.cloudflare.com/83fdea7d910cbc683e6d53fa6baf45ab/home/domains",
-    "description": "CDN 与 DNS 服务管理"
   },
   {
     "icon": "Mountain",
