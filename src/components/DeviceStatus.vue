@@ -35,14 +35,14 @@
         </div>
 
         <!-- 当前活动应用 -->
-        <div v-if="device.status !== 'offline' && device.active_app" class="active-app">
+        <div v-if="device.status !== 'offline' && device.active_app && !isPlaceholder(device.active_app)" class="active-app">
           <span class="app-indicator">&#9654;</span>
           <span class="app-name text-hidden">{{ device.active_app }}</span>
           <span v-if="appStatusText(device.active_app)" class="app-mood text-hidden">{{ appStatusText(device.active_app) }}</span>
         </div>
 
         <!-- 定位信息（仅手机在线时显示） -->
-        <div v-if="device.device_type === 'phone' && device.status !== 'offline' && !isPlaceholder(device.location)" class="location-info">
+        <div v-if="device.device_type === 'phone' && device.status !== 'offline' && !isPlaceholder(device.location) && !looksLikeCoords(device.location)" class="location-info">
           <span class="location-icon">&#128205;</span>
           <span class="location-text text-hidden">{{ device.location }}</span>
         </div>
@@ -94,7 +94,7 @@
             <span class="stat-value">{{ formatMemory(device.memory_used) }}</span>
           </div>
           <div class="stat" v-if="device.battery_level != null">
-            <span class="stat-label">{{ device.battery_charging ? '&#9889;' : '&#128267;' }}</span>
+            <span class="stat-label">{{ isCharging(device) ? '&#9889;' : '&#128267;' }}</span>
             <el-progress
               :percentage="Math.round(device.battery_level)"
               :stroke-width="5"
@@ -130,7 +130,7 @@
             </div>
 
             <!-- 当前活动 -->
-            <div v-if="detailDevice.status !== 'offline' && detailDevice.active_app" class="detail-section">
+            <div v-if="detailDevice.status !== 'offline' && detailDevice.active_app && !isPlaceholder(detailDevice.active_app)" class="detail-section">
               <div class="detail-section-title">当前应用</div>
               <div class="detail-app">
                 <span class="detail-app-name">{{ detailDevice.active_app }}</span>
@@ -174,7 +174,7 @@
                 </div>
                 <div class="detail-metric" v-if="detailDevice.battery_level != null">
                   <div class="detail-metric-header">
-                    <span class="detail-metric-label">{{ detailDevice.battery_charging ? '&#9889; 电量' : '&#128267; 电量' }}</span>
+                    <span class="detail-metric-label">{{ isCharging(detailDevice) ? '&#9889; 电量' : '&#128267; 电量' }}</span>
                     <span class="detail-metric-value">{{ Math.round(detailDevice.battery_level) }}%</span>
                   </div>
                   <el-progress :percentage="Math.round(detailDevice.battery_level)" :stroke-width="6" :show-text="false" :color="batteryColor(detailDevice.battery_level)" />
@@ -186,10 +186,10 @@
             </div>
 
             <!-- 定位信息 -->
-            <div v-if="detailDevice.device_type === 'phone' && detailDevice.status !== 'offline' && !isPlaceholder(detailDevice.location)" class="detail-section">
+            <div v-if="detailDevice.device_type === 'phone' && detailDevice.status !== 'offline' && !isPlaceholder(detailDevice.location) && !looksLikeCoords(detailDevice.location)" class="detail-section">
               <div class="detail-section-title">定位</div>
               <div class="detail-location">
-                <span>&#128205;</span> {{ resolvedAddresses[detailDevice.device_id] || detailDevice.location }}
+                <span>&#128205;</span> {{ detailDevice.location }}
               </div>
             </div>
 
@@ -261,12 +261,8 @@ async function fetchDevices() {
 
   if (!error && data) {
     devices.value = data
-    // 初始加载时解析已有位置
-    data.forEach(d => {
-      if (d.location && !isPlaceholder(d.location)) {
-        resolveLocation(d.device_id, d.location)
-      }
-    })
+    // 坐标 → 地址的转换在服务端由 update-device Edge Function 完成，
+    // 库里存的已经是地址文本，前端不再重复解析。
   }
 }
 
@@ -284,10 +280,6 @@ function subscribeRealtime() {
             devices.value[idx] = { ...devices.value[idx], ...payload.new }
           } else {
             devices.value.push(payload.new)
-          }
-          // 解析新位置
-          if (payload.new.location && !isPlaceholder(payload.new.location)) {
-            resolveLocation(payload.new.device_id, payload.new.location)
           }
         } else if (payload.eventType === 'DELETE') {
           devices.value = devices.value.filter(d => d.device_id !== payload.old.device_id)
@@ -331,9 +323,29 @@ function progressColor(val) {
   return '#409eff'
 }
 
+// MacroDroid 取不到值时有两种表现：原样保留 {token}，或者给一个孤立的 "?"。
+// 两者都不是有效内容，统一按"没有值"处理（location / media_title / active_app 都用它）。
 function isPlaceholder(val) {
   if (!val) return true
-  return val.startsWith('{') && val.endsWith('}')
+  const s = String(val).trim()
+  if (s === '?' || s === '？') return true
+  return s.startsWith('{') && s.endsWith('}')
+}
+
+// 兜底：万一有写入方绕过 update-device Edge Function 直接塞了原始坐标，
+// 不要把它显示在页面上（既难看，也等于公开位置）。
+function looksLikeCoords(val) {
+  if (!val) return false
+  return /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(String(val).trim())
+}
+
+// 手机端由 MacroDroid 上报，只能拿到 {power} 的「打开/关闭」文本，
+// 没有布尔值，所以充电状态先看 battery_charging，再退回 custom_status。
+function isCharging(device) {
+  if (!device) return false
+  if (device.battery_charging) return true
+  const s = device.custom_status
+  return s === '打开' || s === 'charging' || s === 'full'
 }
 
 function batteryColor(val) {
