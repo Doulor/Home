@@ -8,7 +8,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "avatar": "node scripts/fetch-qq-avatar.mjs",
+    "build": "node scripts/fetch-qq-avatar.mjs && vite build",
     "preview": "vite preview",
     "format": "prettier --write src/",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts,.vue --fix"

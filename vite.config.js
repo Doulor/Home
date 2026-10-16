@@ -56,40 +56,23 @@ export default ({ mode }) =>
           theme_color: "#424242",
           background_color: "#424242",
           icons: [
+            // 图标统一用 QQ 头像，由 scripts/fetch-qq-avatar.mjs 在构建前自动更新。
+            // 腾讯接口只提供 100 / 640 两个尺寸，所以 192 和 512 都指向 640 那张
+            // （浏览器按声明的尺寸缩放，Chrome 的可安装性检查需要 192 和 512 两项）。
             {
-              src: "/images/icon/48.png",
-              sizes: "48x48",
-              type: "image/png",
+              src: "/images/icon/qq-avatar-100.jpg",
+              sizes: "100x100",
+              type: "image/jpeg",
             },
             {
-              src: "/images/icon/72.png",
-              sizes: "72x72",
-              type: "image/png",
-            },
-            {
-              src: "/images/icon/96.png",
-              sizes: "96x96",
-              type: "image/png",
-            },
-            {
-              src: "/images/icon/128.png",
-              sizes: "128x128",
-              type: "image/png",
-            },
-            {
-              src: "/images/icon/144.png",
-              sizes: "144x144",
-              type: "image/png",
-            },
-            {
-              src: "/images/icon/192.png",
+              src: "/images/icon/qq-avatar.jpg",
               sizes: "192x192",
-              type: "image/png",
+              type: "image/jpeg",
             },
             {
-              src: "/images/icon/512.png",
+              src: "/images/icon/qq-avatar.jpg",
               sizes: "512x512",
-              type: "image/png",
+              type: "image/jpeg",
             },
           ],
         },
