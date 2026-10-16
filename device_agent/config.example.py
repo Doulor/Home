@@ -3,7 +3,7 @@
 
 # Home-Monitor 项目（device_status 表所在项目）
 # 必须和网页端 .env.local 里的 VITE_MONITOR_URL 一致
-SUPABASE_URL = "https://kphhahpdaqdwcbvhvseo.supabase.co"
+SUPABASE_URL = "https://supabaseproxy.doulor.cn"
 
 # 在 Supabase Dashboard → Project Settings → API Keys 获取
 # 新格式是 sb_secret_ 开头（旧的 service_role JWT 也仍可用）

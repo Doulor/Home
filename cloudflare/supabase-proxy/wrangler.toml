@@ -1,0 +1,9 @@
+name = "supabase-proxy"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# 自定义域名。注意：域名所在 zone 必须和本 Worker 在同一个 Cloudflare 账号里，
+# 否则部署会报错。doulor.cn 在「Doulor」账号下。
+routes = [
+  { pattern = "supabaseproxy.doulor.cn", custom_domain = true }
+]
