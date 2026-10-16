@@ -1,3 +1,7 @@
 supabase>=2.0.0
 psutil>=5.9.0
 pywin32>=306
+
+# 连接池直连用的 Postgres 驱动（纯 Python，无需编译）
+# 走连接池时不需要代理，国内网络下比 REST 可靠得多
+pg8000>=1.30.0

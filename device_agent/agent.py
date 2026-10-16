@@ -12,14 +12,18 @@
 import time
 import sys
 import os
+import json
 
 # 确保能导入同目录模块
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from supabase import create_client
 from collectors.system import get_system_metrics
 from collectors.window import get_active_window
 from collectors.media import get_media_info
+
+# 注意：supabase 客户端是**按需**创建的（见 get_supabase），
+# 走连接池直连时根本不会碰它 —— 免得代理环境异常时在启动阶段就崩掉。
+# from supabase import create_client  <-- 见 get_supabase()
 
 # ── 配置 ──────────────────────────────────────────────
 # 优先从 config.py 读取，否则从环境变量读取
@@ -42,7 +46,7 @@ PUSH_INTERVAL = 5  # 秒
 HEARTBEAT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent.heartbeat")
 
 
-def write_heartbeat(last_push_ok, last_error):
+def write_heartbeat(last_push_ok, last_error, last_via=""):
     """把当前状态写进心跳文件；写失败也不影响主循环。"""
     try:
         with open(HEARTBEAT_FILE, "w", encoding="utf-8") as f:
@@ -54,9 +58,121 @@ def write_heartbeat(last_push_ok, last_error):
                 else "never"
             )
             f.write(f"last_push_ok={pushed}\n")
+            f.write(f"last_via={last_via}\n")
             f.write(f"last_error={last_error}\n")
     except Exception:
         pass
+# ──────────────────────────────────────────────────────
+
+# ── 写库 ──────────────────────────────────────────────
+# 优先走 Postgres 连接池直连（aws-1-ap-southeast-2.pooler.supabase.com:6543）。
+#
+# 为什么：*.supabase.co（REST API）在国内直连是被阻断的（TCP 能连上，TLS 握手
+# 被 RST），只能走代理；而 *.pooler.supabase.com 直连是通的。走连接池之后，
+# 电脑端监控就完全不受 Clash 代理模式影响 —— 实测直连可读写。
+#
+# 连接池写失败时自动退回 REST（走代理那条路），两条路都失败才算失败。
+try:
+    import pg8000.native
+    HAS_PG = True
+except ImportError:
+    HAS_PG = False
+
+try:
+    from config import DB_PASSWORD
+except ImportError:
+    DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
+
+DB_HOST = "aws-1-ap-southeast-2.pooler.supabase.com"
+DB_PORT = 6543  # 事务模式；实测同一密码在 5432 会报 28P01
+DB_USER = "postgres.kphhahpdaqdwcbvhvseo"
+DB_NAME = "postgres"
+
+UPSERT_SQL = """
+INSERT INTO device_status (
+    device_id, device_name, device_type, status,
+    cpu_usage, memory_usage, memory_total, memory_used,
+    battery_level, battery_charging, active_app,
+    media_type, media_title, media_detail, media_elapsed, media_duration,
+    extra, updated_at
+) VALUES (
+    :device_id, :device_name, :device_type, :status,
+    :cpu_usage, :memory_usage, :memory_total, :memory_used,
+    :battery_level, :battery_charging, :active_app,
+    :media_type, :media_title, :media_detail, :media_elapsed, :media_duration,
+    :extra::jsonb, now()
+)
+ON CONFLICT (device_id) DO UPDATE SET
+    device_name = EXCLUDED.device_name,
+    device_type = EXCLUDED.device_type,
+    status = EXCLUDED.status,
+    cpu_usage = EXCLUDED.cpu_usage,
+    memory_usage = EXCLUDED.memory_usage,
+    memory_total = EXCLUDED.memory_total,
+    memory_used = EXCLUDED.memory_used,
+    battery_level = EXCLUDED.battery_level,
+    battery_charging = EXCLUDED.battery_charging,
+    active_app = EXCLUDED.active_app,
+    media_type = EXCLUDED.media_type,
+    media_title = EXCLUDED.media_title,
+    media_detail = EXCLUDED.media_detail,
+    media_elapsed = EXCLUDED.media_elapsed,
+    media_duration = EXCLUDED.media_duration,
+    extra = EXCLUDED.extra,
+    updated_at = now()
+"""
+
+# SQL 需要的字段（多余的一律不传，避免 pg8000 报参数不匹配）
+SQL_FIELDS = [
+    "device_id", "device_name", "device_type", "status",
+    "cpu_usage", "memory_usage", "memory_total", "memory_used",
+    "battery_level", "battery_charging", "active_app",
+    "media_type", "media_title", "media_detail", "media_elapsed", "media_duration",
+    "extra",
+]
+
+_pg_conn = None
+_supabase = None
+
+
+def get_supabase():
+    """REST 兜底通道的客户端，按需创建。
+
+    连接池直连能用时根本不会走到这里，所以代理环境再异常也不影响主流程。
+    """
+    global _supabase
+    if _supabase is None:
+        from supabase import create_client
+
+        _supabase = create_client(SUPABASE_URL, SERVICE_ROLE_KEY)
+    return _supabase
+
+
+def push_via_pooler(payload):
+    """走 Postgres 连接池直连写库。"""
+    global _pg_conn
+    row = {k: payload.get(k) for k in SQL_FIELDS}
+    row["extra"] = json.dumps(row.get("extra") or {}, ensure_ascii=False)
+    if _pg_conn is None:
+        _pg_conn = pg8000.native.Connection(
+            user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT,
+            database=DB_NAME, timeout=15,
+        )
+    _pg_conn.run(UPSERT_SQL, **row)
+
+
+def push(payload):
+    """写库。返回实际走的通道名。"""
+    global _pg_conn
+    if HAS_PG and DB_PASSWORD:
+        try:
+            push_via_pooler(payload)
+            return "pooler"
+        except Exception as e:
+            _pg_conn = None  # 连接可能已坏，下次重建
+            print(f"[{time.strftime('%H:%M:%S')}] 连接池写入失败，改用 REST: {e}")
+    get_supabase().table("device_status").upsert(payload).execute()
+    return "rest"
 # ──────────────────────────────────────────────────────
 
 
@@ -111,14 +227,17 @@ def build_payload(metrics, window, media, prev_payload):
 
 
 def main():
-    if not SUPABASE_URL or not SERVICE_ROLE_KEY:
-        print("错误: 请在 config.py 或环境变量中设置 SUPABASE_URL 和 SERVICE_ROLE_KEY")
+    # 两条通道至少要有条能走：连接池直连（首选），或 REST（需要代理）
+    if not (HAS_PG and DB_PASSWORD) and (not SUPABASE_URL or not SERVICE_ROLE_KEY):
+        print("错误: 连接池不可用（缺 pg8000 或 DB_PASSWORD），且没有配置 SUPABASE_URL / SERVICE_ROLE_KEY")
         sys.exit(1)
 
-    supabase = create_client(SUPABASE_URL, SERVICE_ROLE_KEY)
     prev_payload = None
     last_push_ok = 0
     last_error = ""
+    last_via = ""
+
+    print(f"写库通道: {'连接池直连(不走代理)' if (HAS_PG and DB_PASSWORD) else 'REST(需要代理)'}")
 
     # 启动时强制推送一次（确保 uptime 等字段更新）
     try:
@@ -126,15 +245,15 @@ def main():
         window = get_active_window()
         media = get_media_info()
         payload, _ = build_payload(metrics, window, media, None)
-        supabase.table("device_status").upsert(payload).execute()
+        last_via = push(payload)
         prev_payload = payload
         last_push_ok = time.time()
-        print(f"设备状态 Agent 启动 (设备: {DEVICE_ID}, 间隔: {PUSH_INTERVAL}s)")
+        print(f"设备状态 Agent 启动 (设备: {DEVICE_ID}, 间隔: {PUSH_INTERVAL}s, 通道: {last_via})")
     except Exception as e:
         last_error = f"{type(e).__name__}: {e}"
         print(f"首次推送失败: {e}")
 
-    write_heartbeat(last_push_ok, last_error)
+    write_heartbeat(last_push_ok, last_error, last_via)
 
     while True:
         try:
@@ -144,7 +263,7 @@ def main():
             payload, changed = build_payload(metrics, window, media, prev_payload)
 
             if changed:
-                supabase.table("device_status").upsert(payload).execute()
+                last_via = push(payload)
                 prev_payload = payload
                 last_push_ok = time.time()
                 last_error = ""
@@ -155,7 +274,7 @@ def main():
 
         # 每轮都写心跳：看门狗靠它的修改时间判断这个循环是否还在推进，
         # 而不是靠 CPU 占用（网络不通时 CPU 会掉到接近 0，无法与真卡死区分）
-        write_heartbeat(last_push_ok, last_error)
+        write_heartbeat(last_push_ok, last_error, last_via)
         time.sleep(PUSH_INTERVAL)
 
 
