@@ -34,5 +34,8 @@ __pycache__/
 .claude/
 .mcp.json
 
+# Codex
+.codex/
+
 # Supabase CLI local config
 supabase/
