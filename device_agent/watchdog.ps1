@@ -6,25 +6,28 @@
     为什么需要它：agent 用 pythonw 无窗口运行。一旦它卡在某个阻塞调用上
     （跨进程窗口标题读取、COM 音频会话枚举、PowerShell 子进程收尾等），
     进程仍然"活着"，但循环整个停住、不再推送，而且没有任何报错。
-    实测卡死时 60 秒 CPU 只增长 0.11 秒。
 
-    判定依据（本机实测标定）：
-          健康 agent : 每 1 秒墙钟消耗约 0.0135s CPU（60 秒 +0.81s）
-          卡死 agent : 每 1 秒墙钟仅约 0.0018s CPU（60 秒 +0.11s）
-          默认阈值 0.003 CPU秒/秒：健康值高出 4.5 倍，卡死值低 1.6 倍。
+    判定依据：agent 每轮循环都会更新 agent.heartbeat，本脚本只看这个文件的
+    修改时间，以及里面记录的 pid。
+
+    ⚠ 不要改回用 CPU 占用判断（v1 的教训）：
+      网络不通时 agent 的 CPU 会掉到接近 0，和"真的卡死"完全无法区分 ——
+      实测健康但推不出去约 0.001、真卡死约 0.0018 CPU秒/秒，区间重叠。
+      v1 用 CPU 判定，结果每 15 分钟误杀一次健康进程（两天里误杀 59 次）。
 
     用法：
           powershell -NoProfile -ExecutionPolicy Bypass -File watchdog.ps1
-          powershell ... -File watchdog.ps1 -DryRun              # 只检查不动作
-          powershell ... -File watchdog.ps1 -ObservationSeconds 10
+          powershell ... -File watchdog.ps1 -DryRun       # 只检查不动作
+          powershell ... -File watchdog.ps1 -HeartbeatTimeoutSeconds 30
 #>
 [CmdletBinding()]
 param(
-    # 观察窗口（秒）
-    [int]$ObservationSeconds = 90,
+    # 心跳文件多久没更新就认为卡死（秒）。agent 循环间隔是 5 秒，
+    # 默认 60 秒 = 连续漏掉 12 轮，留足了 PowerShell 超时（各 10 秒）的余量
+    [int]$HeartbeatTimeoutSeconds = 60,
 
-    # 判定阈值，单位「CPU 秒 / 墙钟秒」。低于它即认为进程没有在推进
-    [double]$MinCpuRate = 0.003,
+    # 心跳正常、但超过这么多分钟没能成功推送，就提醒可能是网络/代理问题
+    [int]$PushStaleWarnMinutes = 10,
 
     # 匹配 agent 进程命令行的正则
     [string]$MatchPattern = 'agent\.py',
@@ -156,7 +159,9 @@ function Start-Agent {
 }
 
 # ── 主流程 ────────────────────────────────────────────────────
-Write-Log "── 看门狗检查开始（观察 ${ObservationSeconds}s，阈值 ${MinCpuRate} CPU秒/秒）──"
+$heartbeatFile = Join-Path $AgentDir 'agent.heartbeat'
+
+Write-Log "── 看门狗检查开始（心跳超时 ${HeartbeatTimeoutSeconds}s）──"
 
 $procs = @(Get-AgentProcess)
 
@@ -170,80 +175,81 @@ if ($procs.Count -eq 0) {
 
 Write-Log ("发现 agent 进程: " + (($procs | ForEach-Object { $_.ProcessId }) -join ', '))
 
-# 采样 CPU 基线
-$before = @{}
-foreach ($p in $procs) {
-    $proc = Get-Process -Id $p.ProcessId -ErrorAction SilentlyContinue
-    if ($proc) { $before[$p.ProcessId] = $proc.CPU }
-}
+# ── 读心跳 ────────────────────────────────────────────────────
+$hbPid = $null
+$hbAge = [double]::MaxValue
+$hbLastPush = ''
+$hbLastError = ''
 
-if ($before.Count -eq 0) {
-    Write-Log '错误：找到了 agent 进程但无法读取其 CPU 时间，本次检查视为失败（不动作）'
-    exit 2
-}
-
-Start-Sleep -Seconds $ObservationSeconds
-
-$alive = @()
-$stuck = @()
-foreach ($procId in $before.Keys) {
-    $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
-    if (-not $proc) { Write-Log "PID $procId 在观察期内退出"; continue }
-    $delta = $proc.CPU - $before[$procId]
-    $rate = $delta / $ObservationSeconds
-    if ($rate -ge $MinCpuRate) {
-        $alive += $procId
-    } else {
-        $stuck += $procId
-        Write-Log ("PID {0} 判定卡死：{1}s 内 CPU 仅 +{2:N3}s（{3:N4} CPU秒/秒，阈值 {4}）" -f $procId, $ObservationSeconds, $delta, $rate, $MinCpuRate)
+if (Test-Path $heartbeatFile) {
+    $hbAge = ((Get-Date) - (Get-Item $heartbeatFile).LastWriteTime).TotalSeconds
+    foreach ($line in ((Get-Content $heartbeatFile -ErrorAction SilentlyContinue) -split "`r?`n")) {
+        if ($line -match '^pid=(\d+)') { $hbPid = [int]$Matches[1] }
+        elseif ($line -match '^last_push_ok=(.*)$') { $hbLastPush = $Matches[1].Trim() }
+        elseif ($line -match '^last_error=(.*)$') { $hbLastError = $Matches[1].Trim() }
     }
-}
-
-# 兜底：一个都没判定出来说明检查本身出错了，绝不能当成"健康"放过
-if (($alive.Count + $stuck.Count) -eq 0) {
-    Write-Log '错误：观察期结束后没有取得任何进程的判定结果，本次检查视为失败（不动作）'
-    exit 2
-}
-
-if ($stuck.Count -eq 0) {
-    Write-Log ("健康：PID {0} 正常推进，无需处理" -f ($alive -join ', '))
+} else {
+    Write-Log "没有心跳文件（$heartbeatFile）—— agent 可能是旧版本，本次不判定、不动作"
     return
+}
+
+# 心跳的持有者必须正好是还在运行的某个 agent 进程
+$ownerAlive = $false
+if ($hbPid -and ($procs | Where-Object { $_.ProcessId -eq $hbPid })) {
+    $ownerAlive = $hbAge -le $HeartbeatTimeoutSeconds
+}
+
+# ── 心跳正常：清理多余实例 + 检查推送健康度 ────────────────────
+if ($ownerAlive) {
+    Write-Log ("健康：PID {0} 心跳 {1:N1} 秒前更新，上次成功推送 {2}" -f $hbPid, $hbAge, $hbLastPush)
+
+    # 去重：心跳持有者才是"正主"，其余一律终止。
+    # 这一步必须无条件执行 —— v1 把它写在"卡死处理"之后，结果全健康时
+    # 直接 return，重复实例永远清不掉（实测攒到过 3 个）。
+    foreach ($p in $procs) {
+        if ($p.ProcessId -eq $hbPid) { continue }
+        if ($DryRun) { Write-Log "[DryRun] 本应终止重复实例 PID $($p.ProcessId)"; continue }
+        try {
+            Stop-Process -Id $p.ProcessId -Force -ErrorAction Stop
+            Write-Log "发现重复实例，已终止 PID $($p.ProcessId)（保留 $hbPid）"
+        } catch {
+            Write-Log "终止重复实例 PID $($p.ProcessId) 失败：$($_.Exception.Message)"
+        }
+    }
+
+    # 推送健康度：心跳在跑、但长时间推不出去 —— 这正是"代理被切回直连"的典型表现
+    if ($hbLastPush -eq 'never') {
+        Write-Log "⚠ 从未成功推送过。最后一次错误：$hbLastError"
+    } elseif ($hbLastPush -match '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$') {
+        $pushAge = ((Get-Date) - [datetime]::ParseExact($hbLastPush, 'yyyy-MM-dd HH:mm:ss', $null)).TotalMinutes
+        if ($pushAge -gt $PushStaleWarnMinutes) {
+            Write-Log ("⚠ 心跳正常，但已 {0:N1} 分钟没能成功推送 —— 大概率是网络/代理问题：" -f $pushAge)
+            Write-Log "  去 Clash Verge 看看「代理模式」是不是又被切成「直连」了。最后一次错误：$hbLastError"
+        }
+    }
+    return
+}
+
+# ── 心跳过期 / 持有者已不在：全部重启 ──────────────────────────
+if ($hbPid) {
+    Write-Log ("心跳异常：文件 {0:N1} 秒未更新（超时 {1}s），持有者 PID {2}" -f $hbAge, $HeartbeatTimeoutSeconds, $hbPid)
+} else {
+    Write-Log '心跳文件里没有 pid，按异常处理'
 }
 
 if ($DryRun) {
-    Write-Log ("[DryRun] 本应终止 PID {0} 并重启" -f ($stuck -join ', '))
+    Write-Log ("[DryRun] 本应终止 {0} 并重启" -f (($procs | ForEach-Object { $_.ProcessId }) -join ', '))
     return
 }
 
-# 杀掉卡死实例
-foreach ($sid in $stuck) {
+foreach ($p in $procs) {
     try {
-        Stop-Process -Id $sid -Force -ErrorAction Stop
-        Write-Log "已终止卡死进程 PID $sid"
+        Stop-Process -Id $p.ProcessId -Force -ErrorAction Stop
+        Write-Log "已终止 PID $($p.ProcessId)"
     } catch {
-        Write-Log "终止 PID $sid 失败：$($_.Exception.Message)"
+        Write-Log "终止 PID $($p.ProcessId) 失败：$($_.Exception.Message)"
     }
 }
 
-# 去重：存活实例多于一个时，保留最早启动的那个
-if ($alive.Count -gt 1) {
-    $sorted = $alive | ForEach-Object {
-        $pr = Get-Process -Id $_ -ErrorAction SilentlyContinue
-        if ($pr) { [pscustomobject]@{ Id = $_; Start = $pr.StartTime } }
-    } | Sort-Object Start
-    $keep = $sorted[0].Id
-    foreach ($dup in ($sorted | Select-Object -Skip 1)) {
-        try {
-            Stop-Process -Id $dup.Id -Force -ErrorAction Stop
-            Write-Log "发现重复实例，已终止 PID $($dup.Id)（保留 $keep）"
-        } catch { }
-    }
-    $alive = @($keep)
-}
-
-if ($alive.Count -eq 0) {
-    if ($NoStart) { Write-Log 'NoStart 已指定，不重启' }
-    else { Start-Agent }
-} else {
-    Write-Log ("仍有健康实例 {0}，不重复启动" -f ($alive -join ', '))
-}
+if ($NoStart) { Write-Log 'NoStart 已指定，不重启' }
+else { Start-Agent }

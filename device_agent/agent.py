@@ -34,6 +34,31 @@ DEVICE_NAME = "Desktop  -  TX 6 Pro"
 PUSH_INTERVAL = 5  # 秒
 # ──────────────────────────────────────────────────────
 
+# ── 心跳 ──────────────────────────────────────────────
+# 每轮循环都更新这个文件，看门狗靠它的修改时间和里面的 pid 判断 agent 是否还在推进。
+#
+# 为什么不用 CPU 占用判断：网络不通时 agent 的 CPU 会掉到接近 0，和"真的卡死"
+# 无法区分（实测健康但推不出去时约 0.001，真卡死约 0.0018 CPU秒/秒，区间重叠）。
+HEARTBEAT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent.heartbeat")
+
+
+def write_heartbeat(last_push_ok, last_error):
+    """把当前状态写进心跳文件；写失败也不影响主循环。"""
+    try:
+        with open(HEARTBEAT_FILE, "w", encoding="utf-8") as f:
+            f.write(f"pid={os.getpid()}\n")
+            f.write(f"last_loop={time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            pushed = (
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(last_push_ok))
+                if last_push_ok
+                else "never"
+            )
+            f.write(f"last_push_ok={pushed}\n")
+            f.write(f"last_error={last_error}\n")
+    except Exception:
+        pass
+# ──────────────────────────────────────────────────────
+
 
 def detect_status(cpu, active_window):
     """根据 CPU 和活动窗口推断设备状态"""
@@ -92,6 +117,8 @@ def main():
 
     supabase = create_client(SUPABASE_URL, SERVICE_ROLE_KEY)
     prev_payload = None
+    last_push_ok = 0
+    last_error = ""
 
     # 启动时强制推送一次（确保 uptime 等字段更新）
     try:
@@ -101,9 +128,13 @@ def main():
         payload, _ = build_payload(metrics, window, media, None)
         supabase.table("device_status").upsert(payload).execute()
         prev_payload = payload
+        last_push_ok = time.time()
         print(f"设备状态 Agent 启动 (设备: {DEVICE_ID}, 间隔: {PUSH_INTERVAL}s)")
     except Exception as e:
+        last_error = f"{type(e).__name__}: {e}"
         print(f"首次推送失败: {e}")
+
+    write_heartbeat(last_push_ok, last_error)
 
     while True:
         try:
@@ -115,10 +146,16 @@ def main():
             if changed:
                 supabase.table("device_status").upsert(payload).execute()
                 prev_payload = payload
+                last_push_ok = time.time()
+                last_error = ""
 
         except Exception as e:
+            last_error = f"{type(e).__name__}: {e}"
             print(f"[{time.strftime('%H:%M:%S')}] 推送失败: {e}")
 
+        # 每轮都写心跳：看门狗靠它的修改时间判断这个循环是否还在推进，
+        # 而不是靠 CPU 占用（网络不通时 CPU 会掉到接近 0，无法与真卡死区分）
+        write_heartbeat(last_push_ok, last_error)
         time.sleep(PUSH_INTERVAL)
 
 

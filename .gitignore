@@ -26,6 +26,9 @@ dist-ssr
 # Device agent secrets
 device_agent/config.py
 
+# Device agent runtime state
+device_agent/agent.heartbeat
+
 # Python cache
 __pycache__/
 *.pyc
