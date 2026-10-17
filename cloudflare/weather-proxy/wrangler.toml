@@ -1,0 +1,35 @@
+name = "weather-proxy"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# 部署前先写 secret（不要写进本文件）：
+#   wrangler secret put AMAP_KEY     --config cloudflare/weather-proxy/wrangler.toml
+#   wrangler secret put QWEATHER_KEY --config cloudflare/weather-proxy/wrangler.toml
+#
+# 为什么 Key 不放 [vars]：wrangler.toml 会进 Git，[vars] 明文可见；
+# secret 只在 Cloudflare 侧存储，运行时通过 env 注入。
+
+[vars]
+# 允许的前端来源（逗号分隔）。推荐用「同源路由」部署，那样浏览器根本不需要 CORS，
+# 这一项只是独立子域部署时的兜底。不设则用代码里的默认值
+# （doulor.cn / www.doulor.cn / localhost:3000 / localhost:4173）。
+# ALLOWED_ORIGINS = "https://doulor.cn,https://www.doulor.cn"
+
+# ── 部署方式，二选一 ───────────────────────────────────────────────
+#
+# 方案 A（推荐，同源，前端不用改域名也不用 CORS）：
+#   Worker 路由绑在 doulor.cn/api/weather* 上，前端默认请求 /api/weather。
+#   注意：路由会优先于同域名的 Pages 静态资源，所以 pattern 必须带 /api/weather 前缀，
+#   千万不要写成 doulor.cn/*，否则整站会被 Worker 接管。
+#
+# routes = [
+#   { pattern = "doulor.cn/api/weather*", zone_name = "doulor.cn" },
+#   { pattern = "www.doulor.cn/api/weather*", zone_name = "doulor.cn" },
+# ]
+#
+# 方案 B（独立子域，需要在 Cloudflare 控制台给这个子域加 DNS 记录并开代理）：
+#   前端用 VITE_WEATHER_PROXY_URL=https://weather.doulor.cn 指定地址。
+#
+# routes = [
+#   { pattern = "weather.doulor.cn", custom_domain = true },
+# ]

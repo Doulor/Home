@@ -75,6 +75,7 @@
 import { ref, onMounted, nextTick } from "vue";
 import { Edit, Aiming } from "@icon-park/vue-next";
 import { ElMessage } from "element-plus";
+import { getIpLocation as locateByIp, getWeather as requestWeather } from "@/api";
 import { mainStore } from "@/store";
 
 const store = mainStore();
@@ -85,25 +86,20 @@ const store = mainStore();
 const DEFAULT_CITY = "荆州"; 
 const STORAGE_KEY = "home-weather-city";
 
-// 高德API配置
-// 修改：优先使用环境变量，如果没有则使用空字符串或抛出警告
-const AMAP_WEB_KEY = import.meta.env.VITE_WEATHER_KEY || ""; 
-const AMAP_IP_API = "https://restapi.amap.com/v3/ip";
-const GEOCODE_API = "https://restapi.amap.com/v3/geocode/geo";
-const WEATHER_API = "https://restapi.amap.com/v3/weather/weatherInfo";
+// 天气数据源配置
+//
+// 高德 / 和风的 Key 已经全部挪到后端代理（cloudflare/weather-proxy），
+// 浏览器这边一个 Key 都没有 —— 因为 Vite 会把 import.meta.env.VITE_* 静态内联
+// 进 bundle，Key 一旦出现在这里就等于公开（渗透报告 #27 / #60）。
+// 代理层内部按「高德 → 和风」回退，见 src/api/index.js。
 
-// 和风天气 API 配置
-const QWEATHER_KEY = import.meta.env.VITE_QWEATHER_KEY || "";
-const QWEATHER_GEO_API = "https://geoapi.qweather.com/v2/city/lookup";
-const QWEATHER_WEATHER_API = "https://devapi.qweather.com/v7/weather/now";
-
-// OpenMeteo API 配置 (无 Key 限制)
+// OpenMeteo API 配置 (无 Key 限制，前端直连的最后兜底)
 const OPEN_METEO_GEO_API = "https://geocoding-api.open-meteo.com/v1/search";
 const OPEN_METEO_WEATHER_API = "https://api.open-meteo.com/v1/forecast";
 
 // API 优先级配置 (可手动调整顺序)
-// 可选值: "amap" (高德), "qweather" (和风), "openmeteo" (OpenMeteo)
-const API_PRIORITY = ["amap", "qweather", "openmeteo"];
+// 可选值: "proxy" (自建代理，服务端内部高德→和风), "openmeteo" (无 Key 公共源)
+const API_PRIORITY = ["proxy", "openmeteo"];
 
 // 状态管理
 const isLoading = ref(false);
@@ -182,21 +178,11 @@ const getWeatherAnimationClass = (weather) => {
   return "anim-float";
 };
 
-// IP 定位
+// IP 定位（服务端调高德，浏览器不带 Key）
 const getIpLocation = async () => {
-  if (!AMAP_WEB_KEY) return null;
-  try {
-    const res = await fetch(`${AMAP_IP_API}?key=${AMAP_WEB_KEY}`);
-    const data = await res.json();
-    if (data.status === "1") {
-      // 优先使用城市，如果是空（如直辖市可能返回空或者是省份名），则使用省份
-      const city = (data.city && typeof data.city === 'string' && data.city.length > 0) ? data.city : data.province;
-      return city;
-    }
-  } catch (e) {
-    console.error("IP Location failed", e);
-  }
-  return null;
+  const city = await locateByIp();
+  if (!city) console.warn("IP 定位未返回城市，将回退到默认城市");
+  return city;
 };
 
 // 加载本地存储城市
@@ -293,18 +279,11 @@ const fetchWeather = async () => {
   isLoading.value = true;
   errorMessage.value = "";
   
-  let lastError = null;
-
   // 按优先级尝试 API
   for (const apiName of API_PRIORITY) {
     try {
-      if (apiName === "amap") {
-        if (!AMAP_WEB_KEY) throw new Error("未配置高德 Key");
-        await fetchAmapWeather(city);
-        return; // 成功则直接返回
-      } else if (apiName === "qweather") {
-        if (!QWEATHER_KEY) throw new Error("未配置和风 Key");
-        await fetchQWeather(city);
+      if (apiName === "proxy") {
+        await fetchProxyWeather(city);
         return; // 成功则直接返回
       } else if (apiName === "openmeteo") {
         await fetchOpenMeteoWeather(city);
@@ -312,7 +291,6 @@ const fetchWeather = async () => {
       }
     } catch (err) {
       console.warn(`${apiName} API 失败:`, err);
-      lastError = err;
       // 继续尝试下一个 API
     }
   }
@@ -323,76 +301,22 @@ const fetchWeather = async () => {
   isLoading.value = false;
 };
 
-// 和风天气 API 实现
-const fetchQWeather = async (city) => {
-  // 1. 城市地理编码
-  const geoRes = await fetch(
-    `${QWEATHER_GEO_API}?location=${encodeURIComponent(city)}&key=${QWEATHER_KEY}`
-  );
-  const geoData = await geoRes.json();
-  
-  if (geoData.code !== "200" || !geoData.location?.length) {
-    throw new Error("无法识别城市");
-  }
+// 自建代理实现（服务端内部按「高德 → 和风」回退，见 cloudflare/weather-proxy）
+// 浏览器这边不持有任何 Key，所以这里也没有 key 参数。
+const fetchProxyWeather = async (city) => {
+  const data = await requestWeather(city);
 
-  const location = geoData.location[0];
-  const locationId = location.id;
-
-  // 2. 获取实时天气
-  const weatherRes = await fetch(
-    `${QWEATHER_WEATHER_API}?location=${locationId}&key=${QWEATHER_KEY}`
-  );
-  const weatherDataRes = await weatherRes.json();
-  
-  if (weatherDataRes.code !== "200" || !weatherDataRes.now) {
-    throw new Error("查询失败");
-  }
-
-  const now = weatherDataRes.now;
   weatherData.value = {
-    city: location.name,
-    temp: now.temp,
-    condition: now.text,
-    updateTime: now.obsTime.slice(11, 16)
+    city: data.city,
+    temp: data.temp,
+    condition: data.condition,
+    updateTime:
+      data.updateTime ||
+      new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
   };
 
-  cityName.value = location.name;
-  saveCity(location.name);
-  showSearch.value = false;
-  isLoading.value = false;
-};
-
-// 高德 API 实现
-const fetchAmapWeather = async (city) => {
-  const geocodeRes = await fetch(
-    `${GEOCODE_API}?address=${encodeURIComponent(city)}&city=${encodeURIComponent(city)}&key=${AMAP_WEB_KEY}`
-  );
-  const geocodeData = await geocodeRes.json();
-  
-  if (geocodeData.status !== "1" || !geocodeData.geocodes?.length) {
-    throw new Error("无法识别城市");
-  }
-
-  const adcode = geocodeData.geocodes[0].adcode;
-  const weatherRes = await fetch(
-    `${WEATHER_API}?city=${adcode}&extensions=base&key=${AMAP_WEB_KEY}`
-  );
-  const weatherDataRes = await weatherRes.json();
-  
-  if (weatherDataRes.status !== "1" || !weatherDataRes.lives?.length) {
-    throw new Error("查询失败");
-  }
-
-  const weather = weatherDataRes.lives[0];
-  weatherData.value = {
-    city: weather.city,
-    temp: weather.temperature,
-    condition: weather.weather,
-    updateTime: weather.reporttime.slice(11, 16)
-  };
-
-  cityName.value = weather.city;
-  saveCity(weather.city);
+  cityName.value = data.city;
+  saveCity(data.city);
   showSearch.value = false;
   isLoading.value = false;
 };

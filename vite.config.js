@@ -98,6 +98,17 @@ export default ({ mode }) =>
             });
           },
         },
+        // 天气代理：线上由 Cloudflare Worker 路由接管 /api/weather；
+        // 本地 dev 没有 Worker，所以按 VITE_WEATHER_PROXY_DEV_TARGET 转发到已部署的代理。
+        // 不配这个变量也能跑，只是天气会直接走 OpenMeteo 兜底（Key 永远不进前端）。
+        ...(loadEnv(mode, process.cwd()).VITE_WEATHER_PROXY_DEV_TARGET
+          ? {
+              "/api/weather": {
+                target: loadEnv(mode, process.cwd()).VITE_WEATHER_PROXY_DEV_TARGET,
+                changeOrigin: true,
+              },
+            }
+          : {}),
       },
     },
     resolve: {

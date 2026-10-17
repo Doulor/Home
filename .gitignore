@@ -42,3 +42,10 @@ __pycache__/
 
 # Supabase CLI local config
 supabase/
+
+# 2026-10-17（渗透报告 #27/#60 跟进）：.env.local 里有 VITE_WEATHER_KEY / VITE_QWEATHER_KEY
+# 等明文凭据，且原先**没有被忽略**、随时可能被 git add 进去。只保留 .env.example。
+.env
+.env.local
+.env.*.local
+!.env.example

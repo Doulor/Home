@@ -105,17 +105,31 @@ VITE_SITE_URL = "Doulor.cn"
 VITE_SITE_START = "2025-9-18"
 
 # .env.local — Sensitive keys (create this file yourself)
-VITE_WEATHER_KEY = ""       # AMap Web Service Key
-VITE_QWEATHER_KEY = ""      # QWeather Key (optional, fallback)
 VITE_SUPABASE_URL = ""      # Supabase project URL
 VITE_SUPABASE_ANON_KEY = "" # Supabase anonymous key
 ```
 
-#### Weather
+> **Never put weather Keys in `VITE_*` again**: Vite statically inlines `VITE_`
+> variables into the client bundle at build time, i.e. it ships the Key to every
+> visitor (the root cause of pentest findings #27 / #60).
 
-Weather supports tri-API auto failover: AMap → QWeather → OpenMeteo (no key required). At minimum, configure the AMap key.
+#### Weather (server-side proxy, no Key in the bundle)
 
-Go to [AMap Console](https://console.amap.com/dev/index), create a `Web Service` type Key, and fill it in `VITE_WEATHER_KEY` in `.env.local`.
+Weather Keys now live only in the Cloudflare Worker
+(`cloudflare/weather-proxy`) secrets; the browser just calls `/api/weather`.
+
+```bash
+wrangler deploy --config cloudflare/weather-proxy/wrangler.toml
+wrangler secret put AMAP_KEY     --config cloudflare/weather-proxy/wrangler.toml
+wrangler secret put QWEATHER_KEY --config cloudflare/weather-proxy/wrangler.toml
+```
+
+Deploy either as a same-origin route (`doulor.cn/api/weather*`, recommended —
+the frontend already calls `/api/weather`) or on its own subdomain and point
+`VITE_WEATHER_PROXY_URL` at it.
+
+Failover order is unchanged: AMap → QWeather → OpenMeteo (no key, direct from the
+browser as the last resort), so weather still renders if the proxy is down.
 
 #### Music Player
 

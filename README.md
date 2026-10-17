@@ -108,17 +108,39 @@ VITE_SITE_URL = "Doulor.cn"
 VITE_SITE_START = "2025-9-18"
 
 # .env.local — 敏感信息（需自行创建）
-VITE_WEATHER_KEY = ""       # 高德开放平台 Web 服务 Key
-VITE_QWEATHER_KEY = ""      # 和风天气 Key（可选，作为备选）
 VITE_SUPABASE_URL = ""      # Supabase 项目 URL
 VITE_SUPABASE_ANON_KEY = "" # Supabase 匿名 Key
 ```
 
-#### 天气配置
+> **不要再把天气 Key 放进 `VITE_*`**：Vite 会把 `VITE_` 前缀的变量在构建时
+> **静态内联**进前端产物，等于把 Key 明文发给每个访客（渗透报告 #27 / #60 的成因）。
 
-天气支持三 API 自动故障转移：高德开放平台 → 和风天气 → OpenMeteo（无需 Key）。至少配置高德 Key 即可正常使用。
+#### 天气配置（走后端代理，Key 不进前端）
 
-前往 [高德开放平台控制台](https://console.amap.com/dev/index) 创建 `Web 服务` 类型的 Key，填入 `.env.local` 的 `VITE_WEATHER_KEY`。
+天气的 Key 现在只存在于 Cloudflare Worker（`cloudflare/weather-proxy`）的 secret 里，
+浏览器只请求 `/api/weather`，拿不到任何 Key。
+
+```bash
+# 1. 部署 Worker（在仓库根目录）
+wrangler deploy --config cloudflare/weather-proxy/wrangler.toml
+
+# 2. 写 secret（会提示输入，不进仓库、不进前端）
+wrangler secret put AMAP_KEY     --config cloudflare/weather-proxy/wrangler.toml
+wrangler secret put QWEATHER_KEY --config cloudflare/weather-proxy/wrangler.toml
+```
+
+部署方式二选一（详见 `cloudflare/weather-proxy/wrangler.toml` 里的注释）：
+
+- **同源路由（推荐）**：Worker 路由绑 `doulor.cn/api/weather*`，前端默认就请求
+  `/api/weather`，不用改代码、不用 CORS。
+- **独立子域**：在 `.env` 里设 `VITE_WEATHER_PROXY_URL = "https://weather.doulor.cn"`。
+
+数据源顺序仍是 高德 → 和风 → OpenMeteo（无 Key，前端直连兜底）。代理不可用时
+会自动退到 OpenMeteo，天气不会白屏。
+
+本地开发时 `server.proxy` 需要目标地址，设置
+`VITE_WEATHER_PROXY_DEV_TARGET = "https://weather.doulor.cn"`（或你已部署的
+workers.dev 地址）后 `npm run dev` 即可联调；不设则天气只会走 OpenMeteo 兜底。
 
 #### 音乐播放器
 
