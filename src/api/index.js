@@ -1,5 +1,4 @@
 // import axios from "axios";
-import fetchJsonp from "fetch-jsonp";
 
 /**
  * 音乐播放器
