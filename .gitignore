@@ -45,7 +45,10 @@ supabase/
 
 # 2026-10-17（渗透报告 #27/#60 跟进）：.env.local 里有 VITE_WEATHER_KEY / VITE_QWEATHER_KEY
 # 等明文凭据，且原先**没有被忽略**、随时可能被 git add 进去。只保留 .env.example。
-.env
+.env.local
+# 2026-10-17（渗透报告 #27/#60 跟进）：
+# `.env` 只有站点配置、**没有密钥**，必须继续跟踪（否则新克隆构建不出东西）。
+# 真正带密钥的是 `.env.local`（VITE_WEATHER_KEY / VITE_QWEATHER_KEY / VITE_MONITOR_KEY），
+# 它原先**没有任何忽略规则**，一次 `git add -A` 就会进公开仓库 —— 只挡它。
 .env.local
 .env.*.local
-!.env.example
