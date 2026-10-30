@@ -32,7 +32,7 @@ class Config {
         c.deviceId = Prefs.str(ctx, Prefs.K_ID, Prefs.DEF_ID).trim();
         c.deviceName = Prefs.str(ctx, Prefs.K_NAME, Prefs.DEF_NAME);
         c.heartbeatSeconds = Math.max(30, Prefs.num(ctx, Prefs.K_HB, 300));
-        c.pollSeconds = Math.max(1, Prefs.num(ctx, Prefs.K_POLL, 3));
+        c.pollSeconds = Math.max(1, Prefs.num(ctx, Prefs.K_POLL, 2));
 
         c.sendStatus = Prefs.on(ctx, Prefs.K_STATUS);
         c.sendBattery = Prefs.on(ctx, Prefs.K_BATTERY);

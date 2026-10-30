@@ -46,7 +46,7 @@ public class SettingsActivity extends Activity {
         addEdit("设备 ID", Prefs.K_ID, Prefs.DEF_ID, InputType.TYPE_CLASS_TEXT);
         addEdit("设备名称", Prefs.K_NAME, Prefs.DEF_NAME, InputType.TYPE_CLASS_TEXT);
         addEdit("心跳间隔（秒）", Prefs.K_HB, "300", InputType.TYPE_CLASS_NUMBER);
-        addEdit("轮询间隔（秒）", Prefs.K_POLL, "3", InputType.TYPE_CLASS_NUMBER);
+        addEdit("轮询间隔（秒）", Prefs.K_POLL, "2", InputType.TYPE_CLASS_NUMBER);
 
         header("当前权限");
         TextView perm = new TextView(this);
