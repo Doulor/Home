@@ -40,6 +40,9 @@ public class MediaWatcher extends NotificationListenerService {
     private static final AtomicLong lastRefreshAt = new AtomicLong(0);
     /** 正在飞的刷新线程数，防止挂死堆积 */
     private static final AtomicInteger inflight = new AtomicInteger(0);
+    /** 刷新序号：保证只有最新发起的刷新能写入结果 */
+    private static final AtomicLong seq = new AtomicLong(0);
+    private static final AtomicLong lastAppliedSeq = new AtomicLong(0);
 
     private static final long MIN_INTERVAL_MS = 4000L;
     private static final int MAX_INFLIGHT = 3;
@@ -81,14 +84,10 @@ public class MediaWatcher extends NotificationListenerService {
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         if (sbn == null || sbn.getNotification() == null) return;
-        if (looksMedia(sbn)) {
-            // 先用通知里的文字兜底（不调 binder，马上生效），再异步拉 MediaSession 覆盖
-            String[] fromNotif = fromNotification(sbn);
-            if (fromNotif[0] != null) latest = fromNotif;
-            refreshAsync(getApplicationContext(), true);
-        } else {
-            refreshAsync(getApplicationContext(), false);
-        }
+        // 不再从通知文字里兜底填标题：播放器暂停/关闭后通知还挂着，
+        // 那条兜底会一遍遍把旧歌名塞回缓存，导致"音乐关了页面还显示"。
+        // 只按会话状态判断，交给下面的定时轮询。
+        refreshAsync(getApplicationContext(), looksMedia(sbn));
     }
 
     @Override
@@ -135,14 +134,20 @@ public class MediaWatcher extends NotificationListenerService {
         if (inflight.get() >= MAX_INFLIGHT) return;
         lastRefreshAt.set(now);
         inflight.incrementAndGet();
+        final long mySeq = seq.incrementAndGet();
         final Context app = ctx.getApplicationContext() == null ? ctx : ctx.getApplicationContext();
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     String[] r = read(app);
-                    if (r[0] != null) latest = r;
-                    else if (inflight.get() <= 1) latest = new String[]{null, null};
+                    // 用序号保证只有"最新发起的"那次刷新能写入结果，
+                    // 这样空结果也能生效（音乐停了才会真的清空），
+                    // 又不会因为晚到的旧结果把新值覆盖掉。
+                    if (mySeq >= lastAppliedSeq.get()) {
+                        lastAppliedSeq.set(mySeq);
+                        latest = r;
+                    }
                 } catch (Throwable ignored) {
                 } finally {
                     inflight.decrementAndGet();

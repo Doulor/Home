@@ -57,7 +57,7 @@ public class SettingsActivity extends Activity {
         addSwitch("设备名称与类型", Prefs.K_DEVINFO);
 
         header("界面");
-        addSwitch("在最近任务中隐藏（不出现在后台页面）", Prefs.K_HIDE_RECENTS, false);
+        addSwitch("在最近任务中隐藏（不出现在后台页面）", Prefs.K_HIDE_RECENTS, true);
         note("隐藏后：按 Home 划掉卡片不会停止上报，想关掉请从通知栏进入本 App。");
 
         header("连接");
