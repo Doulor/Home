@@ -1,0 +1,4 @@
+build/
+homemonitor.apk
+# 签名密钥不要提交（丢了就只能卸载重装，请自己备份一份）
+monitor.keystore
