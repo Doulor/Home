@@ -112,7 +112,21 @@ serve(async (req) => {
     // 反向地理编码：坐标 → 地址
     const location = payload.location
     let geocode: "ok" | "skipped" | "failed" = "skipped"
-    if (typeof location === "string" && location.length > 0) {
+
+    // MacroDroid 取不到定位时，会把本地化的兜底文案当作 magic text 的值发上来
+    // （实测是「未知位置」）。它既不是坐标也不是地址，直接当"没有位置"处理。
+    const LOCATION_PLACEHOLDERS = new Set([
+      "未知位置",
+      "未知",
+      "unknown",
+      "unavailable",
+      "null",
+      "undefined",
+    ])
+    if (typeof location === "string" && LOCATION_PLACEHOLDERS.has(location.trim().toLowerCase())) {
+      payload.location = null
+      geocode = "failed"
+    } else if (typeof location === "string" && location.length > 0) {
       const m = location.match(COORDS_RE)
       if (m) {
         // 解析不出来就直接不带位置（前端不显示），绝不把坐标原样写进去

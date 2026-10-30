@@ -323,13 +323,26 @@ function progressColor(val) {
   return '#409eff'
 }
 
-// MacroDroid 取不到值时有两种表现：原样保留 {token}，或者给一个孤立的 "?"。
-// 两者都不是有效内容，统一按"没有值"处理（location / media_title / active_app 都用它）。
+// MacroDroid 取不到值时会有几种表现，都按"没有值"处理
+// （location / media_title / active_app 都用它）：
+//   1. 原样保留 {token}
+//   2. 给一个孤立的 "?" / "？"
+//   3. 给一句本地化的兜底文案，比如定位失败时的「未知位置」
+const PLACEHOLDER_TEXTS = new Set([
+  '未知位置',
+  '未知',
+  'unknown',
+  'unavailable',
+  'null',
+  'undefined',
+])
+
 function isPlaceholder(val) {
   if (!val) return true
   const s = String(val).trim()
   if (s === '?' || s === '？') return true
-  return s.startsWith('{') && s.endsWith('}')
+  if (s.startsWith('{') && s.endsWith('}')) return true
+  return PLACEHOLDER_TEXTS.has(s.toLowerCase())
 }
 
 // 兜底：万一有写入方绕过 update-device Edge Function 直接塞了原始坐标，
