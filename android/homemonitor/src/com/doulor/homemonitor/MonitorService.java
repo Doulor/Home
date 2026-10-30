@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
 
@@ -28,7 +29,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 常驻服务：把手机状态 POST 到 update-device 云函数。
@@ -64,6 +70,16 @@ public class MonitorService extends Service {
     private volatile long lastPushOkAt = 0;
     private volatile boolean pendingRetry = false;
 
+    /**
+     * 调度与执行分离：
+     *   scheduler 只有一个线程，只做"到点提交任务"，绝不调用任何 binder
+     *   workers 是缓存线程池，真正干活 —— 某个任务挂死在 binder 上，
+     *   只会废掉一个工作线程，调度线程照常提交下一轮，循环永远不会整体停摆
+     */
+    private ScheduledExecutorService scheduler;
+    private ExecutorService workers;
+    private final AtomicLong lastSubmitAt = new AtomicLong(0);
+
     // 上一轮快照
     private boolean lastScreenOn = true;
     private boolean lastCharging = false;
@@ -78,6 +94,15 @@ public class MonitorService extends Service {
     private long lastMediaAt = 0;
     private String[] cachedMedia = new String[]{null, null};
     private final Map<String, String> labelCache = new HashMap<>();
+    /** 诊断用：最近一次 queryEvents 看到的前台事件数与包名 */
+    private int lastEventCount = -1;
+    private String lastEventPkg;
+    private long lastEventTs;
+    private long lastAliveLogAt = 0;
+    /** 配置缓存：避免调度线程/每轮都去读 SharedPreferences */
+    private final AtomicBoolean notifying = new AtomicBoolean(false);
+    private volatile Config cachedCfg;
+    private volatile long cfgLoadedAt = 0;
 
     private final BroadcastReceiver powerReceiver = new BroadcastReceiver() {
         @Override
@@ -96,21 +121,31 @@ public class MonitorService extends Service {
         cfg = Config.load(this);
         Logs.i("服务启动: " + cfg.url);
 
-        bgThread = new HandlerThread("monitor");
-        bgThread.start();
-        bg = new Handler(bgThread.getLooper());
+        workers = Executors.newCachedThreadPool();
+        scheduler = Executors.newSingleThreadScheduledExecutor();
 
         createChannel();
         startForeground(NOTIF_ID, buildNotification("运行中"));
         registerReceivers();
 
-        ticker = new Runnable() {
+        scheduler.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                tick();
+                try {
+                    long now = SystemClock.elapsedRealtime();
+                    // 上一轮还在飞（或已挂死）就跳过，绝不排队堆积
+                    if (now - lastSubmitAt.get() < pollFloor()) return;
+                    lastSubmitAt.set(now);
+                    workers.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            tick();
+                        }
+                    });
+                } catch (Throwable ignored) {
+                }
             }
-        };
-        scheduleTick(800, false);
+        }, 700, 500, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -122,7 +157,8 @@ public class MonitorService extends Service {
     public void onDestroy() {
         Logs.w("服务被销毁，尝试重启");
         if (bg != null && ticker != null) bg.removeCallbacks(ticker);
-        if (bgThread != null) bgThread.quitSafely();
+        if (scheduler != null) scheduler.shutdownNow();
+        if (workers != null) workers.shutdownNow();
         try {
             unregisterReceiver(powerReceiver);
         } catch (Exception ignored) {
@@ -141,10 +177,37 @@ public class MonitorService extends Service {
         return null;
     }
 
-    private void scheduleTick(int delayMs, boolean replacePending) {
-        if (bg == null || ticker == null) return;
-        if (replacePending) bg.removeCallbacks(ticker);
-        bg.postDelayed(ticker, Math.max(0, delayMs));
+    /** 广播触发时立刻跑一轮（不等待固定节拍）；执行体在独立工作线程上，挂死也不影响调度 */
+    private void scheduleTick(int delayMs, boolean immediate) {
+        if (workers == null) return;
+        lastSubmitAt.set(SystemClock.elapsedRealtime());
+        workers.submit(new Runnable() {
+            @Override
+            public void run() {
+                tick();
+            }
+        });
+    }
+
+    /** 两轮之间的最小间隔，避免挂住的任务被无限并发提交 */
+    private long pollFloor() {
+        Config c = cachedCfg;
+        return c == null ? 2000L : Math.max(800, c.pollSeconds * 1000L - 400);
+    }
+
+    /** 带缓存的配置读取（10 秒内复用，避免频繁读 SharedPreferences） */
+    private Config config() {
+        long now = SystemClock.elapsedRealtime();
+        Config c = cachedCfg;
+        if (c != null && now - cfgLoadedAt < 10000L) return c;
+        try {
+            c = Config.load(this);
+        } catch (Throwable t) {
+            c = cachedCfg != null ? cachedCfg : Config.load(this);
+        }
+        cachedCfg = c;
+        cfgLoadedAt = now;
+        return c;
     }
 
     // ─────────────────────────── 主循环 ───────────────────────────
@@ -153,7 +216,7 @@ public class MonitorService extends Service {
         long t0 = SystemClock.elapsedRealtime();
         int pollMs = 2000;
         try {
-            cfg = Config.load(this);
+            cfg = config();
             pollMs = Math.max(1000, cfg.pollSeconds * 1000);
 
             boolean screenOn = isScreenOn();
@@ -190,7 +253,6 @@ public class MonitorService extends Service {
                 lastArtist = media[1];
             }
 
-            updateNotification(app == null ? "运行中" : app);
         } catch (Throwable t) {
             Logs.e("tick 异常: " + t);
             pollMs = 5000;
@@ -198,8 +260,14 @@ public class MonitorService extends Service {
 
         long cost = SystemClock.elapsedRealtime() - t0;
         if (cost > 300) Logs.w("tick 耗时 " + cost + "ms（偏慢）");
-        // 扣掉本轮自身耗时，保证节奏稳定
-        scheduleTick((int) Math.max(500L, pollMs - cost), false);
+
+        // 诊断：每 30 秒打一条存活日志
+        if (SystemClock.elapsedRealtime() - lastAliveLogAt > 30000) {
+            lastAliveLogAt = SystemClock.elapsedRealtime();
+            long age = lastEventTs == 0 ? -1 : (System.currentTimeMillis() - lastEventTs) / 1000;
+            Logs.i("存活: app=" + lastApp + " 事件数=" + lastEventCount + " 末次包=" + lastEventPkg
+                    + "(" + age + "秒前) cost=" + cost + "ms");
+        }
     }
 
     private JSONObject buildBody(boolean screenOn, int battery, boolean charging,
@@ -279,14 +347,21 @@ public class MonitorService extends Service {
 
             UsageEvents.Event e = new UsageEvents.Event();
             String pkg = null;
+            int count = 0;
+            long ts = 0;
             while (events.hasNextEvent()) {
                 events.getNextEvent(e);
                 int type = e.getEventType();
                 // MOVE_TO_FOREGROUND = 1（API 29 起同值也叫 ACTIVITY_RESUMED）
                 if (type == UsageEvents.Event.MOVE_TO_FOREGROUND || type == 1) {
                     pkg = e.getPackageName();
+                    ts = e.getTimeStamp();
+                    count++;
                 }
             }
+            lastEventCount = count;
+            lastEventPkg = pkg;
+            lastEventTs = ts;
             if (pkg == null || pkg.equals(getPackageName())) return null;
 
             String cached = labelCache.get(pkg);
@@ -336,12 +411,10 @@ public class MonitorService extends Service {
         }
     }
 
+    /** 只读 MediaWatcher 的缓存。绝不在这里调 getActiveSessions —— 那个 binder 调用
+     *  在国产 ROM 上会永久挂住，把整个采集循环拖死。 */
     private String[] mediaCached() {
-        long now = System.currentTimeMillis();
-        if (now - lastMediaAt < MEDIA_TTL_MS) return cachedMedia;
-        lastMediaAt = now;
-        cachedMedia = MediaWatcher.current(this);
-        return cachedMedia;
+        return MediaWatcher.peek();
     }
 
     // ─────────────────────────── 上报 ───────────────────────────
@@ -420,12 +493,27 @@ public class MonitorService extends Service {
         return b.build();
     }
 
-    private void updateNotification(String text) {
-        try {
-            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            if (nm != null) nm.notify(NOTIF_ID, buildNotification(text));
-        } catch (Exception ignored) {
-        }
+    /**
+     * 更新通知栏文字。
+     * 实测这个 ROM 上 NotificationManager.notify() 会挂住（卡住后整个采集循环随之停摆），
+     * 所以绝不在 tick 里调用；只有显式需要时用，并且放在守护线程里，挂住也不影响别处。
+     */
+    private void updateNotificationAsync(final String text) {
+        if (!notifying.compareAndSet(false, true)) return;
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    if (nm != null) nm.notify(NOTIF_ID, buildNotification(text));
+                } catch (Throwable ignored) {
+                } finally {
+                    notifying.set(false);
+                }
+            }
+        }, "notify");
+        t.setDaemon(true);
+        t.start();
     }
 
     private void registerReceivers() {
