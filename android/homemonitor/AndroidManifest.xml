@@ -31,6 +31,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
             android:label="设备监控">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,11 +42,14 @@
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
+            android:excludeFromRecents="true"
             android:label="设置" />
 
+        <!-- stopWithTask=false：从最近任务里划掉也不停止上报 -->
         <service
             android:name=".MonitorService"
             android:exported="false"
+            android:stopWithTask="false"
             android:foregroundServiceType="dataSync" />
 
         <service

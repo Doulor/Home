@@ -27,8 +27,13 @@ class Prefs {
     static final String K_DEVINFO = "send_devinfo";
 
     // ── 界面 ──
-    /** 在最近任务（后台页面）里隐藏，默认关闭 */
-    static final String K_HIDE_RECENTS = "hide_recents";
+    /**
+     * 在最近任务（后台页面）里隐藏，默认开启。
+     * 注意：换过 key（原来是 hide_recents）。旧版默认是 false，
+     * 用户一旦保存过就把 false 写进去了，之后改默认值也覆盖不掉，
+     * 所以这里换成新 key，让默认值真正生效。
+     */
+    static final String K_HIDE_RECENTS = "hide_recents2";
 
     // ── 连接与设备 ──
     static final String K_URL = "url";

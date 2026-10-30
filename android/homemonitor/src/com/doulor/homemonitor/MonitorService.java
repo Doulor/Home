@@ -231,11 +231,13 @@ public class MonitorService extends Service {
             String location = locationCached();
 
             // 取不到值时先别急着清空（避免切应用瞬间页面闪）；
-            // 连续 ABSENT_TICKS 轮都没有，就明确发 null，让页面上的旧值消失
+            // 连续 ABSENT_TICKS 轮都没有，就明确发 null，让页面上的旧值消失。
+            // 注意这里【不要求】本进程之前见过有值：否则服务重启后就永远清不掉
+            // 服务端残留的旧值（重装后旧歌名一直挂着就是这个原因）。
             absentAppTicks = app == null ? absentAppTicks + 1 : 0;
             absentMediaTicks = media[0] == null ? absentMediaTicks + 1 : 0;
-            boolean clearApp = app == null && lastApp != null && absentAppTicks >= ABSENT_TICKS;
-            boolean clearMedia = media[0] == null && lastTitle != null && absentMediaTicks >= ABSENT_TICKS;
+            boolean clearApp = app == null && absentAppTicks == ABSENT_TICKS;
+            boolean clearMedia = media[0] == null && absentMediaTicks == ABSENT_TICKS;
 
             boolean changed =
                     screenOn != lastScreenOn
@@ -264,8 +266,8 @@ public class MonitorService extends Service {
                 lastApp = app;
                 lastTitle = media[0];
                 lastArtist = media[1];
-                if (clearApp) absentAppTicks = 0;
-                if (clearMedia) absentMediaTicks = 0;
+                if (clearApp) absentAppTicks = ABSENT_TICKS + 1;
+                if (clearMedia) absentMediaTicks = ABSENT_TICKS + 1;
             }
 
         } catch (Throwable t) {
