@@ -73,13 +73,31 @@ public class MainActivity extends Activity {
 
         scroll.addView(root);
         setContentView(scroll);
+        applyRecentsSetting();
         refresh();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        applyRecentsSetting();
         refresh();
+    }
+
+    /** 按设置决定本 App 是否出现在最近任务（后台页面）里 */
+    private void applyRecentsSetting() {
+        try {
+            boolean hide = Config.load(this).hideFromRecents;
+            android.app.ActivityManager am =
+                    (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am == null) return;
+            for (android.app.ActivityManager.AppTask t : am.getAppTasks()) {
+                t.setExcludeFromRecents(hide);
+            }
+            Logs.i("最近任务隐藏 = " + hide);
+        } catch (Throwable e) {
+            Logs.w("设置最近任务隐藏失败: " + e);
+        }
     }
 
     private void startMonitor() {

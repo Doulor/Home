@@ -99,6 +99,10 @@ public class MonitorService extends Service {
     private String lastEventPkg;
     private long lastEventTs;
     private long lastAliveLogAt = 0;
+    /** 连续多少轮取不到值：够了才把服务端的旧值清掉（避免切换瞬间闪没） */
+    private static final int ABSENT_TICKS = 3;
+    private int absentAppTicks = 0;
+    private int absentMediaTicks = 0;
     /** 配置缓存：避免调度线程/每轮都去读 SharedPreferences */
     private final AtomicBoolean notifying = new AtomicBoolean(false);
     private volatile Config cachedCfg;
@@ -226,21 +230,30 @@ public class MonitorService extends Service {
             String[] media = mediaCached();
             String location = locationCached();
 
+            // 取不到值时先别急着清空（避免切应用瞬间页面闪）；
+            // 连续 ABSENT_TICKS 轮都没有，就明确发 null，让页面上的旧值消失
+            absentAppTicks = app == null ? absentAppTicks + 1 : 0;
+            absentMediaTicks = media[0] == null ? absentMediaTicks + 1 : 0;
+            boolean clearApp = app == null && lastApp != null && absentAppTicks >= ABSENT_TICKS;
+            boolean clearMedia = media[0] == null && lastTitle != null && absentMediaTicks >= ABSENT_TICKS;
+
             boolean changed =
                     screenOn != lastScreenOn
                             || charging != lastCharging
                             || battery != lastBattery
                             || !eq(app, lastApp)
                             || !eq(media[0], lastTitle)
-                            || !eq(media[1], lastArtist);
+                            || !eq(media[1], lastArtist)
+                            || clearApp || clearMedia;
             boolean heartbeat = System.currentTimeMillis() - lastPushOkAt >= cfg.heartbeatSeconds * 1000L;
 
             if (changed || heartbeat || pendingRetry) {
                 if (pushing.compareAndSet(false, true)) {
-                    JSONObject body = buildBody(screenOn, battery, charging, app, media, location);
+                    JSONObject body = buildBody(screenOn, battery, charging, app, media, location, clearApp, clearMedia);
                     String reason = pendingRetry ? "重试" : changed ? "变化" : "心跳";
                     Logs.i("上报(" + reason + "): app=" + app + " screen=" + (screenOn ? "on" : "off")
-                            + " batt=" + battery + (charging ? " 充电" : "") + " loc=" + (location != null));
+                            + " batt=" + battery + (charging ? " 充电" : "") + " loc=" + (location != null)
+                            + (clearApp ? " [清空应用]" : "") + (clearMedia ? " [清空音乐]" : ""));
                     pushAsync(body);
                 } else {
                     Logs.w("上一轮上报还在进行，本轮跳过");
@@ -251,6 +264,8 @@ public class MonitorService extends Service {
                 lastApp = app;
                 lastTitle = media[0];
                 lastArtist = media[1];
+                if (clearApp) absentAppTicks = 0;
+                if (clearMedia) absentMediaTicks = 0;
             }
 
         } catch (Throwable t) {
@@ -271,7 +286,8 @@ public class MonitorService extends Service {
     }
 
     private JSONObject buildBody(boolean screenOn, int battery, boolean charging,
-                                 String app, String[] media, String location) throws Exception {
+                                 String app, String[] media, String location,
+                                 boolean clearApp, boolean clearMedia) throws Exception {
         JSONObject body = new JSONObject();
         body.put("device_id", cfg.deviceId);
         if (cfg.sendDeviceInfo) {
@@ -281,12 +297,16 @@ public class MonitorService extends Service {
         if (cfg.sendStatus) body.put("status", screenOn ? "online" : "offline");
         if (cfg.sendBattery && battery >= 0) body.put("battery_level", battery);
         if (cfg.sendCharging) body.put("battery_charging", charging);
-        // 有值才发：取不到就保留服务端上一次的值，避免页面闪没
-        if (cfg.sendApp && app != null) body.put("active_app", app);
+        if (cfg.sendApp) {
+            if (app != null) body.put("active_app", app);
+            else if (clearApp) body.put("active_app", JSONObject.NULL); // 确认没了才清空
+        }
         if (cfg.sendLocation && location != null) body.put("location", location);
         if (cfg.sendMedia) {
             if (media[0] != null) body.put("media_title", media[0]);
+            else if (clearMedia) body.put("media_title", JSONObject.NULL);
             if (media[1] != null) body.put("media_detail", media[1]);
+            else if (clearMedia) body.put("media_detail", JSONObject.NULL);
         }
         return body;
     }
@@ -412,8 +432,14 @@ public class MonitorService extends Service {
     }
 
     /** 只读 MediaWatcher 的缓存。绝不在这里调 getActiveSessions —— 那个 binder 调用
-     *  在国产 ROM 上会永久挂住，把整个采集循环拖死。 */
+     *  在国产 ROM 上会永久挂住，把整个采集循环拖死。
+     *  这里顺带触发一次（内部 4 秒节流、跑在守护线程）刷新，
+     *  这样不依赖通知监听服务实例是否被系统启动。 */
     private String[] mediaCached() {
+        try {
+            MediaWatcher.refreshAsync(this, false);
+        } catch (Throwable ignored) {
+        }
         return MediaWatcher.peek();
     }
 

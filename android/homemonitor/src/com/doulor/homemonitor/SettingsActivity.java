@@ -30,6 +30,22 @@ public class SettingsActivity extends Activity {
         scroll.addView(root);
         setContentView(scroll);
 
+        try {
+            buildUi();
+        } catch (Throwable t) {
+            // 任何异常都不让它闪退，直接显示在界面上，方便排查
+            Logs.e("设置页构建失败: " + t);
+            root.removeAllViews();
+            TextView err = new TextView(this);
+            err.setText("设置页加载出错（已避免崩溃）：\n\n" + t);
+            err.setTextSize(14);
+            err.setTextColor(Color.RED);
+            err.setPadding(0, 40, 0, 0);
+            root.addView(err);
+        }
+    }
+
+    private void buildUi() {
         header("上报内容");
         note("勾选的项会随每次上报一起发送；取消勾选就不再发这一项。");
         addSwitch("在线状态（亮屏=在线，熄屏=离线）", Prefs.K_STATUS);
@@ -39,6 +55,10 @@ public class SettingsActivity extends Activity {
         addSwitch("位置（坐标由服务端反查成地址）", Prefs.K_LOCATION);
         addSwitch("音乐信息（歌名 / 歌手）", Prefs.K_MEDIA);
         addSwitch("设备名称与类型", Prefs.K_DEVINFO);
+
+        header("界面");
+        addSwitch("在最近任务中隐藏（不出现在后台页面）", Prefs.K_HIDE_RECENTS, false);
+        note("隐藏后：按 Home 划掉卡片不会停止上报，想关掉请从通知栏进入本 App。");
 
         header("连接");
         addEdit("上报地址", Prefs.K_URL, Prefs.DEF_URL, InputType.TYPE_TEXT_VARIATION_URI);
@@ -87,10 +107,14 @@ public class SettingsActivity extends Activity {
     }
 
     private void addSwitch(String label, String key) {
+        addSwitch(label, key, true);
+    }
+
+    private void addSwitch(String label, String key, boolean def) {
         Switch sw = new Switch(this);
         sw.setText(label);
         sw.setTextSize(15);
-        sw.setChecked(Prefs.on(this, key, true));
+        sw.setChecked(Prefs.on(this, key, def));
         sw.setTag(key);
         sw.setPadding(0, 18, 0, 18);
         root.addView(sw);

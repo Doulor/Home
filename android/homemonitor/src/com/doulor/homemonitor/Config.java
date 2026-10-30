@@ -22,6 +22,9 @@ class Config {
     boolean sendMedia = true;
     boolean sendDeviceInfo = true;
 
+    /** 是否在最近任务（后台页面）里隐藏；默认关闭 */
+    boolean hideFromRecents = false;
+
     /** 这些"前台应用"名不算真正的应用，不上报 */
     private static final String[] IGNORED = {"系统桌面", "桌面", "Launcher", "桌面启动器"};
 
@@ -41,6 +44,7 @@ class Config {
         c.sendLocation = Prefs.on(ctx, Prefs.K_LOCATION);
         c.sendMedia = Prefs.on(ctx, Prefs.K_MEDIA);
         c.sendDeviceInfo = Prefs.on(ctx, Prefs.K_DEVINFO);
+        c.hideFromRecents = Prefs.on(ctx, Prefs.K_HIDE_RECENTS, false);
         return c;
     }
 

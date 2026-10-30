@@ -26,6 +26,10 @@ class Prefs {
     static final String K_MEDIA = "send_media";
     static final String K_DEVINFO = "send_devinfo";
 
+    // ── 界面 ──
+    /** 在最近任务（后台页面）里隐藏，默认关闭 */
+    static final String K_HIDE_RECENTS = "hide_recents";
+
     // ── 连接与设备 ──
     static final String K_URL = "url";
     static final String K_KEY = "key";
@@ -38,13 +42,39 @@ class Prefs {
         return c.getSharedPreferences(P, Context.MODE_PRIVATE);
     }
 
+    /**
+     * 读字符串。用 getAll() 取值而不是 getString()：
+     * 心跳/轮询间隔是以 int 存的，直接 getString() 会抛
+     * ClassCastException（Integer cannot be cast to String）导致设置页闪退。
+     */
     static String str(Context c, String k, String def) {
-        String v = p(c).getString(k, def);
-        return v == null ? def : v;
+        Object o;
+        try {
+            o = p(c).getAll().get(k);
+        } catch (Throwable t) {
+            return def;
+        }
+        return o == null ? def : String.valueOf(o);
     }
 
+    /** 读整数，兼容被存成 String 的情况 */
     static int num(Context c, String k, int def) {
-        return p(c).getInt(k, def);
+        Object o;
+        try {
+            o = p(c).getAll().get(k);
+        } catch (Throwable t) {
+            return def;
+        }
+        if (o instanceof Integer) return (Integer) o;
+        if (o instanceof Long) return ((Long) o).intValue();
+        if (o instanceof String) {
+            try {
+                return Integer.parseInt(((String) o).trim());
+            } catch (Throwable ignored) {
+                return def;
+            }
+        }
+        return def;
     }
 
     static boolean on(Context c, String k) {
